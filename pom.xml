@@ -1,0 +1,83 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.trickshotmlg</groupId>
+    <artifactId>friendnet</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>friendnet</name>
+
+    <!-- modules in this repository -->
+    <modules>
+        <module>core-api</module>
+        <module>core</module>
+        <module>adapter-spigot</module>
+    <!--
+        <module>adapter-bungee</module>
+        <module>plugin-spigot</module>
+        <module>plugin-bungee</module>
+        <module>addons/party-addon</module>
+    -->
+</modules>
+
+<!-- central properties -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>17</java.version>
+        <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <maven.shade.plugin.version>3.5.0</maven.shade.plugin.version>
+        <gson.version>2.10.1</gson.version>
+        <jedis.version>4.3.2</jedis.version>
+        <hibernate.version>6.1.7.Final</hibernate.version>
+    </properties>
+
+    <!-- central dependency versions for children to use -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>${gson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
+            </dependency>
+            <!-- add more centrally pinned dependencies here -->
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- common plugin configuration for children to inherit -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- compiler -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <release>${java.version}</release>
+                    </configuration>
+                </plugin>
+
+                <!-- shade plugin defaults — children can reuse/override -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${maven.shade.plugin.version}</version>
+                    <configuration>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+                        <!-- child modules should configure relocations & finalName -->
+                    </configuration>
+                </plugin>
+
+                <!-- other useful plugin defaults -->
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

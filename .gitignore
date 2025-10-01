@@ -1,0 +1,4 @@
+# Project exclude paths
+/adapter-spigot/target/
+/core/target/
+/core-api/target/

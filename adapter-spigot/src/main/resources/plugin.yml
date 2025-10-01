@@ -1,0 +1,5 @@
+name: FriendNet
+version: '1.0-SNAPSHOT'
+main: com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin
+api-version: '1.21'
+load: POSTWORLD
