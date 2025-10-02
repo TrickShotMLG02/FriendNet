@@ -1,21 +1,28 @@
 package com.trickshotmlg.friendnet.adapter_spigot;
 
 import com.trickshotmlg.friendnet.FriendServiceImpl;
+import com.trickshotmlg.friendnet.adapter_spigot.Commands.ReloadCommand;
+import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
+import com.trickshotmlg.friendnet.core_api.interfaces.FriendNetLogger;
 import com.trickshotmlg.friendnet.core_api.interfaces.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FriendNetPlugin extends JavaPlugin {
+    /*
+    https://github.com/TrickShotMLG02/MinecraftPluginDevelopment/blob/ModularLobby/ModularLobby/src/main/java/com/trickshotdev/modularlobby/Spigot/ModularLobby.java
+    Check this for more about configs, message files and other stuff
+    */
+
 
     private FriendService friendService;
     private Platform platform;
 
     @Override
     public void onEnable() {
+        SpigotLogger.initialize(this);
+
         initializePlatform();
         initializeServices();
         registerListeners();
@@ -34,39 +41,14 @@ public final class FriendNetPlugin extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PlayerStatusListener(friendService), this);
     }
 
+    private void registerCommands() {
+
+        this.getCommand("friendsreload").setExecutor((CommandExecutor) new ReloadCommand(this, "friendnet.reload"));
+    }
+
     public FriendService getFriendService() {
         return friendService;
     }
 
-    /**
-     * Listener class for player join/quit events.
-     */
-    private static class PlayerStatusListener implements Listener {
 
-        private final FriendService friendService;
-
-        public PlayerStatusListener(FriendService friendService) {
-            this.friendService = friendService;
-        }
-
-        @EventHandler
-        public void onPlayerJoin(PlayerJoinEvent event) {
-            SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
-
-            friendService.setOnline(spigotPlayer.getUniqueId(), true);
-            log(spigotPlayer.getName() + " joined!");
-        }
-
-        @EventHandler
-        public void onPlayerQuit(PlayerQuitEvent event) {
-            SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
-
-            friendService.setOnline(spigotPlayer.getUniqueId(), false);
-            log(spigotPlayer.getName() + " quit!");
-        }
-
-        private void log(String message) {
-            System.out.println("[FriendNet] " + message); // simple logging
-        }
-    }
 }
