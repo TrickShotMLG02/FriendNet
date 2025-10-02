@@ -1,63 +1,72 @@
 package com.trickshotmlg.friendnet;
 
 import com.trickshotmlg.friendnet.core_api.interfaces.FriendService;
+import com.trickshotmlg.friendnet.core_api.models.FriendData;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FriendServiceImpl implements FriendService {
 
-    private final Map<UUID, Set<UUID>> friendMap = new HashMap<>();
-    private final Set<UUID> onlinePlayers = new HashSet<>();
+    /**
+     * Stores the friend data for all players.
+     * <p>
+     * The key is the player's {@link UUID}, and the value is the corresponding
+     * {@link FriendData} object containing their friends list and online status.
+     * <p>
+     * Uses a {@link java.util.concurrent.ConcurrentHashMap} to ensure thread-safe
+     * access, allowing multiple threads (e.g., event handlers, network updates)
+     * to safely read and modify friend data concurrently.
+     * </p>
+     */
+    private final Map<UUID, FriendData> friends = new ConcurrentHashMap<>();
+
 
     /**
-     * @param requester
-     * @param target
+     * Retrieves the {@link FriendData} object for the given player.
+     * <p>
+     * If no {@link FriendData} exists for the player, a new instance is
+     * automatically created, added to the internal storage map, and returned.
+     * This ensures that every player UUID queried has a corresponding
+     * {@link FriendData} object.
+     * </p>
+     *
+     * @param player the UUID of the player whose {@link FriendData} is requested
+     * @return the existing or newly created {@link FriendData} associated with the player
      */
-    @Override
-    public void addFriend(UUID requester, UUID target) {
-        friendMap.computeIfAbsent(requester, k -> new HashSet<>()).add(target);
-        friendMap.computeIfAbsent(target, k -> new HashSet<>()).add(requester);
+    private FriendData getOrCreate(UUID player) {
+        return friends.computeIfAbsent(player, FriendData::new);
     }
 
-    /**
-     * @param requester
-     * @param target
-     */
     @Override
-    public void removeFriend(UUID requester, UUID target) {
-        friendMap.getOrDefault(requester, Set.of()).remove(target);
-        friendMap.getOrDefault(target, Set.of()).remove(requester);
+    public void addFriend(UUID player, UUID target) {
+        getOrCreate(player).addFriend(target);
+        getOrCreate(target).addFriend(player);
     }
 
-    /**
-     * @param a
-     * @param b
-     * @return
-     */
     @Override
-    public boolean areFriends(UUID a, UUID b) {
-        return friendMap.getOrDefault(a, Set.of()).contains(b);
+    public void removeFriend(UUID player, UUID target) {
+        getOrCreate(player).removeFriend(target);
+        getOrCreate(target).removeFriend(player);
     }
 
-    /**
-     * @param requester
-     * @return
-     */
     @Override
-    public Set<UUID> getFriends(UUID requester) {
-        return Collections.unmodifiableSet(friendMap.getOrDefault(requester, Set.of()));
+    public boolean areFriends(UUID player, UUID target) {
+        return getOrCreate(player).getFriends().contains(target);
     }
 
-    /**
-     * @param player
-     * @param online
-     */
+    @Override
+    public Set<UUID> getFriends(UUID player) {
+        return getOrCreate(player).getFriends();
+    }
+
     @Override
     public void setOnline(UUID player, boolean online) {
-        if (online) {
-            onlinePlayers.add(player);
-        } else {
-            onlinePlayers.remove(player);
-        }
+        getOrCreate(player).setOnline(online);
+    }
+
+    @Override
+    public boolean isOnline(UUID player) {
+        return getOrCreate(player).isOnline();
     }
 }
