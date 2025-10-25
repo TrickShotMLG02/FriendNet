@@ -34,6 +34,7 @@ public class FriendCommand extends BaseCommand {
         if (cmd.getName().equalsIgnoreCase("friend")) {
             if (args.length == 0) return false;
 
+            /*
             switch (args[0].toLowerCase()) {
                 case "add" -> {
                     if (!player.hasPermission(FriendNetPermissions.FRIEND_ADD)) {
@@ -62,6 +63,10 @@ public class FriendCommand extends BaseCommand {
                     player.sendMessage("§aFriends: " + friends.size());
                 }
             }
+            */
+
         }
+
+        return true;
     }
 }

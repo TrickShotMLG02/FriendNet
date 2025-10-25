@@ -3,9 +3,11 @@ package com.trickshotmlg.friendnet.adapter_spigot;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
 import com.trickshotmlg.friendnet.adapter_spigot.Commands.ReloadCommand;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
+import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core_api.interfaces.FriendNetLogger;
 import com.trickshotmlg.friendnet.core_api.interfaces.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
+import com.trickshotmlg.friendnet.core_api.interfaces.PlayerService;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,6 +22,7 @@ public final class FriendNetPlugin extends JavaPlugin {
 
 
     private FriendService friendService;
+    private PlayerService playerService;
     private Platform platform;
 
     public FileConfiguration config = this.getConfig();
@@ -45,10 +48,11 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     private void initializeServices() {
         this.friendService = new FriendServiceImpl();
+        this.playerService = new PlayerServiceImpl();
     }
 
     private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new PlayerStatusListener(friendService), this);
+        getServer().getPluginManager().registerEvents(new PlayerStatusListener(friendService, playerService), this);
     }
 
     private void registerCommands() {

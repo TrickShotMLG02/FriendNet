@@ -51,6 +51,10 @@ public class MySQLDatabase implements Database {
      */
     @Override
     public DatabaseConnection getConnection() throws SQLException {
+        if (connection != null && !connection.isClosed()) return connection;
+
+        // no active connection - connect and return new connection
+        connect();
         return connection;
     }
 

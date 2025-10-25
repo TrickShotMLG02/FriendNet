@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.core_api.interfaces.FriendService;
+import com.trickshotmlg.friendnet.core_api.interfaces.PlayerService;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -13,9 +14,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public class PlayerStatusListener implements Listener {
 
     private final FriendService friendService;
+    private final PlayerService playerService;
 
-    public PlayerStatusListener(FriendService friendService) {
+    public PlayerStatusListener(FriendService friendService, PlayerService playerService) {
         this.friendService = friendService;
+        this.playerService = playerService;
     }
 
     @EventHandler
@@ -23,6 +26,8 @@ public class PlayerStatusListener implements Listener {
         SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
 
         friendService.setOnline(spigotPlayer.getUniqueId(), true);
+        playerService.initPlayer(spigotPlayer.getUniqueId());
+
         log(spigotPlayer.getName() + " joined!");
     }
 
@@ -31,6 +36,8 @@ public class PlayerStatusListener implements Listener {
         SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
 
         friendService.setOnline(spigotPlayer.getUniqueId(), false);
+        playerService.setLastSeen(spigotPlayer.getUniqueId());
+
         log(spigotPlayer.getName() + " quit!");
     }
 
