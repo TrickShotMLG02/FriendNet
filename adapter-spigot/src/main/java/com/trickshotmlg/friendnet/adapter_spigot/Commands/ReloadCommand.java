@@ -16,17 +16,14 @@ public class ReloadCommand extends BaseCommand {
     public boolean onCommand(final CommandSender sender, final Command cmd, final String label, final String[] args) {
         Player player = (Player) sender;
 
-        //TODO:
-        /*
         if (playerHasPermission(player)) {
             if (plugin.reloadPluginConfigs()) {
-                plugin.applyAllValues();
+                //plugin.applyAllValues();
                 sendPluginMessage(player, plugin.messages.getString("configReloadSuccess"));
             } else {
                 sendPluginMessage(player, plugin.messages.getString("configReloadError"));
             }
         }
-        */
 
         return true;
     }
