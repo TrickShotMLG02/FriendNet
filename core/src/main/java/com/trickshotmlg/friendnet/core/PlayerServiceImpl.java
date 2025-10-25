@@ -17,14 +17,12 @@ public class PlayerServiceImpl implements PlayerService {
      * @param playerId
      */
     @Override
-    public void initPlayer(UUID playerId) {
-        if (players.containsKey(playerId)) {
-            setLastSeen(playerId);
-        }
-        else {
+    public PlayerData initPlayer(UUID playerId) {
+        if (!players.containsKey(playerId)) {
             players.put(playerId, new PlayerData(playerId));
         }
-        System.out.println(players.get(playerId));
+
+        return players.get(playerId);
     }
 
     /**
@@ -42,4 +40,24 @@ public class PlayerServiceImpl implements PlayerService {
     public Timestamp getLastSeen(UUID playerId) {
         return players.get(playerId).getLastSeen();
     }
+
+    /**
+     * @param playerId
+     * @return
+     */
+    @Override
+    public PlayerData getPlayerData(UUID playerId) {
+        return players.get(playerId);
+    }
+
+    /**
+     * @param playerData
+     * @return
+     */
+    @Override
+    public boolean putPlayerData(PlayerData playerData) {
+        players.put(playerData.getPlayerId(), playerData);
+        return true;
+    }
+
 }

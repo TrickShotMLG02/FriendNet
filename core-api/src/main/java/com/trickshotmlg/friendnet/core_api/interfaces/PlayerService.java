@@ -1,11 +1,13 @@
 package com.trickshotmlg.friendnet.core_api.interfaces;
 
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+
 import java.sql.Timestamp;
 import java.util.UUID;
 
 public interface PlayerService {
 
-    public void initPlayer(UUID playerId);
+    public PlayerData initPlayer(UUID playerId);
 
     /**
      * Sets the last seen timestamp to the current time for given player
@@ -15,4 +17,7 @@ public interface PlayerService {
 
     public Timestamp getLastSeen(UUID playerId);
 
+    public PlayerData getPlayerData(UUID playerId);
+
+    public boolean putPlayerData(PlayerData playerData);
 }

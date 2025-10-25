@@ -4,10 +4,12 @@ import com.trickshotmlg.friendnet.core.FriendServiceImpl;
 import com.trickshotmlg.friendnet.adapter_spigot.Commands.ReloadCommand;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
 import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
+import com.trickshotmlg.friendnet.core.database.DatabaseServiceImpl;
 import com.trickshotmlg.friendnet.core_api.interfaces.FriendNetLogger;
 import com.trickshotmlg.friendnet.core_api.interfaces.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
 import com.trickshotmlg.friendnet.core_api.interfaces.PlayerService;
+import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseService;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -28,6 +30,7 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     private FriendService friendService;
     private PlayerService playerService;
+    private DatabaseService databaseService;
     private Platform platform;
 
     public FileConfiguration config = this.getConfig();
@@ -57,10 +60,14 @@ public final class FriendNetPlugin extends JavaPlugin {
     private void initializeServices() {
         this.friendService = new FriendServiceImpl();
         this.playerService = new PlayerServiceImpl();
+        this.databaseService = new DatabaseServiceImpl(this.getDataFolder(), "friendnet");
+
+        this.databaseService.init();
+        this.databaseService.postInit();
     }
 
     private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new PlayerStatusListener(friendService, playerService), this);
+        getServer().getPluginManager().registerEvents(new PlayerStatusListener(friendService, playerService, this), this);
     }
 
     private void registerCommands() {
@@ -70,6 +77,14 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     public FriendService getFriendService() {
         return friendService;
+    }
+
+    public PlayerService getPlayerService() {
+        return playerService;
+    }
+
+    public DatabaseService getDatabaseService() {
+        return databaseService;
     }
 
     public void createConfigWithDefaults() {

@@ -62,7 +62,7 @@ public class SQLiteDatabase implements Database {
      */
     @Override
     public DatabaseConnection getConnection() throws SQLException {
-        if (!this.sqlFile.exists()){
+        if (!this.sqlFile.exists()) {
             try {
                 this.sqlFile.createNewFile();
             } catch (IOException e) {
@@ -71,7 +71,7 @@ public class SQLiteDatabase implements Database {
         }
 
         try {
-            if(connection != null && !connection.isClosed()){
+            if (connection != null && !connection.isClosed()) {
                 return connection;
             }
 
@@ -84,13 +84,5 @@ public class SQLiteDatabase implements Database {
             //TODO: plugin.getLogger().log(Level.SEVERE,"SQLite exception on initialize", ex);
         }
         return null;
-    }
-
-    /**
-     * @throws SQLException
-     */
-    @Override
-    public void setupTables() throws SQLException {
-
     }
 }

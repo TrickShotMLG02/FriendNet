@@ -1,13 +1,16 @@
+# Mode for the plugin: Proxy, Standalone
+Mode: Standalone
+
 # The backend to use: MySQL, SQLite, MariaDB
 DatabaseType: MySQL
 
 # The settings for MySQL Connection
 MySQL:
-  host: "localhost:3306"
-  dbName: "friendnet"
-  username: "friendnet"
-  password: "friendnet"
+  host: localhost:3306
+  dbName: friendnet
+  username: friendnet
+  password: friendnet
 
 # The settings for SQLite Connection
 SQLite:
-  dbName: "friendnet"
+  dbName: friendnet

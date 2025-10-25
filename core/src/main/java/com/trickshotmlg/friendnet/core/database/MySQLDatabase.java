@@ -57,12 +57,4 @@ public class MySQLDatabase implements Database {
         connect();
         return connection;
     }
-
-    /**
-     * @throws SQLException
-     */
-    @Override
-    public void setupTables() throws SQLException {
-
-    }
 }

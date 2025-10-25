@@ -25,6 +25,12 @@ public class PlayerData {
         lastSeen = firstSeen;
     }
 
+    public PlayerData(UUID playerId, Timestamp firstSeen, Timestamp lastSeen) {
+        this.playerId = playerId;
+        this.firstSeen = firstSeen;
+        this.lastSeen = lastSeen;
+    }
+
     public void setLastSeen() {
         Instant now = Instant.now();
         ZonedDateTime zdt = ZonedDateTime.ofInstant(now, ZoneId.of("UTC"));

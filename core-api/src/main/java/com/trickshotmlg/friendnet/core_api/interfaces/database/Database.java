@@ -10,5 +10,4 @@ public interface Database {
     public void connect() throws SQLException;
     public void disconnect() throws SQLException;
     public DatabaseConnection getConnection() throws SQLException;
-    public void setupTables() throws SQLException;
 }
