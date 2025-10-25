@@ -1,0 +1,4 @@
+noPermission: "&4&lYou dont have enough Permissions to execute this command"
+commandNotFound: "&4&lThis command wasn't found"
+configReloadSuccess: "&bSuccessfully reloaded Plugin Configs"
+configReloadError: "&4Error while reloading Plugin Configs"
