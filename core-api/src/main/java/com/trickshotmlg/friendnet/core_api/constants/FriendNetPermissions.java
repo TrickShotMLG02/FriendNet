@@ -7,7 +7,7 @@ public class FriendNetPermissions {
     public static final String RELOAD = PERMISSION_PREFIX + ".reload";
 
     // Default Permissions
-    public static final String FRIEND = PERMISSION_PREFIX + ".friends";
+    public static final String FRIEND_USE = PERMISSION_PREFIX + ".friends.use";
     public static final String FRIEND_LIST = PERMISSION_PREFIX + ".friends.list";
 
     // Friend Management Permissions
