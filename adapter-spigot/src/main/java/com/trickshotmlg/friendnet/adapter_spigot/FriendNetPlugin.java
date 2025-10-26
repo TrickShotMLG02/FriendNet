@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot;
 
 import com.trickshotmlg.friendnet.adapter_spigot.Commands.FriendCommand;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotLogger;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
 import com.trickshotmlg.friendnet.core.Logger;
@@ -69,7 +70,7 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private void registerListeners() {
-        getServer().getPluginManager().registerEvents(new PlayerStatusListener(friendService, playerService, this), this);
+        new PlayerStatusListener(this, friendService, playerService);
     }
 
     private void registerCommands() {

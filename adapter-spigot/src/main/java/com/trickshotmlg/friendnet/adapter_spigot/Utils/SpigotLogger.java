@@ -1,4 +1,4 @@
-package com.trickshotmlg.friendnet.adapter_spigot;
+package com.trickshotmlg.friendnet.adapter_spigot.Utils;
 
 import com.trickshotmlg.friendnet.core_api.interfaces.FriendNetLogger;
 import org.bukkit.plugin.java.JavaPlugin;

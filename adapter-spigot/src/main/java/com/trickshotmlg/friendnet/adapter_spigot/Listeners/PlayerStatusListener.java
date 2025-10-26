@@ -1,29 +1,28 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 
-import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
+import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.java.JavaPlugin;
 
 
 /**
  * Listener class for player join/quit events.
  */
-public class PlayerStatusListener implements Listener {
+public class PlayerStatusListener extends AbstractListener {
 
     private final FriendService friendService;
     private final PlayerService playerService;
 
-    private final FriendNetPlugin plugin;
+    public PlayerStatusListener(JavaPlugin plugin, FriendService friendService, PlayerService playerService) {
+        super(plugin);
 
-    public PlayerStatusListener(FriendService friendService, PlayerService playerService, FriendNetPlugin plugin) {
         this.friendService = friendService;
         this.playerService = playerService;
-        this.plugin = plugin;
     }
 
     @EventHandler
@@ -33,7 +32,7 @@ public class PlayerStatusListener implements Listener {
         //TODO: Check if player has their status set to offline
         friendService.setOnline(spigotPlayer.getUniqueId(), true);
 
-        log(spigotPlayer.getName() + " joined!");
+        Logger.debug(spigotPlayer.getName() + " joined!");
     }
 
     @EventHandler
@@ -42,10 +41,6 @@ public class PlayerStatusListener implements Listener {
 
         friendService.setOnline(spigotPlayer.getUniqueId(), false);
 
-        log(spigotPlayer.getName() + " quit!");
-    }
-
-    private void log(String message) {
-        System.out.println("[FriendNet] " + message); // simple logging
+        Logger.debug(spigotPlayer.getName() + " quit!");
     }
 }
