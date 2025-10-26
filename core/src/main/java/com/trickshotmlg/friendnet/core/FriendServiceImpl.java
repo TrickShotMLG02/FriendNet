@@ -1,12 +1,29 @@
 package com.trickshotmlg.friendnet.core;
 
+import com.trickshotmlg.friendnet.core.database.SQLQueries;
+import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.FriendData;
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FriendServiceImpl implements FriendService {
+
+    private final DatabaseService databaseService;
+    private final PlayerService playerService;
+
+    public FriendServiceImpl(DatabaseService databaseService, PlayerService playerService) {
+        this.databaseService = databaseService;
+        this.playerService = playerService;
+    }
 
     /**
      * Stores the friend data for all players.
@@ -63,6 +80,50 @@ public class FriendServiceImpl implements FriendService {
     @Override
     public void setOnline(UUID player, boolean online) {
         getOrCreate(player).setOnline(online);
+
+        if (online) {
+            try {
+                DatabaseConnection conn = this.databaseService.getDatabase().getConnection();
+
+                try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_GET_PLAYER)) {
+                    ps.setObject(1, player);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            UUID id = UUID.fromString(rs.getString("player_id"));
+                            Timestamp firstSeen = rs.getTimestamp("first_seen");
+                            Timestamp lastSeen = rs.getTimestamp("last_seen");
+                            PlayerData playerData = new PlayerData(id, firstSeen, lastSeen);
+                            this.playerService.putPlayerData(playerData);
+                        } else {
+                            PlayerData playerData = playerService.initPlayer(player);
+                        }
+                    }
+                }
+            } catch (SQLException ex) {
+                System.err.println("SQLException: " + ex.getMessage());
+            }
+        }
+        else {
+            playerService.setLastSeen(player);
+
+            try {
+                DatabaseConnection conn = this.databaseService.getDatabase().getConnection();
+
+                try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_UPSERT_LASTSEEN)) {
+
+                    PlayerData playerData = playerService.getPlayerData(player);
+
+                    ps.setObject(1, playerData.getPlayerId());
+                    ps.setTimestamp(2, playerData.getFirstSeen());
+                    ps.setTimestamp(3, playerData.getLastSeen());
+
+                    ps.executeUpdate();
+                }
+            } catch (SQLException ex) {
+                System.err.println("SQLException: " + ex.getMessage());
+            }
+        }
     }
 
     @Override

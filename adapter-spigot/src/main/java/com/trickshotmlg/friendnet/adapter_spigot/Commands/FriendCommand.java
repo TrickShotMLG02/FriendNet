@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -27,7 +28,7 @@ public class FriendCommand extends AbstractCommand {
             command.setTabCompleter(this);
         }
 
-       plugin.getLogger().info("Registered command: " + command.getName());
+       Logger.debug("Registered command: " + command);
     }
 
     /**

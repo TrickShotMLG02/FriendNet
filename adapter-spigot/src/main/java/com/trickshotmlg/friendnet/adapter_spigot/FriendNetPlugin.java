@@ -3,6 +3,7 @@ package com.trickshotmlg.friendnet.adapter_spigot;
 import com.trickshotmlg.friendnet.adapter_spigot.Commands.FriendCommand;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
+import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core.database.DatabaseServiceImpl;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
@@ -25,7 +26,7 @@ public final class FriendNetPlugin extends JavaPlugin {
     Check this for more about configs, message files and other stuff
     */
 
-    private static boolean DEBUG = false;
+    private static boolean DEBUG = true;
 
     private FriendService friendService;
     private PlayerService playerService;
@@ -41,13 +42,14 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        SpigotLogger.initialize(this);
+        Logger.enableDebug(DEBUG);
+        Logger.setLogger(new SpigotLogger(this));
 
         initializePlatform();
         initializeServices();
         registerListeners();
         registerCommands();
-        getLogger().info("FriendNet enabled!");
+        Logger.info("FriendNet enabled!");
     }
 
     private void initializePlatform() {
@@ -58,9 +60,9 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private void initializeServices() {
-        this.friendService = new FriendServiceImpl();
-        this.playerService = new PlayerServiceImpl();
         this.databaseService = new DatabaseServiceImpl(this.getDataFolder(), "friendnet");
+        this.playerService = new PlayerServiceImpl();
+        this.friendService = new FriendServiceImpl(this.databaseService, this.playerService);
 
         this.databaseService.init();
         this.databaseService.postInit();
@@ -71,8 +73,6 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private void registerCommands() {
-
-        //this.getCommand("friendsreload").setExecutor((CommandExecutor) new ReloadCommand(this));
         new FriendCommand(this);
     }
 

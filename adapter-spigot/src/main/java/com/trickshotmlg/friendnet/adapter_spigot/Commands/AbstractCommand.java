@@ -119,4 +119,14 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
         sb.append(String.join("|", subNames)).append(">");
         return sb.toString();
     }
+
+    @Override
+    public String toString() {
+        return "AbstractCommand{" +
+                "name='" + name + '\'' +
+                ", permission='" + permission + '\'' +
+                ", description='" + description + '\'' +
+                ", usage='" + getUsageMessage() + '\'' +
+                '}';
+    }
 }
