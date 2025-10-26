@@ -1,6 +1,6 @@
 package com.trickshotmlg.friendnet.core;
 
-import com.trickshotmlg.friendnet.core_api.interfaces.FriendService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendData;
 
 import java.util.*;

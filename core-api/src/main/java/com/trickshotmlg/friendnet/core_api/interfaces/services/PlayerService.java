@@ -1,4 +1,4 @@
-package com.trickshotmlg.friendnet.core_api.interfaces;
+package com.trickshotmlg.friendnet.core_api.interfaces.services;
 
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 

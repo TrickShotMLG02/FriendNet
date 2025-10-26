@@ -1,5 +1,7 @@
 package com.trickshotmlg.friendnet.core_api.interfaces;
 
+import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
+
 import java.util.UUID;
 
 /**
@@ -7,7 +9,7 @@ import java.util.UUID;
  * <p>
  * This interface abstracts away the specifics of the server implementation
  * (e.g., Spigot, BungeeCord, Velocity) and allows core systems like
- * {@link com.trickshotmlg.friendnet.core_api.interfaces.FriendService}
+ * {@link FriendService}
  * to interact with players generically.
  * </p>
  */

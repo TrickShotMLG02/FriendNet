@@ -3,7 +3,7 @@ package com.trickshotmlg.friendnet.core.database;
 import com.trickshotmlg.friendnet.core_api.enums.ServiceState;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
-import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 
 import java.io.File;
 import java.sql.PreparedStatement;

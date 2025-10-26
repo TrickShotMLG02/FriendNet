@@ -3,15 +3,14 @@ package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.core.database.SQLQueries;
-import com.trickshotmlg.friendnet.core_api.interfaces.FriendService;
-import com.trickshotmlg.friendnet.core_api.interfaces.PlayerService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

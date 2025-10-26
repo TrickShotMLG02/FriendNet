@@ -1,6 +1,6 @@
-package com.trickshotmlg.friendnet.core_api.interfaces.database;
+package com.trickshotmlg.friendnet.core_api.interfaces.services;
 
-import com.trickshotmlg.friendnet.core_api.interfaces.BaseService;
+import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

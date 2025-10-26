@@ -1,7 +1,6 @@
 package com.trickshotmlg.friendnet.core;
 
-import com.trickshotmlg.friendnet.core_api.interfaces.PlayerService;
-import com.trickshotmlg.friendnet.core_api.models.FriendData;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
 import java.sql.Timestamp;
