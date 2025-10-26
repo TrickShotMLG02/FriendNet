@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.core.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -24,6 +25,8 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
         this.description = description;
         this.usage = usage;
         this.permission = permission;
+
+        Logger.debug("Registered Command: " + this);
     }
 
     public String getName() { return name; }
@@ -122,7 +125,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public String toString() {
-        return "AbstractCommand{" +
+        return  getClass().getName() + "{" +
                 "name='" + name + '\'' +
                 ", permission='" + permission + '\'' +
                 ", description='" + description + '\'' +

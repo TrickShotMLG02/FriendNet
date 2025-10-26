@@ -27,8 +27,6 @@ public class FriendCommand extends AbstractCommand {
             command.setExecutor(this);
             command.setTabCompleter(this);
         }
-
-       Logger.debug("Registered command: " + command);
     }
 
     /**
