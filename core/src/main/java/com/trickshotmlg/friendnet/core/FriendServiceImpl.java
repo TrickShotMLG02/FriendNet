@@ -80,50 +80,10 @@ public class FriendServiceImpl implements FriendService {
     @Override
     public void setOnline(UUID player, boolean online) {
         getOrCreate(player).setOnline(online);
+        playerService.setLastSeen(player);
 
-        if (online) {
-            try {
-                DatabaseConnection conn = this.databaseService.getDatabase().getConnection();
-
-                try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_GET_PLAYER)) {
-                    ps.setObject(1, player);
-
-                    try (ResultSet rs = ps.executeQuery()) {
-                        if (rs.next()) {
-                            UUID id = UUID.fromString(rs.getString("player_id"));
-                            Timestamp firstSeen = rs.getTimestamp("first_seen");
-                            Timestamp lastSeen = rs.getTimestamp("last_seen");
-                            PlayerData playerData = new PlayerData(id, firstSeen, lastSeen);
-                            this.playerService.putPlayerData(playerData);
-                        } else {
-                            PlayerData playerData = playerService.initPlayer(player);
-                        }
-                    }
-                }
-            } catch (SQLException ex) {
-                System.err.println("SQLException: " + ex.getMessage());
-            }
-        }
-        else {
-            playerService.setLastSeen(player);
-
-            try {
-                DatabaseConnection conn = this.databaseService.getDatabase().getConnection();
-
-                try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_UPSERT_LASTSEEN)) {
-
-                    PlayerData playerData = playerService.getPlayerData(player);
-
-                    ps.setObject(1, playerData.getPlayerId());
-                    ps.setTimestamp(2, playerData.getFirstSeen());
-                    ps.setTimestamp(3, playerData.getLastSeen());
-
-                    ps.executeUpdate();
-                }
-            } catch (SQLException ex) {
-                System.err.println("SQLException: " + ex.getMessage());
-            }
-        }
+        databaseService.save(playerService.getPlayerData(player));
+        databaseService.save(getOrCreate(player));
     }
 
     @Override

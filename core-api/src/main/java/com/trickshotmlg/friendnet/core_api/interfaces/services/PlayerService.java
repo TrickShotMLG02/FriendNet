@@ -20,4 +20,6 @@ public interface PlayerService {
     public PlayerData getPlayerData(UUID playerId);
 
     public boolean putPlayerData(PlayerData playerData);
+
+    public boolean removePlayerData(UUID playerId);
 }

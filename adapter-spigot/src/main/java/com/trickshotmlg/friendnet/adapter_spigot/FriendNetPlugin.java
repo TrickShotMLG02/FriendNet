@@ -70,7 +70,7 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private void registerListeners() {
-        new PlayerStatusListener(this, friendService, playerService);
+        new PlayerStatusListener(this, friendService, playerService, databaseService);
     }
 
     private void registerCommands() {

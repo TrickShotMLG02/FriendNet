@@ -8,12 +8,65 @@ import java.util.UUID;
 
 public class PlayerData {
 
-    /**
-     * The UUID of the player this data belongs to.
-     */
+    /// The UUID of the player this data belongs to.
     private final UUID playerId;
 
+
+
+    // --- Settings --- //
+    private boolean allowFriendRequests = true;
+    private boolean showOnlineStatus = true;
+    private boolean autoAcceptFriends = false;
+    private boolean friendRequestNotifications = true;
+    private boolean friendListPublic = true;
+
+    public boolean isAllowFriendRequests() {
+        return allowFriendRequests;
+    }
+
+    public boolean isShowOnlineStatus() {
+        return showOnlineStatus;
+    }
+
+    public boolean isAutoAcceptFriends() {
+        return autoAcceptFriends;
+    }
+
+    public boolean isFriendRequestNotifications() {
+        return friendRequestNotifications;
+    }
+
+    public boolean isFriendListPublic() {
+        return friendListPublic;
+    }
+
+    public void setAllowFriendRequests(boolean allowFriendRequests) {
+        this.allowFriendRequests = allowFriendRequests;
+    }
+
+    public void setShowOnlineStatus(boolean showOnlineStatus) {
+        this.showOnlineStatus = showOnlineStatus;
+    }
+
+    public void setAutoAcceptFriends(boolean autoAcceptFriends) {
+        this.autoAcceptFriends = autoAcceptFriends;
+    }
+
+    public void setFriendRequestNotifications(boolean friendRequestNotifications) {
+        this.friendRequestNotifications = friendRequestNotifications;
+    }
+
+    public void setFriendListPublic(boolean friendListPublic) {
+        this.friendListPublic = friendListPublic;
+    }
+
+
+
+
+    /// The timestamp when the player first joined the server
     private final Timestamp firstSeen;
+
+    /// The timestamp when the player status was last time online
     private Timestamp lastSeen;
 
     public PlayerData(UUID playerId) {
@@ -62,6 +115,11 @@ public class PlayerData {
     public String toString() {
         return "PlayerData{" +
                 "playerId=" + playerId +
+                ", allow_friend_requests=" + allowFriendRequests +
+                ", show_online_status=" + showOnlineStatus +
+                ", auto_accept_friends=" + autoAcceptFriends +
+                ", friend_request_notifications=" + friendRequestNotifications +
+                ", friend_list_public=" + friendListPublic +
                 ", firstSeen=" + firstSeen +
                 ", lastSeen=" + lastSeen +
                 '}';

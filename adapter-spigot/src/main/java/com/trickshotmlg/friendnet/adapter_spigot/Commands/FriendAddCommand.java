@@ -1,5 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core.database.SQLTables;
 import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -27,6 +29,8 @@ public class FriendAddCommand extends AbstractCommand {
      */
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
+        Logger.info(SQLTables.TABLE_CREATE_PLAYERDATA);
+        Logger.info(SQLTables.TABLE_CREATE_FRIENDSHIPS);
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cOnly Players can use this command!");
             return true;
@@ -43,6 +47,11 @@ public class FriendAddCommand extends AbstractCommand {
             return true;
         }
 
+        if (target.getUniqueId().equals(player.getUniqueId())) {
+            sender.sendMessage("§cYou cannot add yourself!.");
+            return true;
+        }
+
         sender.sendMessage("§aYou added " + target.getName() + " as a friend!");
         return true;
     }
@@ -54,7 +63,7 @@ public class FriendAddCommand extends AbstractCommand {
      */
     @Override
     protected List<String> tabComplete(CommandSender sender, String[] args) {
-
+        // TODO: remove sender from auto-complete list
         if (args.length == 1) {
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)

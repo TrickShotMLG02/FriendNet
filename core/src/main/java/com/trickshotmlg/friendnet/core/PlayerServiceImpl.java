@@ -59,4 +59,14 @@ public class PlayerServiceImpl implements PlayerService {
         return true;
     }
 
+    /**
+     * @param playerId
+     * @return
+     */
+    @Override
+    public boolean removePlayerData(UUID playerId) {
+        players.remove(playerId);
+        return true;
+    }
+
 }

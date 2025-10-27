@@ -9,7 +9,9 @@ public interface BaseService {
     void stop();
     void destroy();
 
-    String getName();
+    default String getName() {
+        return getClass().getSimpleName();
+    }
     ServiceState getState();
     boolean isRunning();
 }
