@@ -13,6 +13,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -37,6 +38,7 @@ public class PlayerStatusListener extends AbstractListener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
 
+        // load player data
         Optional<PlayerData> pld = databaseService.find(spigotPlayer.getUniqueId(), PlayerData.class);
         if (pld.isPresent()) {
             PlayerData playerData = pld.get();
@@ -45,6 +47,15 @@ public class PlayerStatusListener extends AbstractListener {
         } else {
             playerService.initPlayer(spigotPlayer.getUniqueId());
         }
+
+        // load player friendships into memory
+        Optional<Set<FriendshipData>> friendships = databaseService.findAll(spigotPlayer.getUniqueId(), FriendshipData.class);
+        if (friendships.isPresent()) {
+            for (FriendshipData friendshipData : friendships.get()) {
+                friendService.putFriendshipData(friendshipData);
+            }
+        }
+
 
         //TODO: Check if player has their status set to offline
         //friendService.setOnline(spigotPlayer.getUniqueId(), true);
@@ -62,7 +73,9 @@ public class PlayerStatusListener extends AbstractListener {
         playerData.setLastSeen();
         databaseService.save(playerData);
 
+        //friendService.acceptFriendRequest(UUID.fromString("0f8fbcdd-dd36-4409-a689-dc9fb761b55d"), spigotPlayer.getUniqueId());
 
+        /*
         FriendshipData d1 = new FriendshipData(spigotPlayer.getUniqueId(), UUID.fromString("efbdd36b-a9b0-4d99-9a6a-b92b6f3e149e"));
         FriendshipData d2 = new FriendshipData(spigotPlayer.getUniqueId(), UUID.fromString("412334cc-8ee9-4edf-bfba-6a8267aece38"));
         FriendshipData d3 = new FriendshipData(UUID.fromString("0f8fbcdd-dd36-4409-a689-dc9fb761b55d"), spigotPlayer.getUniqueId());
@@ -71,10 +84,13 @@ public class PlayerStatusListener extends AbstractListener {
         databaseService.save(d2);
         databaseService.save(d3);
 
+        */
+
         //friendService.setOnline(spigotPlayer.getUniqueId(), false);
 
         // remove playerData as it is no longer needed
         playerService.removePlayerData(spigotPlayer.getUniqueId());
+
 
         Logger.debug(spigotPlayer.getName() + " quit!");
     }

@@ -20,6 +20,8 @@ public class FriendCommand extends AbstractCommand {
 
         // Register subcommands
         registerSubCommand(new FriendAddCommand(plugin));
+        registerSubCommand(new FriendAcceptCommand(plugin));
+        registerSubCommand(new FriendRequestsCommand(plugin));
         //registerSubCommand(new FriendRequestCommand());
 
         PluginCommand command = plugin.getCommand("friend");

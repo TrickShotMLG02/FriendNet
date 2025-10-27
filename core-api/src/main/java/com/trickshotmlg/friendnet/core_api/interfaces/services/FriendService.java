@@ -1,65 +1,115 @@
 package com.trickshotmlg.friendnet.core_api.interfaces.services;
 
+import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
 /**
- * Service interface for managing a player's friends and online status.
+ * Provides operations for managing friendships between players in a platform-independent way.
  * <p>
- * Implementations of this interface should be platform-independent, using UUIDs
- * to identify players. This interface handles friend relationships and online
- * status tracking, which can be used for cross-server communication or plugin
- * features such as joining friends' servers or displaying online status.
- * </p>
+ * This service handles sending friend requests, accepting requests, removing friends,
+ * and querying friendship status or pending requests. All player identities are represented by {@link UUID}.
+ * Implementations should ensure thread-safe access and consistent state management.
  */
 public interface FriendService {
 
     /**
-     * Adds a player to another player's friend list.
+     * Accepts a pending friend request from a requester to the specified player.
      * <p>
-     * If the target player does not exist in the system yet, it should be created.
-     * Implementations may optionally notify the target player that they have been added.
-     * </p>
+     * After this operation, both players should be considered friends.
      *
-     * @param player the UUID of the player who is adding a friend
-     * @param target the UUID of the player to be added as a friend
+     * @param player    The UUID of the player accepting the friend request.
+     * @param requester The UUID of the player who sent the friend request.
+     * @return
+     * @throws IllegalArgumentException if there is no pending request from {@code requester} to {@code player}.
      */
-    void acceptFriendRequest(UUID player, UUID requester);
-
-    void sendFriendRequest(UUID player, UUID target);
+    boolean acceptFriendRequest(UUID player, UUID requester);
 
     /**
-     * Removes a player from another player's friend list.
+     * Sends a friend request from one player to another.
      * <p>
-     * If the target player is not in the friend list, this operation should have no effect.
-     * </p>
+     * If a request already exists in either direction, this method may either
+     * update the request timestamp or do nothing depending on implementation.
      *
-     * @param player the UUID of the player who is removing a friend
-     * @param target the UUID of the friend to remove
+     * @param player The UUID of the player sending the request.
+     * @param target The UUID of the target player to whom the request is sent.
+     * @return True if request was sent successfully, else False
+     * @throws IllegalArgumentException if {@code player} equals {@code target}.
+     */
+    boolean sendFriendRequest(UUID player, UUID target);
+
+    /**
+     * Removes an existing friendship between two players.
+     * <p>
+     * If the players are not friends, this method may do nothing or throw an exception
+     * depending on implementation.
+     *
+     * @param player The UUID of the first player.
+     * @param target The UUID of the second player.
      */
     void removeFriend(UUID player, UUID target);
 
     /**
-     * Checks whether two players are friends.
-     * <p>
-     * Friendship may be bidirectional or unidirectional depending on implementation.
-     * Typically, adding a friend will create a mutual relationship.
-     * </p>
+     * Checks whether two players are currently friends.
      *
-     * @param player the UUID of the first player
-     * @param target the UUID of the second player
-     * @return {@code true} if both players are friends, {@code false} otherwise
+     * @param player The UUID of the first player.
+     * @param target The UUID of the second player.
+     * @return {@code true} if the players are friends; {@code false} otherwise.
      */
     boolean areFriends(UUID player, UUID target);
 
+    /**
+     * Checks whether there is a pending friend request between two players.
+     *
+     * @param player The UUID of the potential recipient of the request.
+     * @param target The UUID of the potential sender of the request.
+     * @return {@code true} if there is a pending request from {@code target} to {@code player};
+     *         {@code false} otherwise.
+     */
     boolean requestPending(UUID player, UUID target);
 
     /**
-     * Retrieves all friends of a given player.
+     * Retrieves all confirmed friendships of a player.
      *
-     * @param player the UUID of the player whose friends should be returned
-     * @return a {@link Set} of UUIDs representing the player's friends;
-     *         returns an empty set if the player has no friends
+     * @param player The UUID of the player whose friendships are requested.
+     * @return A set of {@link FriendshipData} representing all friendships of the player.
+     *         The set may be empty if the player has no friends.
      */
-    Set<UUID> getFriends(UUID player);
+    Set<FriendshipData> getFriendships(UUID player);
+
+    /**
+     * Retrieves all incoming friend requests that are pending for the specified player.
+     *
+     * @param player The UUID of the player whose incoming requests are requested.
+     * @return A set of {@link FriendshipData} representing all pending friend requests
+     *         received by the player.
+     */
+    Set<FriendshipData> getPendingRequests(UUID player);
+
+    /**
+     * Retrieves all outgoing friend requests that have been sent by the specified player
+     * and are still pending.
+     *
+     * @param player The UUID of the player whose sent requests are requested.
+     * @return A set of {@link FriendshipData} representing all pending requests sent by the player.
+     */
+    Set<FriendshipData> getSentRequests(UUID player);
+
+    /**
+     * Retrieves the friendship data between two players, if it exists.
+     * <p>
+     * This includes both confirmed friendships and pending friend requests.
+     *
+     * @param player1 The UUID of the first player.
+     * @param player2 The UUID of the second player.
+     * @return An {@link Optional} containing the {@link FriendshipData} if a friendship
+     *         or pending request exists; otherwise, {@link Optional#empty()}.
+     */
+    Optional<FriendshipData> getFriendshipData(UUID player1, UUID player2);
+
+    boolean putFriendshipData(FriendshipData friendshipData);
+
+    boolean removeFriendshipData(FriendshipData friendshipData);
 }

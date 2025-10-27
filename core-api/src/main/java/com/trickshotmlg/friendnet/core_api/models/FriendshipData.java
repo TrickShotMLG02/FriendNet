@@ -1,8 +1,9 @@
 package com.trickshotmlg.friendnet.core_api.models;
 
-import com.trickshotmlg.friendnet.core_api.enums.FriendshipType;
+import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
 
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -11,7 +12,7 @@ public class FriendshipData {
     private UUID player1Id;
     private UUID player2Id;
     private UUID requesterId;
-    private FriendshipType friendshipType;
+    private FriendshipStatus friendshipStatus;
     private Timestamp requestSentTime;
     private Timestamp friendSince;
     private boolean isFavourite;
@@ -27,19 +28,19 @@ public class FriendshipData {
         this.player2Id = uuids.get(1);
 
         this.requesterId = requesterId;
-        this.friendshipType = FriendshipType.Pending;
+        this.friendshipStatus = FriendshipStatus.Pending;
         this.requestSentTime = new Timestamp(System.currentTimeMillis());
         this.friendSince = null;
         this.isFavourite = false;
     }
 
-    public FriendshipData(UUID requesterId, UUID targetId, FriendshipType friendshipType, Timestamp requestSentTime, Timestamp friendSince, boolean isFavourite) {
+    public FriendshipData(UUID requesterId, UUID targetId, FriendshipStatus friendshipType, Timestamp requestSentTime, Timestamp friendSince, boolean isFavourite) {
         List<UUID> uuids = List.of(requesterId, targetId).stream().sorted().collect(Collectors.toList());
         this.player1Id = uuids.get(0);
         this.player2Id = uuids.get(1);
 
         this.requesterId = requesterId;
-        this.friendshipType = friendshipType;
+        this.friendshipStatus = friendshipType;
         this.requestSentTime = requestSentTime;
         this.friendSince = friendSince;
         this.isFavourite = isFavourite;
@@ -61,6 +62,10 @@ public class FriendshipData {
         this.player2Id = player2Id;
     }
 
+    public HashSet<UUID> getPlayerIds() {
+        return new HashSet<>(List.of(player1Id, player2Id));
+    }
+
     public UUID getRequesterId() {
         return requesterId;
     }
@@ -77,12 +82,12 @@ public class FriendshipData {
         this.requestSentTime = requestSentTime;
     }
 
-    public FriendshipType getFriendshipType() {
-        return friendshipType;
+    public FriendshipStatus getFriendshipStatus() {
+        return friendshipStatus;
     }
 
-    public void setFriendshipType(FriendshipType friendshipType) {
-        this.friendshipType = friendshipType;
+    public void setFriendshipStatus(FriendshipStatus friendshipStatus) {
+        this.friendshipStatus = friendshipStatus;
     }
 
     public Timestamp getFriendSince() {
@@ -102,12 +107,30 @@ public class FriendshipData {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FriendshipData)) return false;
+        FriendshipData other = (FriendshipData) o;
+
+        // Two friendships are equal if they involve the same two players, in any order
+        return (player1Id.equals(other.player1Id) && player2Id.equals(other.player2Id)) ||
+                (player1Id.equals(other.player2Id) && player2Id.equals(other.player1Id));
+    }
+
+    @Override
+    public int hashCode() {
+        // Use a commutative combination so order doesn't matter
+        // e.g., hash(a, b) = hash(b, a)
+        return player1Id.hashCode() + player2Id.hashCode();
+    }
+
+    @Override
     public String toString() {
         return "FriendshipData{" +
                 "player1Id=" + player1Id +
                 ", player2Id=" + player2Id +
                 ", requesterId=" + requesterId +
-                ", friendshipType=" + friendshipType +
+                ", friendshipType=" + friendshipStatus +
                 ", requestSentTime=" + requestSentTime +
                 ", friendSince=" + friendSince +
                 ", isFavourite=" + isFavourite +

@@ -1,12 +1,16 @@
 package com.trickshotmlg.friendnet.core;
 
+import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
-import com.trickshotmlg.friendnet.core_api.models.FriendData;
+import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class FriendServiceImpl implements FriendService {
 
@@ -18,77 +22,122 @@ public class FriendServiceImpl implements FriendService {
         this.playerService = playerService;
     }
 
-    /**
-     * Stores the friend data for all players.
-     * <p>
-     * The key is the player's {@link UUID}, and the value is the corresponding
-     * {@link FriendData} object containing their friends list and online status.
-     * <p>
-     * Uses a {@link java.util.concurrent.ConcurrentHashMap} to ensure thread-safe
-     * access, allowing multiple threads (e.g., event handlers, network updates)
-     * to safely read and modify friend data concurrently.
-     * </p>
-     */
-    private final Map<UUID, FriendData> friends = new ConcurrentHashMap<>();
-
-
-    /**
-     * Retrieves the {@link FriendData} object for the given player.
-     * <p>
-     * If no {@link FriendData} exists for the player, a new instance is
-     * automatically created, added to the internal storage map, and returned.
-     * This ensures that every player UUID queried has a corresponding
-     * {@link FriendData} object.
-     * </p>
-     *
-     * @param player the UUID of the player whose {@link FriendData} is requested
-     * @return the existing or newly created {@link FriendData} associated with the player
-     */
-    private FriendData getOrCreate(UUID player) {
-        return friends.computeIfAbsent(player, FriendData::new);
-    }
-
-    /**
-     * @param player    the UUID of the player who is adding a friend
-     * @param requester
-     */
-    @Override
-    public void acceptFriendRequest(UUID player, UUID requester) {
-
-    }
-
-    /**
-     * @param player
-     * @param target
-     */
-    @Override
-    public void sendFriendRequest(UUID player, UUID target) {
-
-    }
+    private final HashSet<FriendshipData> friends = new HashSet<>();
 
     @Override
-    public void removeFriend(UUID player, UUID target) {
-        getOrCreate(player).removeFriend(target);
-        getOrCreate(target).removeFriend(player);
-    }
+    public boolean acceptFriendRequest(UUID player, UUID requester) {
+        Optional<FriendshipData> request = getFriendshipData(player, requester);
+        if (request.isPresent() && request.get().getFriendshipStatus() == FriendshipStatus.Pending) {
+            Instant now = Instant.now();
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(now, ZoneId.of("UTC"));
+            Timestamp friendSince = Timestamp.from(zdt.toInstant());
 
-    @Override
-    public boolean areFriends(UUID player, UUID target) {
-        return getOrCreate(player).getFriends().contains(target);
-    }
-
-    /**
-     * @param player
-     * @param target
-     * @return
-     */
-    @Override
-    public boolean requestPending(UUID player, UUID target) {
+            request.get().setFriendshipStatus(FriendshipStatus.Accepted);
+            request.get().setFriendSince(friendSince);
+            databaseService.save(request.get());
+            return true;
+        }
         return false;
     }
 
     @Override
-    public Set<UUID> getFriends(UUID player) {
-        return getOrCreate(player).getFriends();
+    public boolean sendFriendRequest(UUID player, UUID target) {
+        FriendshipData request = new FriendshipData(player, target);
+
+        if (friends.contains(request)) {
+            return false;
+        }
+        else {
+            friends.add(request);
+            databaseService.save(request);
+            return true;
+        }
+    }
+
+    @Override
+    public void removeFriend(UUID player, UUID target) {
+        Optional<FriendshipData> friendship = getFriendshipData(player, target);
+        if (friendship.isPresent() && friendship.get().getFriendshipStatus() == FriendshipStatus.Accepted) {
+            removeFriendshipData(friendship.get());
+            databaseService.delete(friendship.get());
+        }
+    }
+
+    @Override
+    public boolean areFriends(UUID player, UUID target) {
+        HashSet<UUID> targets = new HashSet<>(List.of(player, target));
+        return friends.stream().anyMatch(f -> f.getPlayerIds().equals(targets) && f.getFriendshipStatus() == FriendshipStatus.Accepted);
+    }
+
+    @Override
+    public boolean requestPending(UUID player, UUID target) {
+        Optional<FriendshipData> friendship = getFriendshipData(player, target);
+
+        if (friendship.isPresent()) {
+            return friendship.get().getRequesterId().equals(player);
+        }
+
+        return false;
+    }
+
+    @Override
+    public Set<FriendshipData> getFriendships(UUID player) {
+        List<FriendshipData> friendships = friends.stream()
+            .filter(f ->
+                    f.getPlayerIds().contains(player) &&
+                    f.getFriendshipStatus() == FriendshipStatus.Accepted
+            )
+        .toList();
+
+        return new HashSet<>(friendships);
+    }
+
+    @Override
+    public Set<FriendshipData> getPendingRequests(UUID player) {
+        List<FriendshipData> requests = friends.stream()
+            .filter(f ->
+                f.getPlayerIds().contains(player) &&
+                !f.getRequesterId().equals(player) &&
+                f.getFriendshipStatus() == FriendshipStatus.Pending
+            )
+        .toList();
+
+        return new HashSet<>(requests);
+    }
+
+    @Override
+    public Set<FriendshipData> getSentRequests(UUID player) {
+        List<FriendshipData> requests = friends.stream()
+            .filter(f ->
+                    f.getPlayerIds().contains(player) &&
+                    f.getRequesterId().equals(player) &&
+                    f.getFriendshipStatus() == FriendshipStatus.Pending
+            )
+        .toList();
+
+        return new HashSet<>(requests);
+    }
+
+    @Override
+    public Optional<FriendshipData> getFriendshipData(UUID player1, UUID player2) {
+        HashSet<UUID> targets = new HashSet<>(List.of(player1, player2));
+        return friends.stream().filter(f -> f.getPlayerIds().equals(targets)).findFirst();
+    }
+
+    @Override
+    public boolean putFriendshipData(FriendshipData friendshipData) {
+        boolean success = friends.add(friendshipData);
+        if(!success) {
+            // force update wih new friendship data
+            friends.remove(friendshipData);
+            friends.add(friendshipData);
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean removeFriendshipData(FriendshipData friendshipData) {
+        return friends.remove(friendshipData);
     }
 }

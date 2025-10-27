@@ -3,30 +3,28 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
+import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Set;
 
-public class FriendAddCommand extends AbstractCommand {
+public class FriendAcceptCommand extends AbstractCommand {
 
-    protected FriendAddCommand(JavaPlugin plugin) {
+    protected FriendAcceptCommand(JavaPlugin plugin) {
         super(
                 plugin,
-                "add",
-                "Send a friend request to a player",
-                "/friend add <player>",
-                FriendNetPermissions.FRIEND_ADD
+                "accept",
+                "Accepts a friend request from a player",
+                "/friend accept <player>",
+                FriendNetPermissions.FRIEND_ACCEPT
         );
     }
 
-    /**
-     * @param sender
-     * @param args
-     * @return
-     */
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
@@ -39,42 +37,37 @@ public class FriendAddCommand extends AbstractCommand {
             return true;
         }
 
-        Player target = Bukkit.getPlayerExact(args[0]);
+        OfflinePlayer target = Bukkit.getOfflinePlayer(args[0]);
         if (target == null) {
             sender.sendMessage("§cPlayer not found.");
             return true;
         }
 
-        if (target.getUniqueId().equals(player.getUniqueId())) {
-            sender.sendMessage("§cYou cannot add yourself!.");
-            return true;
-        }
-
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
-        boolean success = fs.sendFriendRequest(player.getUniqueId(), target.getUniqueId());
-        if (success) {
-            target.sendMessage("§aYou got a new Friend Request from " + sender.getName());
-            sender.sendMessage("§aYou sent " + target.getName() + " a Friend Request!");
-        } else {
-            sender.sendMessage("§cYou already have sent a Friend Request to " + target.getName() + "!");
-        }
+        boolean success = fs.acceptFriendRequest(player.getUniqueId(), target.getUniqueId());
 
+        if (success) {
+            sender.sendMessage("§aYou accepted the friend request from " + target.getName() + "!");
+        } else {
+            sender.sendMessage("§cYou don't have a pending friend request from " + target.getName() + "!");
+        }
 
         return true;
     }
 
-    /**
-     * @param sender
-     * @param args
-     * @return
-     */
+
     @Override
     protected List<String> tabComplete(CommandSender sender, String[] args) {
-        // TODO: remove sender from auto-complete list
-        if (args.length == 1) {
-            return Bukkit.getOnlinePlayers().stream()
-                    .map(Player::getName)
+        // TODO: show only open requests
+
+        if (args.length == 1 && sender instanceof Player player) {
+            FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
+            FriendService fs = pl.getFriendService();
+            Set<FriendshipData> requests = fs.getPendingRequests(player.getUniqueId());
+
+            return requests.stream()
+                    .map(f -> Bukkit.getOfflinePlayer(f.getRequesterId()).getName())
                     .filter(n -> n.toLowerCase().startsWith(args[0].toLowerCase()))
                     .toList();
         }

@@ -12,5 +12,7 @@ public class FriendNetPermissions {
 
     // Friend Management Permissions
     public static final String FRIEND_ADD = PERMISSION_PREFIX + ".friends.add";
+    public static final String FRIEND_ACCEPT = PERMISSION_PREFIX + ".friends.accept";
     public static final String FRIEND_REMOVE = PERMISSION_PREFIX + ".friends.remove";
+    public static final String FRIEND_REQUESTS = PERMISSION_PREFIX + ".friends.requests";
 }

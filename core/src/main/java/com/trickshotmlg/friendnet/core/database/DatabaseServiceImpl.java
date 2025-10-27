@@ -1,12 +1,11 @@
 package com.trickshotmlg.friendnet.core.database;
 
 import com.trickshotmlg.friendnet.core.Logger;
-import com.trickshotmlg.friendnet.core_api.enums.FriendshipType;
+import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
 import com.trickshotmlg.friendnet.core_api.enums.ServiceState;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
-import com.trickshotmlg.friendnet.core_api.models.FriendData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
@@ -15,7 +14,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 public class DatabaseServiceImpl implements DatabaseService {
@@ -46,11 +47,9 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public <T> Optional<T> find(UUID playerId, Class<T> clazz) {
-        if (clazz.equals(FriendData.class)) {
-            return Optional.empty();
-        }
 
         if (clazz.equals(FriendshipData.class)) {
+
             try {
                 DatabaseConnection conn = getDatabase().getConnection();
 
@@ -64,7 +63,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                             UUID player1Id = UUID.fromString(rs.getString("player1_id"));
                             UUID player2Id = UUID.fromString(rs.getString("player2_id"));
                             UUID requesterId = UUID.fromString(rs.getString("requester_id"));
-                            FriendshipType friendshipType = FriendshipType.valueOf(rs.getString("status"));
+                            FriendshipStatus friendshipType = FriendshipStatus.valueOf(rs.getString("status"));
                             Timestamp requestSentTime = rs.getTimestamp("request_sent_time");
                             Timestamp friendSince = rs.getTimestamp("friend_since");
                             boolean favourite = rs.getBoolean("is_favourite");
@@ -132,12 +131,62 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     /**
-     * @param entity
+     * @param playerId
+     * @param clazz
+     * @param <T>
+     * @return
      */
     @Override
-    public void save(FriendData entity) {
+    public <T> Optional<Set<T>> findAll(UUID playerId, Class<T> clazz) {
+        if (clazz.equals(FriendshipData.class)) {
 
+            Set<FriendshipData> friendships = new HashSet<>();
+
+            try {
+                DatabaseConnection conn = getDatabase().getConnection();
+
+                try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FRIENDSHIPS_SELECT)) {
+                    ps.setObject(1, playerId);
+                    ps.setObject(2, playerId);
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+
+                            UUID player1Id = UUID.fromString(rs.getString("player1_id"));
+                            UUID player2Id = UUID.fromString(rs.getString("player2_id"));
+                            UUID requesterId = UUID.fromString(rs.getString("requester_id"));
+                            FriendshipStatus friendshipType = FriendshipStatus.valueOf(rs.getString("status"));
+                            Timestamp requestSentTime = rs.getTimestamp("request_sent_time");
+                            Timestamp friendSince = rs.getTimestamp("friend_since");
+                            boolean favourite = rs.getBoolean("is_favourite");
+
+                            // Create FriendshipData instance
+                            FriendshipData friendshipData = new FriendshipData(
+                                    requesterId,
+                                    requesterId == player1Id ? player2Id : player1Id,
+                                    friendshipType,
+                                    requestSentTime,
+                                    friendSince,
+                                    favourite
+                            );
+
+                            friendships.add((FriendshipData) clazz.cast(friendshipData));
+                        }
+
+                        // Cast to T to satisfy the generic method signature
+                        return Optional.of((Set<T>) friendships);
+                    }
+                } catch (SQLException e) {
+                    Logger.error("Failed to fetch friendship data for player: " + playerId, e);
+                }
+            } catch (SQLException e) {
+                Logger.error("Could not establish database connection", e);
+            }
+        }
+
+        return Optional.empty();
     }
+
 
     /**
      * @param entity
@@ -151,7 +200,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                 ps.setObject(1, entity.getPlayer1Id());
                 ps.setObject(2, entity.getPlayer2Id());
                 ps.setObject(3, entity.getRequesterId());
-                ps.setObject(4, entity.getFriendshipType());
+                ps.setObject(4, entity.getFriendshipStatus());
                 ps.setTimestamp(5, entity.getRequestSentTime());
                 ps.setTimestamp(6, entity.getFriendSince());
                 ps.setBoolean(7, entity.isFavourite());
@@ -188,14 +237,6 @@ public class DatabaseServiceImpl implements DatabaseService {
         } catch (SQLException e) {
             Logger.error("Could not save PlayerData: " + entity, e);
         }
-    }
-
-    /**
-     * @param entity
-     */
-    @Override
-    public void delete(FriendData entity) {
-
     }
 
     /**
