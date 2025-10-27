@@ -1,11 +1,13 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Map;
 
 public class FriendCommand extends AbstractCommand {
     public FriendCommand(JavaPlugin plugin) {
@@ -43,7 +45,7 @@ public class FriendCommand extends AbstractCommand {
      */
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
-        sender.sendMessage(getUsageMessage());
+        MessageManager.send(sender, "commandFeedback.usage", Map.of("usage", getUsageMessage()));
         return true;
     }
 

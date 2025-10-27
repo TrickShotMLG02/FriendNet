@@ -114,7 +114,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
             return getUsage() != null ? getUsage() : "/" + getName();
         }
 
-        StringBuilder sb = new StringBuilder("§eUsage: /").append(getName()).append(" <");
+        StringBuilder sb = new StringBuilder("/").append(getName()).append(" <");
 
         List<String> subNames = new ArrayList<>();
         for (AbstractCommand sub : getSubCommands()) {
