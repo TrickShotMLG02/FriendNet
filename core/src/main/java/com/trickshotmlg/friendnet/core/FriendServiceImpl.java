@@ -66,6 +66,23 @@ public class FriendServiceImpl implements FriendService {
         return false;
     }
 
+    /**
+     * @param requester
+     * @param target
+     * @return
+     */
+    @Override
+    public boolean cancelRequest(UUID requester, UUID target) {
+        Optional<FriendshipData> friendship = getFriendshipData(requester, target);
+        if (friendship.isPresent() && friendship.get().getFriendshipStatus() == FriendshipStatus.Pending && friendship.get().getRequesterId().equals(requester)) {
+            removeFriendshipData(friendship.get());
+            databaseService.delete(friendship.get());
+
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean areFriends(UUID player, UUID target) {
         HashSet<UUID> targets = new HashSet<>(List.of(player, target));

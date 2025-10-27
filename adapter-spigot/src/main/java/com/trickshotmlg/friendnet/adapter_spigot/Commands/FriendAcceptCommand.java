@@ -61,8 +61,6 @@ public class FriendAcceptCommand extends AbstractCommand {
 
     @Override
     protected List<String> tabComplete(CommandSender sender, String[] args) {
-        // TODO: show only open requests
-
         if (args.length == 1 && sender instanceof Player player) {
             FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
             FriendService fs = pl.getFriendService();

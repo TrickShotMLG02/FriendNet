@@ -76,7 +76,7 @@ public class FriendAddCommand extends AbstractCommand {
         if (args.length == 1) {
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)
-                    .filter(n -> n.toLowerCase().startsWith(args[0].toLowerCase()))
+                    .filter(n -> n.toLowerCase().startsWith(args[0].toLowerCase()) && n != sender.getName())
                     .toList();
         }
 

@@ -20,6 +20,8 @@ requests:
   alreadyPendingRequest: '&cYou already have sent a Friend Request to &e%target%'
   listHeader: '&aYou have pending requests from the following players:'
   listEntry: '&e%target%'
+  cancelSuccess: '&aSuccessfully cancelled the friend request for &e%target%'
+  cancelFail: '&cThere is no pending request for &e%target% &cthat can be cancelled'
 
 friend:
   removeSuccess: '&e%target% &bis no longer your friend'

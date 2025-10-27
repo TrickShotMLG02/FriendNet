@@ -52,6 +52,14 @@ public interface FriendService {
     boolean removeFriend(UUID player, UUID target);
 
     /**
+     *
+     * @param requester
+     * @param target
+     * @return
+     */
+    boolean cancelRequest(UUID requester, UUID target);
+
+    /**
      * Checks whether two players are currently friends.
      *
      * @param player The UUID of the first player.
