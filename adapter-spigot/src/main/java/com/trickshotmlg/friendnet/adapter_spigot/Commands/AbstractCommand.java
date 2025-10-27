@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.Logger;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -57,7 +58,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             // no subcommand — execute this command
             if (!hasPermission(sender)) {
-                sender.sendMessage("§cYou don’t have permission to use this command!");
+                MessageManager.send(sender, "noPermission");
                 return true;
             }
             return execute(sender, args);
@@ -70,7 +71,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
         // No matching subcommand — maybe execute this one
         if (!hasPermission(sender)) {
-            sender.sendMessage("§cYou don’t have permission to use this command!");
+            MessageManager.send(sender, "noPermission");
             return true;
         }
 
@@ -120,7 +121,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
             subNames.add(sub.getName());
         }
 
-        sb.append(String.join("|", subNames)).append(">");
+        sb.append(String.join(" | ", subNames)).append(">");
         return sb.toString();
     }
 

@@ -1,6 +1,5 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
-import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -20,9 +19,15 @@ public class FriendCommand extends AbstractCommand {
 
         // Register subcommands
         registerSubCommand(new FriendAddCommand(plugin));
+        registerSubCommand(new FriendRemoveCommand(plugin));
         registerSubCommand(new FriendAcceptCommand(plugin));
+        registerSubCommand(new FriendDenyCommand(plugin));
+
         registerSubCommand(new FriendRequestsCommand(plugin));
-        //registerSubCommand(new FriendRequestCommand());
+        registerSubCommand(new FriendListCommand(plugin));
+
+        registerSubCommand(new FriendReloadCommand(plugin));
+
 
         PluginCommand command = plugin.getCommand("friend");
         if (command != null) {

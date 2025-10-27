@@ -55,12 +55,15 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public void removeFriend(UUID player, UUID target) {
+    public boolean removeFriend(UUID player, UUID target) {
         Optional<FriendshipData> friendship = getFriendshipData(player, target);
         if (friendship.isPresent() && friendship.get().getFriendshipStatus() == FriendshipStatus.Accepted) {
             removeFriendshipData(friendship.get());
             databaseService.delete(friendship.get());
+
+            return true;
         }
+        return false;
     }
 
     @Override

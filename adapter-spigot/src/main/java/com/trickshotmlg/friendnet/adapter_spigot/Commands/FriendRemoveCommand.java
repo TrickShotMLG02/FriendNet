@@ -15,15 +15,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class FriendAcceptCommand extends AbstractCommand {
+public class FriendRemoveCommand extends AbstractCommand{
 
-    protected FriendAcceptCommand(JavaPlugin plugin) {
+    protected FriendRemoveCommand(JavaPlugin plugin) {
         super(
                 plugin,
-                "accept",
-                "Accepts a friend request from a player",
-                "/friend accept <player>",
-                FriendNetPermissions.FRIEND_ACCEPT
+                "remove",
+                "Remove an existing friend",
+                "/friend remove <player>",
+                FriendNetPermissions.FRIEND_REMOVE
         );
     }
 
@@ -31,6 +31,7 @@ public class FriendAcceptCommand extends AbstractCommand {
     protected boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
             MessageManager.send(sender, "commandFeedback.playersOnlyCommand");
+
             return true;
         }
 
@@ -47,12 +48,12 @@ public class FriendAcceptCommand extends AbstractCommand {
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
-        boolean success = fs.acceptFriendRequest(player.getUniqueId(), target.getUniqueId());
+        boolean success = fs.removeFriend(player.getUniqueId(), target.getUniqueId());
 
         if (success) {
-            MessageManager.send(sender, "requests.requestAccepted", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friend.removeSuccess", Map.of("target", target.getName()));
         } else {
-            MessageManager.send(sender, "requests.requestNotFound", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friend.removeFail", Map.of("target", target.getName()));
         }
 
         return true;
@@ -61,19 +62,18 @@ public class FriendAcceptCommand extends AbstractCommand {
 
     @Override
     protected List<String> tabComplete(CommandSender sender, String[] args) {
-        // TODO: show only open requests
-
         if (args.length == 1 && sender instanceof Player player) {
             FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
             FriendService fs = pl.getFriendService();
-            Set<FriendshipData> requests = fs.getPendingRequests(player.getUniqueId());
+            Set<FriendshipData> friends = fs.getFriendships(player.getUniqueId());
 
-            return requests.stream()
-                    .map(f -> Bukkit.getOfflinePlayer(f.getRequesterId()).getName())
+            return friends.stream()
+                    .map(f -> Bukkit.getOfflinePlayer(f.getOtherPlayerId(player.getUniqueId())).getName())
                     .filter(n -> n.toLowerCase().startsWith(args[0].toLowerCase()))
                     .toList();
         }
 
         return List.of();
     }
+
 }

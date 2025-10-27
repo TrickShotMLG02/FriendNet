@@ -49,7 +49,7 @@ public interface FriendService {
      * @param player The UUID of the first player.
      * @param target The UUID of the second player.
      */
-    void removeFriend(UUID player, UUID target);
+    boolean removeFriend(UUID player, UUID target);
 
     /**
      * Checks whether two players are currently friends.

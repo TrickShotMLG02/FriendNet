@@ -1,4 +1,26 @@
+prefix: "&7[&aFriends&7]"
+
 noPermission: "&4&lYou dont have enough Permissions to execute this command"
 commandNotFound: "&4&lThis command wasn't found"
 configReloadSuccess: "&bSuccessfully reloaded Plugin Configs"
 configReloadError: "&4Error while reloading Plugin Configs"
+
+commandFeedback:
+  playersOnlyCommand: "&cOnly Players can use this command!"
+  commandNotFound: "&cThis command wasn't found!"
+  playerNotFound: "&cThis player wasn't found!"
+  usage: "&eUsage: %usage%"
+
+requests:
+  requestAccepted: '&aYou accepted the friend request from &e%target%'
+  requestNotFound: '&cYou have no pending request from &e%target%'
+  invalidTargetSelf: '&cYou can''t send a request to yourself'
+  notificationReceivedRequest: '&aYou got a new Friend Request from &e%target%'
+  notificationSentRequest: '&aYou sent &e%target% &aa Friend Request'
+  alreadyPendingRequest: '&cYou already have sent a Friend Request to &e%target%'
+  listHeader: '&aYou have pending requests from the following players:'
+  listEntry: '&e%target%'
+
+friend:
+  removeSuccess: '&e%target% &bis no longer your friend'
+  removeFail: '&e%target% &cis not in your friend list'

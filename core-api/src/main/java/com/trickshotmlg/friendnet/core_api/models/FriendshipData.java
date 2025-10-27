@@ -66,6 +66,10 @@ public class FriendshipData {
         return new HashSet<>(List.of(player1Id, player2Id));
     }
 
+    public UUID getOtherPlayerId(UUID playerId) {
+        return playerId.equals(player1Id) ? player2Id : player1Id;
+    }
+
     public UUID getRequesterId() {
         return requesterId;
     }

@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import org.bukkit.Bukkit;
@@ -9,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Map;
 
 public class FriendAddCommand extends AbstractCommand {
 
@@ -30,23 +32,23 @@ public class FriendAddCommand extends AbstractCommand {
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("§cOnly Players can use this command!");
+            MessageManager.send(sender, "commandFeedback.playersOnlyCommand");
             return true;
         }
 
         if (args.length < 1) {
-            sender.sendMessage("§eUsage: " + getUsage());
+            MessageManager.send(sender, "commandFeedback.usage", Map.of("usage", getUsage()));
             return true;
         }
 
         Player target = Bukkit.getPlayerExact(args[0]);
         if (target == null) {
-            sender.sendMessage("§cPlayer not found.");
+            MessageManager.send(sender, "commandFeedback.playerNotFound");
             return true;
         }
 
         if (target.getUniqueId().equals(player.getUniqueId())) {
-            sender.sendMessage("§cYou cannot add yourself!.");
+            MessageManager.send(sender, "requests.invalidTargetSelf");
             return true;
         }
 
@@ -54,12 +56,11 @@ public class FriendAddCommand extends AbstractCommand {
         FriendService fs = pl.getFriendService();
         boolean success = fs.sendFriendRequest(player.getUniqueId(), target.getUniqueId());
         if (success) {
-            target.sendMessage("§aYou got a new Friend Request from " + sender.getName());
-            sender.sendMessage("§aYou sent " + target.getName() + " a Friend Request!");
+            MessageManager.send(sender, "requests.notificationSentRequest", Map.of("target", target.getName()));
+            MessageManager.send(target, "requests.notificationReceivedRequest", Map.of("target", sender.getName()));
         } else {
-            sender.sendMessage("§cYou already have sent a Friend Request to " + target.getName() + "!");
+            MessageManager.send(sender, "requests.alreadyPendingRequest", Map.of("target", target.getName()));
         }
-
 
         return true;
     }

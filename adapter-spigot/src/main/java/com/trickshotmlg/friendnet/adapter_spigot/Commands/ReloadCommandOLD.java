@@ -7,9 +7,9 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 @Deprecated
-public class ReloadCommand extends BaseCommand {
+public class ReloadCommandOLD extends BaseCommand {
 
-    public ReloadCommand(FriendNetPlugin pluginInstance) {
+    public ReloadCommandOLD(FriendNetPlugin pluginInstance) {
         super(pluginInstance, FriendNetPermissions.RELOAD);
     }
 
