@@ -1,17 +1,10 @@
 package com.trickshotmlg.friendnet.core;
 
-import com.trickshotmlg.friendnet.core.database.SQLQueries;
-import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.FriendData;
-import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -55,10 +48,22 @@ public class FriendServiceImpl implements FriendService {
         return friends.computeIfAbsent(player, FriendData::new);
     }
 
+    /**
+     * @param player    the UUID of the player who is adding a friend
+     * @param requester
+     */
     @Override
-    public void addFriend(UUID player, UUID target) {
-        getOrCreate(player).addFriend(target);
-        getOrCreate(target).addFriend(player);
+    public void acceptFriendRequest(UUID player, UUID requester) {
+
+    }
+
+    /**
+     * @param player
+     * @param target
+     */
+    @Override
+    public void sendFriendRequest(UUID player, UUID target) {
+
     }
 
     @Override
@@ -72,22 +77,18 @@ public class FriendServiceImpl implements FriendService {
         return getOrCreate(player).getFriends().contains(target);
     }
 
+    /**
+     * @param player
+     * @param target
+     * @return
+     */
+    @Override
+    public boolean requestPending(UUID player, UUID target) {
+        return false;
+    }
+
     @Override
     public Set<UUID> getFriends(UUID player) {
         return getOrCreate(player).getFriends();
-    }
-
-    @Override
-    public void setOnline(UUID player, boolean online) {
-        getOrCreate(player).setOnline(online);
-        playerService.setLastSeen(player);
-
-        databaseService.save(playerService.getPlayerData(player));
-        databaseService.save(getOrCreate(player));
-    }
-
-    @Override
-    public boolean isOnline(UUID player) {
-        return getOrCreate(player).isOnline();
     }
 }

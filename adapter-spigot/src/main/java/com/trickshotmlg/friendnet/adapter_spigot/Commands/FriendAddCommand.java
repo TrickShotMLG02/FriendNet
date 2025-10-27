@@ -1,7 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
-import com.trickshotmlg.friendnet.core.Logger;
-import com.trickshotmlg.friendnet.core.database.SQLTables;
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -29,8 +28,6 @@ public class FriendAddCommand extends AbstractCommand {
      */
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
-        Logger.info(SQLTables.TABLE_CREATE_PLAYERDATA);
-        Logger.info(SQLTables.TABLE_CREATE_FRIENDSHIPS);
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cOnly Players can use this command!");
             return true;

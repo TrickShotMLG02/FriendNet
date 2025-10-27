@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
+import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -12,6 +13,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
+import java.util.UUID;
 
 
 /**
@@ -59,6 +61,15 @@ public class PlayerStatusListener extends AbstractListener {
         // TODO: set player status to offline
         playerData.setLastSeen();
         databaseService.save(playerData);
+
+
+        FriendshipData d1 = new FriendshipData(spigotPlayer.getUniqueId(), UUID.fromString("efbdd36b-a9b0-4d99-9a6a-b92b6f3e149e"));
+        FriendshipData d2 = new FriendshipData(spigotPlayer.getUniqueId(), UUID.fromString("412334cc-8ee9-4edf-bfba-6a8267aece38"));
+        FriendshipData d3 = new FriendshipData(UUID.fromString("0f8fbcdd-dd36-4409-a689-dc9fb761b55d"), spigotPlayer.getUniqueId());
+
+        databaseService.save(d1);
+        databaseService.save(d2);
+        databaseService.save(d3);
 
         //friendService.setOnline(spigotPlayer.getUniqueId(), false);
 

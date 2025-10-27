@@ -27,4 +27,18 @@ public class SQLQueries {
 
     public static final String TABLE_PLAYERS_SELECT =
             "SELECT * FROM players WHERE player_id = ?";
+
+    public static final String TABLE_FRIENDSHIPS_UPSERT =
+            "INSERT INTO friendships (" +
+                    "player1_id, player2_id, requester_id, status, request_sent_time, friend_since, is_favourite) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?) " +
+                    "ON CONFLICT(player1_id, player2_id) DO UPDATE SET " +
+                    "requester_id = excluded.requester_id, " +
+                    "status = excluded.status, " +
+                    "request_sent_time = excluded.request_sent_time, " +
+                    "friend_since = excluded.friend_since, " +
+                    "is_favourite = excluded.is_favourite;";
+
+    public static final String TABLE_FRIENDSHIPS_SELECT =
+            "SELECT * FROM friendships WHERE player1_id = ? OR player2_id = ?";
 }

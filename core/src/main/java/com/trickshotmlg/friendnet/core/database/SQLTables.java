@@ -16,13 +16,26 @@ public class SQLTables {
 
     public static final String TABLE_CREATE_FRIENDSHIPS =
             "CREATE TABLE IF NOT EXISTS friendships (" +
-            "player_id UUID NOT NULL, " +                  // first player
-            "friend_id UUID NOT NULL, " +                // second player
-            "friend_since TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +  // when friendship started
-            "status VARCHAR(10) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'blocked')), " +
-            "is_favourite BOOLEAN DEFAULT FALSE, " +    // example setting
-            "PRIMARY KEY (player_id, friend_id), " +
-            "FOREIGN KEY (player_id) REFERENCES players(player_id), " +
-            "FOREIGN KEY (friend_id) REFERENCES players(player_id)" +
+            "player1_id UUID NOT NULL, " +
+            "player2_id UUID NOT NULL, " +
+            "requester_id UUID NOT NULL, " +
+            "status VARCHAR(10) NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Accepted')), " +
+            "request_sent_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+            "friend_since TIMESTAMP DEFAULT NULL, " +
+            "is_favourite BOOLEAN DEFAULT FALSE, " +
+            "PRIMARY KEY (player1_id, player2_id), " +
+            "FOREIGN KEY (player1_id) REFERENCES players(player_id), " +
+            "FOREIGN KEY (player2_id) REFERENCES players(player_id)" +
+            "FOREIGN KEY (requester_id) REFERENCES players(player_id)" +
             ");";
+
+    public static final String TABLE_CREATE_BLOCKLIST =
+            "CREATE TABLE IF NOT EXISTS blocklist (" +
+                    "blocker_id UUID NOT NULL, " +
+                    "blocked_id UUID NOT NULL, " +
+                    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
+                    "PRIMARY KEY (blocker_id, blocked_id), " +
+                    "FOREIGN KEY (blocker_id) REFERENCES players(player_id), " +
+                    "FOREIGN KEY (blocked_id) REFERENCES players(player_id)" +
+                    ");";
 }

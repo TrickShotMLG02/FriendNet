@@ -29,6 +29,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
         Logger.debug("Registered Command: " + this);
     }
 
+    public JavaPlugin getPlugin() { return plugin; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public String getUsage() { return usage; }

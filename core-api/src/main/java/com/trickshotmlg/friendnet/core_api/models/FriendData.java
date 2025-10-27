@@ -1,8 +1,10 @@
 package com.trickshotmlg.friendnet.core_api.models;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import com.trickshotmlg.friendnet.core_api.enums.FriendshipType;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Represents the friend data of a single player.
@@ -18,19 +20,7 @@ public class FriendData {
      */
     private final UUID playerId;
 
-    /**
-     * The set of UUIDs representing the player's friends.
-     * <p>
-     * Duplicate entries are not allowed. Modifications should be done via
-     * {@link #addFriend(UUID)} and {@link #removeFriend(UUID)}.
-     * </p>
-     */
-    private final Set<UUID> friends = new HashSet<>();
-
-    /**
-     * Whether the player is currently online.
-     */
-    private boolean online;
+    private final Set<FriendshipData> friends = Set.of();
 
     /**
      * Creates a new {@link FriendData} instance for the specified player.
@@ -50,36 +40,10 @@ public class FriendData {
         return playerId;
     }
 
-    /**
-     * Returns the set of friends of this player.
-     * <p>
-     * Note: Modifying the returned set directly is allowed but not
-     * recommended. Prefer using {@link #addFriend(UUID)} and
-     * {@link #removeFriend(UUID)} for consistency.
-     * </p>
-     *
-     * @return a {@link Set} of UUIDs representing the player's friends
-     */
     public Set<UUID> getFriends() {
-        return friends;
-    }
-
-    /**
-     * Returns whether the player is currently online.
-     *
-     * @return {@code true} if the player is online, {@code false} otherwise
-     */
-    public boolean isOnline() {
-        return online;
-    }
-
-    /**
-     * Sets the player's online status.
-     *
-     * @param online {@code true} to mark the player as online, {@code false} to mark offline
-     */
-    public void setOnline(boolean online) {
-        this.online = online;
+        Set<UUID> p1 = friends.stream().map(fd -> fd.getPlayer1Id()).collect(Collectors.toSet());
+        p1.addAll(friends.stream().map(fd -> fd.getPlayer2Id()).collect(Collectors.toSet()));
+        return p1;
     }
 
     /**
@@ -90,8 +54,10 @@ public class FriendData {
      *
      * @param friendId the UUID of the friend to add
      */
-    public void addFriend(UUID friendId) {
-        friends.add(friendId);
+    public void addFriend(UUID friendId, FriendshipType type) {
+        //friends.computeIfAbsent(friendId, k -> Set.of());
+        //friends.get(friendId)
+        //friends.add(friendId);
     }
 
     /**

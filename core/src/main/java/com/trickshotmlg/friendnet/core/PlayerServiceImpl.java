@@ -45,6 +45,15 @@ public class PlayerServiceImpl implements PlayerService {
      * @return
      */
     @Override
+    public boolean isOnline(UUID playerId) {
+        return players.containsKey(playerId) && getPlayerData(playerId).isShowOnlineStatus();
+    }
+
+    /**
+     * @param playerId
+     * @return
+     */
+    @Override
     public PlayerData getPlayerData(UUID playerId) {
         return players.get(playerId);
     }

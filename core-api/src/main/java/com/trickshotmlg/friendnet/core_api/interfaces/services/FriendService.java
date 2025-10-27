@@ -24,7 +24,9 @@ public interface FriendService {
      * @param player the UUID of the player who is adding a friend
      * @param target the UUID of the player to be added as a friend
      */
-    void addFriend(UUID player, UUID target);
+    void acceptFriendRequest(UUID player, UUID requester);
+
+    void sendFriendRequest(UUID player, UUID target);
 
     /**
      * Removes a player from another player's friend list.
@@ -50,6 +52,8 @@ public interface FriendService {
      */
     boolean areFriends(UUID player, UUID target);
 
+    boolean requestPending(UUID player, UUID target);
+
     /**
      * Retrieves all friends of a given player.
      *
@@ -58,28 +62,4 @@ public interface FriendService {
      *         returns an empty set if the player has no friends
      */
     Set<UUID> getFriends(UUID player);
-
-    /**
-     * Sets a player's online status.
-     * <p>
-     * This method can be called when a player joins or leaves a server,
-     * or in cross-server implementations when their status changes.
-     * </p>
-     *
-     * @param player the UUID of the player to update
-     * @param online {@code true} to mark the player as online, {@code false} to mark them offline
-     */
-    void setOnline(UUID player, boolean online);
-
-    /**
-     * Checks if a player is currently online.
-     * <p>
-     * Online status can be tracked locally or synchronized across servers
-     * in a distributed setup.
-     * </p>
-     *
-     * @param player the UUID of the player to check
-     * @return {@code true} if the player is online, {@code false} otherwise
-     */
-    boolean isOnline(UUID player);
 }

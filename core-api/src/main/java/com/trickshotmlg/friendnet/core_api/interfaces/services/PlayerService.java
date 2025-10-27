@@ -17,6 +17,8 @@ public interface PlayerService {
 
     public Timestamp getLastSeen(UUID playerId);
 
+    public boolean isOnline(UUID playerId);
+
     public PlayerData getPlayerData(UUID playerId);
 
     public boolean putPlayerData(PlayerData playerData);
