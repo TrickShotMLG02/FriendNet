@@ -263,7 +263,17 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void delete(PlayerData entity) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
+
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_DELETE)){
+                ps.setObject(1, entity.getPlayerId());
+                ps.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            Logger.error("Could not delete PlayerData: " + entity, e);
+        }
     }
 
     /**
