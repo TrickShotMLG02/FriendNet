@@ -129,4 +129,29 @@ public final class SpigotUtils {
         }
         return glass;
     }
+
+    public static ItemStack createItem(Material material, String displayName) {
+        return createItem(material, displayName, null, 1);
+    }
+
+    public static ItemStack createItem(Material material, String displayName, List<String> lore) {
+        return createItem(material, displayName, lore, 1);
+    }
+
+    public static ItemStack createItem(Material material, String displayName, List<String> lore, int amount) {
+        ItemStack item = new ItemStack(material, amount);
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return item;
+
+        if (displayName != null && !displayName.isEmpty()) {
+            meta.setDisplayName(displayName);
+        }
+
+        if (lore != null && !lore.isEmpty()) {
+            meta.setLore(lore);
+        }
+
+        item.setItemMeta(meta);
+        return item;
+    }
 }
