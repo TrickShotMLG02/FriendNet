@@ -26,9 +26,8 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public boolean acceptFriendRequest(UUID player, UUID requester) {
-        // TODO: Verify that only the target player can accept request from requester
         Optional<FriendshipData> request = getFriendshipData(player, requester);
-        if (request.isPresent() && request.get().getFriendshipStatus() == FriendshipStatus.Pending) {
+        if (request.isPresent() && request.get().getFriendshipStatus() == FriendshipStatus.Pending && request.get().getRequesterId().equals(requester)) {
             Instant now = Instant.now();
             ZonedDateTime zdt = ZonedDateTime.ofInstant(now, ZoneId.of("UTC"));
             Timestamp friendSince = Timestamp.from(zdt.toInstant());
@@ -107,11 +106,11 @@ public class FriendServiceImpl implements FriendService {
     }
 
     @Override
-    public boolean requestPending(UUID player, UUID target) {
-        Optional<FriendshipData> friendship = getFriendshipData(player, target);
+    public boolean requestPending(UUID player, UUID requester) {
+        Optional<FriendshipData> friendship = getFriendshipData(player, requester);
 
-        if (friendship.isPresent()) {
-            return friendship.get().getRequesterId().equals(player);
+        if (friendship.isPresent() && friendship.get().getFriendshipStatus() == FriendshipStatus.Pending) {
+            return friendship.get().getRequesterId().equals(requester);
         }
 
         return false;

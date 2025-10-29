@@ -84,11 +84,11 @@ public interface FriendService {
      * Checks whether there is a pending friend request between two players.
      *
      * @param player The UUID of the potential recipient of the request.
-     * @param target The UUID of the potential sender of the request.
-     * @return {@code true} if there is a pending request from {@code target} to {@code player};
+     * @param requester The UUID of the potential sender of the request.
+     * @return {@code true} if there is a pending request from {@code requester} to {@code player};
      *         {@code false} otherwise.
      */
-    boolean requestPending(UUID player, UUID target);
+    boolean requestPending(UUID player, UUID requester);
 
     /**
      * Retrieves all confirmed friendships of a player.

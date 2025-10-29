@@ -89,8 +89,19 @@ public class FriendAddCommand extends AbstractCommand {
                     )
             );
         } else {
-            // TODO: Check if player sent the request or if target sent the request to the player
-            MessageManager.send(sender, "friendRequest.send.sender.alreadyPending", Map.of("target", target.getName()));
+            // CODE COPIED! from FriendAcceptCommand.java
+            if (fs.requestPending(player.getUniqueId(), target.getUniqueId())) {
+                success = fs.acceptFriendRequest(player.getUniqueId(), target.getUniqueId());
+
+                if (success) {
+                    MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", target.getName()));
+                    MessageManager.send(target, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
+                } else {
+                    MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", target.getName()));
+                }
+            } else {
+                MessageManager.send(sender, "friendRequest.send.sender.alreadyPending", Map.of("target", target.getName()));
+            }
         }
 
         return true;
