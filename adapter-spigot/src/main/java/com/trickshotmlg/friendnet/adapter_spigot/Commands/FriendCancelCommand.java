@@ -2,7 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
-import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
+import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.Bukkit;
@@ -23,7 +23,7 @@ public class FriendCancelCommand extends AbstractCommand{
                 "cancel",
                 "Cancel a friend request sent to a player",
                 "/friend cancel <player>",
-                FriendNetPermissions.FRIEND_CANCEL
+                PermissionHolder.FRIEND_REQUESTS_CANCEL
         );
     }
 

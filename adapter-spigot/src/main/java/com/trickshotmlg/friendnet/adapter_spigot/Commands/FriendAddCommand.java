@@ -2,7 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
-import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
+import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -22,7 +22,7 @@ public class FriendAddCommand extends AbstractCommand {
                 "add",
                 "Send a friend request to a player",
                 "/friend add <player>",
-                FriendNetPermissions.FRIEND_ADD
+                PermissionHolder.FRIEND_ADD
         );
     }
 

@@ -1,11 +1,14 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core_api.interfaces.PermissionNode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
@@ -14,13 +17,13 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
     private final JavaPlugin plugin;
     private final String name;
-    private final String permission;
+    private final PermissionNode permission;
     private final String description;
     private final String usage;
     private final Map<String, AbstractCommand> subCommands = new HashMap<>();
     private AbstractCommand parent; // for permission inheritance
 
-    protected AbstractCommand(JavaPlugin plugin, String name, String description, String usage, String permission) {
+    protected AbstractCommand(JavaPlugin plugin, String name, String description, String usage, PermissionNode permission) {
         this.plugin = plugin;
         this.name = name;
         this.description = description;
@@ -34,7 +37,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
     public String getName() { return name; }
     public String getDescription() { return description; }
     public String getUsage() { return usage; }
-    public String getPermission() { return permission; }
+    public PermissionNode getPermission() { return permission; }
 
     public AbstractCommand getParent() { return parent; }
     public void setParent(AbstractCommand parent) { this.parent = parent; }
@@ -99,12 +102,14 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
     }
 
     private boolean hasPermission(CommandSender sender) {
-        String effectivePermission = getEffectivePermission();
-        return effectivePermission == null || sender.hasPermission(effectivePermission);
+        Player player = sender instanceof Player p ? p : null;
+
+        SpigotPlayer spigotPlayer = new SpigotPlayer(player);
+        return permission.has(spigotPlayer);
     }
 
     private String getEffectivePermission() {
-        if (permission != null && !permission.isEmpty()) return permission;
+        if (permission != null && !permission.getPermission().isEmpty()) return permission.getPermissionPrefixed();
         if (parent != null) return parent.getEffectivePermission();
         return null;
     }

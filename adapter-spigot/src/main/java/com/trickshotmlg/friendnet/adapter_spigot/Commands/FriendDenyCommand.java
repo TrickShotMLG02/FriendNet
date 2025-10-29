@@ -2,8 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
-import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
-import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
+import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.Bukkit;
@@ -13,7 +12,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public class FriendDenyCommand extends AbstractCommand{
@@ -24,7 +22,7 @@ public class FriendDenyCommand extends AbstractCommand{
                 "deny",
                 "Deny a friend request from a player",
                 "/friend deny <player>",
-                FriendNetPermissions.FRIEND_DENY
+                PermissionHolder.FRIEND_REQUESTS_DENY
         );
     }
 

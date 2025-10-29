@@ -2,7 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
-import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
+import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.Bukkit;
@@ -23,7 +23,7 @@ public class FriendRemoveCommand extends AbstractCommand{
                 "remove",
                 "Remove an existing friend",
                 "/friend remove <player>",
-                FriendNetPermissions.FRIEND_REMOVE
+                PermissionHolder.FRIEND_REMOVE
         );
     }
 
