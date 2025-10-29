@@ -64,7 +64,7 @@ public class FriendCancelCommand extends AbstractCommand{
         if (args.length == 1 && sender instanceof Player player) {
             FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
             FriendService fs = pl.getFriendService();
-            Set<FriendshipData> requests = fs.getPendingRequests(player.getUniqueId());
+            Set<FriendshipData> requests = fs.getSentRequests(player.getUniqueId());
 
             //TODO: Fix this to actually use the requests sent by player!
             return requests.stream()

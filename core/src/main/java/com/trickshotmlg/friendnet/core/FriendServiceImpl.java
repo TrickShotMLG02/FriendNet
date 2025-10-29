@@ -145,7 +145,6 @@ public class FriendServiceImpl implements FriendService {
     public Set<FriendshipData> getSentRequests(UUID player) {
         List<FriendshipData> requests = friends.stream()
             .filter(f ->
-                    f.getPlayerIds().contains(player) &&
                     f.getRequesterId().equals(player) &&
                     f.getFriendshipStatus() == FriendshipStatus.Pending
             )
