@@ -25,7 +25,7 @@ public class SQLTables {
             "is_favourite BOOLEAN DEFAULT FALSE, " +
             "PRIMARY KEY (player1_id, player2_id), " +
             "FOREIGN KEY (player1_id) REFERENCES players(player_id), " +
-            "FOREIGN KEY (player2_id) REFERENCES players(player_id)" +
+            "FOREIGN KEY (player2_id) REFERENCES players(player_id), " +
             "FOREIGN KEY (requester_id) REFERENCES players(player_id)" +
             ");";
 
