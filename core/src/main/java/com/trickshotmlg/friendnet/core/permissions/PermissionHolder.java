@@ -7,18 +7,18 @@ public class PermissionHolder {
     ///////////////////////////////////////////
     public static final Permission FRIENDS_ADMIN = new Permission("admin", null);
 
-    public static final Permission FRIENDS_RELOAD = new Permission("reload", FRIENDS_ADMIN);
+    public static final Permission FRIENDS_RELOAD = new Permission("reload", FRIENDS_ADMIN, false);
 
 
     ///////////////////////////////////////////
     ///         BASIC PERMISSIONS           ///
     ///////////////////////////////////////////
-    public static final Permission FRIENDS_BASIC = new Permission("basic", FRIENDS_ADMIN);
+    public static final Permission FRIENDS_BASIC = new Permission("basic", FRIENDS_ADMIN, false);
 
     // Friends
-    public static final Permission FRIEND_LIST = new Permission("friends.list", FRIENDS_BASIC);
-    public static final Permission FRIEND_ADD = new Permission("friends.add", FRIENDS_BASIC);
-    public static final Permission FRIEND_REMOVE = new Permission("friends.remove", FRIENDS_BASIC);
+    public static final Permission FRIEND_LIST = new Permission("friends.list", FRIENDS_BASIC, false);
+    public static final Permission FRIEND_ADD = new Permission("friends.add", FRIENDS_BASIC, false);
+    public static final Permission FRIEND_REMOVE = new Permission("friends.remove", FRIENDS_BASIC, false);
 
     // Requests
     public static final Permission FRIEND_REQUESTS = new Permission("friends.requests", FRIENDS_BASIC, false);
