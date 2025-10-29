@@ -4,6 +4,10 @@ import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -56,8 +60,36 @@ public class FriendAddCommand extends AbstractCommand {
         FriendService fs = pl.getFriendService();
         boolean success = fs.sendFriendRequest(player.getUniqueId(), target.getUniqueId());
         if (success) {
+
+            // --- Accept button ---
+            TextComponent accept = MessageManager.createButton(
+                    "chatButtons.acceptRequestText",
+                    Map.of(),
+                    "chatButtons.acceptRequestHover",
+                    Map.of(),
+                    ClickEvent.Action.RUN_COMMAND,
+                    "/friend accept " + sender.getName()
+            );
+
+            // --- Deny button ---
+            TextComponent deny = MessageManager.createButton(
+                    "chatButtons.denyRequestText",
+                    Map.of(),
+                    "chatButtons.denyRequestHover",
+                    Map.of(),
+                    ClickEvent.Action.RUN_COMMAND,
+                    "/friend deny " + sender.getName()
+            );
+
+
             MessageManager.send(sender, "requests.notificationSentRequest", Map.of("target", target.getName()));
-            MessageManager.send(target, "requests.notificationReceivedRequest", Map.of("target", sender.getName()));
+            MessageManager.send(target, "requests.notificationReceivedRequest",
+                    Map.of(
+                            "target", sender.getName(),
+                            "acceptBtn", accept,
+                            "denyBtn", deny
+                    )
+            );
         } else {
             MessageManager.send(sender, "requests.alreadyPendingRequest", Map.of("target", target.getName()));
         }
