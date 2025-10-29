@@ -4,6 +4,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -56,6 +57,13 @@ public class FriendAddCommand extends AbstractCommand {
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
+        PlayerService ps = pl.getPlayerService();
+
+        if (!ps.getPlayerData(target.getUniqueId()).isAllowFriendRequests()) {
+            MessageManager.send(sender, "friendRequest.send.sender.disabled", Map.of("target", target.getName()));
+            return true;
+        }
+
         boolean success = fs.sendFriendRequest(player.getUniqueId(), target.getUniqueId());
         if (success) {
 

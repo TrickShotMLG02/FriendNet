@@ -29,6 +29,7 @@ friendRequest:
       success: "&aYou sent a friend request to &e%target%"
       cannotSelf: "&cYou can't send a friend request to yourself"
       alreadyPending: "&cYou already sent a friend request to &e%target%"
+      disabled: "&e%target% &chas disabled friend requests"
     target:
       success: "&aYou received a friend request from &e%sender% %acceptRequest% %denyRequest%"
       alreadyPending: "&e%sender% &chas already sent you a friend request"

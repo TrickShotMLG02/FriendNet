@@ -72,6 +72,7 @@ public class PlayerStatusListener extends AbstractListener {
         playerData.setLastSeen();
         databaseService.save(playerData);
 
+        // TODO: Remove this junk
         //friendService.acceptFriendRequest(UUID.fromString("0f8fbcdd-dd36-4409-a689-dc9fb761b55d"), spigotPlayer.getUniqueId());
 
         /*
