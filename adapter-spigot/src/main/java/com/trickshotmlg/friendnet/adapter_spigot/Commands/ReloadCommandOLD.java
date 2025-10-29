@@ -1,7 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
-import com.trickshotmlg.friendnet.core_api.constants.FriendNetPermissions;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -10,7 +9,7 @@ import org.bukkit.entity.Player;
 public class ReloadCommandOLD extends BaseCommand {
 
     public ReloadCommandOLD(FriendNetPlugin pluginInstance) {
-        super(pluginInstance, FriendNetPermissions.RELOAD);
+        super(pluginInstance, "");
     }
 
     @Override
