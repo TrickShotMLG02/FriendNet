@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.core.database;
 
+import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.enums.DatabaseType;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
@@ -8,7 +9,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.logging.Level;
 
 public class SQLiteDatabase implements Database {
 
@@ -42,9 +42,9 @@ public class SQLiteDatabase implements Database {
             connection = new SimpleDatabaseConnection(DriverManager.getConnection("jdbc:sqlite:" + sqlFile));
         }
         catch (SQLException ex) {
-            //TODO: plugin.getLogger().log(Level.SEVERE,"SQLite exception on initialize", ex);
+            Logger.error(ex.getMessage(), ex);
         } catch (ClassNotFoundException ex) {
-            //TODO: plugin.getLogger().log(Level.SEVERE, "You need the SQLite JDBC library. Google it. Put it in /lib folder.");
+            Logger.error("You need the SQLite JDBC library. Google it. Put it in /lib folder.\n" + ex.getMessage(), ex);
         }
     }
 
@@ -66,7 +66,7 @@ public class SQLiteDatabase implements Database {
             try {
                 this.sqlFile.createNewFile();
             } catch (IOException e) {
-                //TODO: plugin.getLogger().log(Level.SEVERE, "File write error: " + this.dbName + ".db");
+                Logger.error("File write error: " + this.dbName + ".db\n" + e.getMessage(), e);
             }
         }
 
@@ -80,8 +80,7 @@ public class SQLiteDatabase implements Database {
             return connection;
 
         } catch (SQLException ex) {
-            System.err.println(ex.getMessage());
-            //TODO: plugin.getLogger().log(Level.SEVERE,"SQLite exception on initialize", ex);
+            Logger.error("SQLite exception on initialize\n" + ex.getMessage(), ex);
         }
         return null;
     }

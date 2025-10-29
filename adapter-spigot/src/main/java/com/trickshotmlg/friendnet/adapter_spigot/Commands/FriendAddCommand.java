@@ -104,7 +104,6 @@ public class FriendAddCommand extends AbstractCommand {
      */
     @Override
     protected List<String> tabComplete(CommandSender sender, String[] args) {
-        // TODO: remove sender from auto-complete list
         if (args.length == 1) {
             return Bukkit.getOnlinePlayers().stream()
                     .map(Player::getName)

@@ -119,7 +119,7 @@ public final class FriendNetPlugin extends JavaPlugin {
             messagesFile = new File(getDataFolder(), "messages.yml");
             messages = YamlConfiguration.loadConfiguration(messagesFile);
 
-            //TODO:
+            //TODO: Reload listeners
             //reloadListeners();
 
             return true;

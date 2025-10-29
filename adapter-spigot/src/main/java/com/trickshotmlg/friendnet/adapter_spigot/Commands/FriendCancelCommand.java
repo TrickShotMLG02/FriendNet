@@ -66,7 +66,6 @@ public class FriendCancelCommand extends AbstractCommand{
             FriendService fs = pl.getFriendService();
             Set<FriendshipData> requests = fs.getSentRequests(player.getUniqueId());
 
-            //TODO: Fix this to actually use the requests sent by player!
             return requests.stream()
                     .map(f -> Bukkit.getOfflinePlayer(f.getOtherPlayerId(f.getRequesterId())).getName())
                     .filter(n -> n.toLowerCase().startsWith(args[0].toLowerCase()))
