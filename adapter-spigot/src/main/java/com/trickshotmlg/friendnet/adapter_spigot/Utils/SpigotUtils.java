@@ -8,6 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -153,5 +154,11 @@ public final class SpigotUtils {
 
         item.setItemMeta(meta);
         return item;
+    }
+
+    public static <T> List<T> safeSubList(List<T> list, int start, int end) {
+        if (list == null || list.isEmpty() || start >= list.size()) return Collections.emptyList();
+        end = Math.min(end, list.size());
+        return list.subList(start, end);
     }
 }

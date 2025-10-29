@@ -7,12 +7,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class FriendsGUI extends AbstractGUI {
-
+public class RequestsGUI extends AbstractGUI {
     private final List<FriendshipData> friends;
     private final List<FriendshipData> requests;
 
@@ -21,9 +19,8 @@ public class FriendsGUI extends AbstractGUI {
     private int currentPage = 0;
     private final int friendsPerPage = friendRows * 9;
 
-    public FriendsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
-        //super(plugin, player, ((friends.size() - 1) / 9 + 1) * 9, "Your Friends");
-        super(plugin, player, 9 * 6, "Your Friends");
+    public RequestsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
+        super(plugin, player, 9 * 6, "Your Pending Requests");
         this.friends = friends;
         this.requests = requests;
     }
@@ -36,11 +33,11 @@ public class FriendsGUI extends AbstractGUI {
         int startIndex = currentPage * friendsPerPage;
         int endIndex = Math.min(startIndex + friendsPerPage, friends.size());
 
-        List<FriendshipData> visibleFriends = SpigotUtils.safeSubList(friends, startIndex, endIndex);
+        List<FriendshipData> visibleRequests = SpigotUtils.safeSubList(requests, startIndex, endIndex);
 
         // Populate friends for this page
-        for (int i = 0; i < visibleFriends.size(); i++) {
-            FriendshipData friend = visibleFriends.get(i);
+        for (int i = 0; i < visibleRequests.size(); i++) {
+            FriendshipData friend = visibleRequests.get(i);
             ItemStack friendItem = createFriendItem(friend);
             List<String> lore = List.of(
                     "Status: " + friend.getFriendshipStatus(),
@@ -67,30 +64,17 @@ public class FriendsGUI extends AbstractGUI {
             //inventory.setItem(bottomRowStart + 8, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
 
-        // Block List Item
-        inventory.setItem(bottomRowStart + 3 - 9, SpigotUtils.createItem(Material.BARRIER, "§eBlocked"));
-
-        // Player Head
-        inventory.setItem(
-                bottomRowStart + 4 - 9,
-                SpigotUtils.createPlayerHead(
-                        player.getUniqueId(),
-                        player.getDisplayName(),
-                        List.of("Statistics:", "Total Friends: " + friends.size(), "Total Requests: " + requests.size())
-                )
-        );
-
-        // Pending Requests Item
-        inventory.setItem(bottomRowStart + 5 - 9, SpigotUtils.createItem(Material.BOOK, "§ePending Requests"));
-
-        // Personal Settings Item
-        inventory.setItem(bottomRowStart + 3, SpigotUtils.createItem(Material.COMPARATOR, "§eSettings"));
+        // Deny All Item
+        inventory.setItem(bottomRowStart + 3, SpigotUtils.createItem(Material.RED_WOOL, "§eDeny All"));
 
         // Page Display Item
-        inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.PAPER, "§7Page " + (currentPage + 1)));
+        //inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.PAPER, "§7Page " + (currentPage + 1)));
 
-        // Filter Item
-        inventory.setItem(bottomRowStart + 5, SpigotUtils.createItem(Material.HOPPER, "§eFilter"));
+        // Back Item
+        inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.BLACK_WOOL, "§7Back"));
+
+        // Accept All Item
+        inventory.setItem(bottomRowStart + 5, SpigotUtils.createItem(Material.LIME_WOOL, "§eAccept All"));
 
 
         // Filler for aesthetics
@@ -119,15 +103,8 @@ public class FriendsGUI extends AbstractGUI {
                 currentPage++;
                 buildInventory();
             }
-        } else if (displayName.contains("Filter")) {
-
-        } else if (displayName.contains("Settings")) {
-
-        } else if (displayName.contains("Pending Requests")) {
-
-            RequestsGUI reqGui = new RequestsGUI(plugin, player, friends, requests);
-            this.openChild(reqGui);
-
+        } else if (displayName.contains("Back")) {
+            goBack();
         } else {
             // Handle friend item clicks later (open detail GUI, etc.)
         }

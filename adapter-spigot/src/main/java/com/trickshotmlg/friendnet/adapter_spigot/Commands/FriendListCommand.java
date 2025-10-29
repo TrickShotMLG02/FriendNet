@@ -6,8 +6,6 @@ import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
-import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
