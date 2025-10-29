@@ -163,7 +163,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                             // Create FriendshipData instance
                             FriendshipData friendshipData = new FriendshipData(
                                     requesterId,
-                                    requesterId == player1Id ? player2Id : player1Id,
+                                    requesterId.equals(player1Id) ? player2Id : player1Id,
                                     friendshipType,
                                     requestSentTime,
                                     friendSince,
