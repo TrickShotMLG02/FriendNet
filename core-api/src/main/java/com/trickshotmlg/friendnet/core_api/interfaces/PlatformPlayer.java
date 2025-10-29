@@ -46,4 +46,12 @@ public interface PlatformPlayer {
      * @return {@code true} if the player is online, {@code false} otherwise
      */
     boolean isOnline();
+
+    /**
+     * Checks whether the player has a specific permission
+     *
+     * @param permission the permission to check
+     * @return {@code true} if the player has the permission, {@code false} otherwise
+     */
+    boolean hasPermission(String permission);
 }

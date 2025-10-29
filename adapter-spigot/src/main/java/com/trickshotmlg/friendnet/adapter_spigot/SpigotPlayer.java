@@ -67,4 +67,13 @@ public class SpigotPlayer implements PlatformPlayer {
     public boolean isOnline() {
         return player.isOnline();
     }
+
+    /**
+     * @param permission the permission to check
+     * @return
+     */
+    @Override
+    public boolean hasPermission(String permission) {
+        return player.hasPermission(permission);
+    }
 }
