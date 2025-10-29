@@ -244,7 +244,18 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void delete(FriendshipData entity) {
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
 
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FRIENDSHIPS_DELETE)){
+                ps.setObject(1, entity.getPlayer1Id());
+                ps.setObject(2, entity.getPlayer2Id());
+                ps.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            Logger.error("Could not delete FriendshipData: " + entity, e);
+        }
     }
 
     /**
@@ -252,7 +263,7 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void delete(PlayerData entity) {
-
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     /**

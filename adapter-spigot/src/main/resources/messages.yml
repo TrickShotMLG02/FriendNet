@@ -19,6 +19,7 @@ chatButtons:
 
 requests:
   requestAccepted: '&aYou accepted the friend request from &e%target%'
+  requestDenied: '&aYou denied the friend request from &e%target%'
   requestNotFound: '&cYou have no pending request from &e%target%'
   invalidTargetSelf: '&cYou can''t send a request to yourself'
   notificationReceivedRequest: '&aYou got a new Friend Request from &e%target% %acceptBtn% %denyBtn%'

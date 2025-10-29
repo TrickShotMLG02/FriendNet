@@ -28,6 +28,10 @@ public class SQLQueries {
     public static final String TABLE_PLAYERS_SELECT =
             "SELECT * FROM players WHERE player_id = ?";
 
+    public static final String TABLE_PLAYERS_DELETE =
+            "DELETE FROM players WHERE player_id = ?";
+
+
     public static final String TABLE_FRIENDSHIPS_UPSERT =
             "INSERT INTO friendships (" +
                     "player1_id, player2_id, requester_id, status, request_sent_time, friend_since, is_favourite) " +
@@ -41,4 +45,7 @@ public class SQLQueries {
 
     public static final String TABLE_FRIENDSHIPS_SELECT =
             "SELECT * FROM friendships WHERE player1_id = ? OR player2_id = ?";
+
+    public static final String TABLE_FRIENDSHIPS_DELETE =
+            "DELETE FROM friendships WHERE (player1_id = ? AND player2_id = ?) OR (player2_id = ? AND player1_id = ?)";
 }

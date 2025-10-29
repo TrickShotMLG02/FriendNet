@@ -40,6 +40,22 @@ public class FriendServiceImpl implements FriendService {
         return false;
     }
 
+    /**
+     * @param player    The UUID of the player denying the friend request.
+     * @param requester The UUID of the player who sent the friend request.
+     * @return
+     */
+    @Override
+    public boolean denyFriendRequest(UUID player, UUID requester) {
+        Optional<FriendshipData> request = getFriendshipData(player, requester);
+        if (request.isPresent() && request.get().getFriendshipStatus() == FriendshipStatus.Pending) {
+            friends.remove(request.get());
+            databaseService.delete(request.get());
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean sendFriendRequest(UUID player, UUID target) {
         FriendshipData request = new FriendshipData(player, target);

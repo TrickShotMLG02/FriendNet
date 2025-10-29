@@ -28,6 +28,18 @@ public interface FriendService {
     boolean acceptFriendRequest(UUID player, UUID requester);
 
     /**
+     * Denies a pending friend request from a requester to the specified player.
+     * <p>
+     * After this operation, there should be no friend request anymore.
+     *
+     * @param player    The UUID of the player denying the friend request.
+     * @param requester The UUID of the player who sent the friend request.
+     * @return
+     * @throws IllegalArgumentException if there is no pending request from {@code requester} to {@code player}.
+     */
+    boolean denyFriendRequest(UUID player, UUID requester);
+
+    /**
      * Sends a friend request from one player to another.
      * <p>
      * If a request already exists in either direction, this method may either
