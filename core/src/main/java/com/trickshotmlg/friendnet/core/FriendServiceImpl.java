@@ -26,6 +26,7 @@ public class FriendServiceImpl implements FriendService {
 
     @Override
     public boolean acceptFriendRequest(UUID player, UUID requester) {
+        // TODO: Verify that only the target player can accept request from requester
         Optional<FriendshipData> request = getFriendshipData(player, requester);
         if (request.isPresent() && request.get().getFriendshipStatus() == FriendshipStatus.Pending) {
             Instant now = Instant.now();

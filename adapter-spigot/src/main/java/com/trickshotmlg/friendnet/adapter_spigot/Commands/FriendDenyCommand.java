@@ -48,10 +48,10 @@ public class FriendDenyCommand extends AbstractCommand{
         FriendService fs = pl.getFriendService();
         boolean success = fs.denyFriendRequest(player.getUniqueId(), target.getUniqueId());
         if (success) {
-            MessageManager.send(sender, "requests.requestDenied", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", target.getName()));
         }
         else {
-            MessageManager.send(sender, "requests.requestNotFound", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friendRequest.deny.sender.notFound", Map.of("target", target.getName()));
         }
         return true;
     }

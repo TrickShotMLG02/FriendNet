@@ -50,9 +50,9 @@ public class FriendCancelCommand extends AbstractCommand{
         boolean success = fs.cancelRequest(player.getUniqueId(), target.getUniqueId());
 
         if (success) {
-            MessageManager.send(sender, "requests.cancelSuccess", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friendRequest.cancel.sender.success", Map.of("target", target.getName()));
         } else {
-            MessageManager.send(sender, "requests.cancelFail", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friendRequest.cancel.sender.notFound", Map.of("target", target.getName()));
         }
 
         return true;

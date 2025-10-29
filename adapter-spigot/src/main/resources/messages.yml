@@ -1,35 +1,73 @@
+# Global settings
 prefix: "&7[&aFriends&7]"
 
-noPermission: "&4&lYou dont have enough Permissions to execute this command"
+noPermission: "&4&lYou don't have enough Permissions to execute this command"
 commandNotFound: "&4&lThis command wasn't found"
 configReloadSuccess: "&bSuccessfully reloaded Plugin Configs"
 configReloadError: "&4Error while reloading Plugin Configs"
 
+# General command feedback
 commandFeedback:
   playersOnlyCommand: "&cOnly Players can use this command!"
   commandNotFound: "&cThis command wasn't found!"
   playerNotFound: "&cThis player wasn't found!"
   usage: "&eUsage: %usage%"
 
+# Chat button text / hover messages (reusable)
 chatButtons:
-  acceptRequestText: "&a[Accept]"
-  acceptRequestHover: "&bClick here to accept the request"
-  denyRequestText: "&c[Deny]"
-  denyRequestHover: "&bClick here to deny the request"
+  acceptRequest:
+    text: "&a[Accept]"
+    hover: "&bClick here to accept the request"
+  denyRequest:
+    text: "&c[Deny]"
+    hover: "&bClick here to deny the request"
 
-requests:
-  requestAccepted: '&aYou accepted the friend request from &e%target%'
-  requestDenied: '&aYou denied the friend request from &e%target%'
-  requestNotFound: '&cYou have no pending request from &e%target%'
-  invalidTargetSelf: '&cYou can''t send a request to yourself'
-  notificationReceivedRequest: '&aYou got a new Friend Request from &e%target% %acceptBtn% %denyBtn%'
-  notificationSentRequest: '&aYou sent &e%target% &aa Friend Request'
-  alreadyPendingRequest: '&cYou already have sent a Friend Request to &e%target%'
-  listHeader: '&aYou have pending requests from the following players:'
-  listEntry: '&e%target%'
-  cancelSuccess: '&aSuccessfully cancelled the friend request for &e%target%'
-  cancelFail: '&cThere is no pending request for &e%target% &cthat can be cancelled'
+# Friend request events
+friendRequest:
+  send:
+    sender:
+      success: "&aYou sent a friend request to &e%target%"
+      cannotSelf: "&cYou can't send a friend request to yourself"
+      alreadyPending: "&cYou already sent a friend request to &e%target%"
+    target:
+      success: "&aYou received a friend request from &e%sender% %acceptRequest% %denyRequest%"
+      alreadyPending: "&e%sender% &chas already sent you a friend request"
 
+  accept:
+    sender:
+      success: "&aYou accepted the friend request from &e%target%"
+      notFound: "&cNo pending friend request from &e%target%"
+    target:
+      success: "&e%sender% &aaccepted your friend request"
+      notFound: "&c%sender% tried to accept a request that doesn't exist"
+
+  deny:
+    sender:
+      success: "&aYou denied the friend request from &e%target%"
+      notFound: "&cNo pending friend request from &e%target%"
+    target:
+      success: "&e%sender% &adenied your friend request"
+      notFound: "&c%sender% tried to deny a request that doesn't exist"
+
+  cancel:
+    sender:
+      success: "&aYou cancelled the friend request to &e%target%"
+      notFound: "&cThe friend request to &e%target% &ccan no longer be cancelled"
+    target:
+      success: "&e%sender% &acancelled the friend request"
+      notFound: "&c%sender% tried to cancel a request that doesn't exist"
+
+# Friend management events
 friend:
-  removeSuccess: '&e%target% &bis no longer your friend'
-  removeFail: '&e%target% &cis not in your friend list'
+  remove:
+    sender:
+      success: "&e%target% &bis no longer your friend"
+      notFound: "&e%target% &cis not in your friend list"
+    target:
+      success: "&e%sender% &bremoved you from their friends list"
+      notFound: "&c%sender% tried to remove you but you are not their friend"
+
+# Friend request list display
+requestList:
+  header: "&aYou have pending friend requests from the following players:"
+  entry: "&e%target%"

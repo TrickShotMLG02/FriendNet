@@ -50,9 +50,10 @@ public class FriendAcceptCommand extends AbstractCommand {
         boolean success = fs.acceptFriendRequest(player.getUniqueId(), target.getUniqueId());
 
         if (success) {
-            MessageManager.send(sender, "requests.requestAccepted", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", target.getName()));
+            MessageManager.send(target, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
         } else {
-            MessageManager.send(sender, "requests.requestNotFound", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", target.getName()));
         }
 
         return true;

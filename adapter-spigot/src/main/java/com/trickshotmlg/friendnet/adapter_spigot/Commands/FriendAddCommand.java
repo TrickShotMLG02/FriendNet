@@ -50,7 +50,7 @@ public class FriendAddCommand extends AbstractCommand {
         }
 
         if (target.getUniqueId().equals(player.getUniqueId())) {
-            MessageManager.send(sender, "requests.invalidTargetSelf");
+            MessageManager.send(sender, "friendRequest.send.sender.cannotSelf");
             return true;
         }
 
@@ -61,9 +61,9 @@ public class FriendAddCommand extends AbstractCommand {
 
             // --- Accept button ---
             TextComponent accept = MessageManager.createButton(
-                    "chatButtons.acceptRequestText",
+                    "chatButtons.acceptRequest.text",
                     Map.of(),
-                    "chatButtons.acceptRequestHover",
+                    "chatButtons.acceptRequest.hover",
                     Map.of(),
                     ClickEvent.Action.RUN_COMMAND,
                     "/friend accept " + sender.getName()
@@ -71,25 +71,26 @@ public class FriendAddCommand extends AbstractCommand {
 
             // --- Deny button ---
             TextComponent deny = MessageManager.createButton(
-                    "chatButtons.denyRequestText",
+                    "chatButtons.denyRequest.text",
                     Map.of(),
-                    "chatButtons.denyRequestHover",
+                    "chatButtons.denyRequest.hover",
                     Map.of(),
                     ClickEvent.Action.RUN_COMMAND,
                     "/friend deny " + sender.getName()
             );
 
 
-            MessageManager.send(sender, "requests.notificationSentRequest", Map.of("target", target.getName()));
-            MessageManager.send(target, "requests.notificationReceivedRequest",
+            MessageManager.send(sender, "friendRequest.send.sender.success", Map.of("target", target.getName()));
+            MessageManager.send(target, "friendRequest.send.target.success",
                     Map.of(
-                            "target", sender.getName(),
-                            "acceptBtn", accept,
-                            "denyBtn", deny
+                            "sender", sender.getName(),
+                            "acceptRequest", accept,
+                            "denyRequest", deny
                     )
             );
         } else {
-            MessageManager.send(sender, "requests.alreadyPendingRequest", Map.of("target", target.getName()));
+            // TODO: Check if player sent the request or if target sent the request to the player
+            MessageManager.send(sender, "friendRequest.send.sender.alreadyPending", Map.of("target", target.getName()));
         }
 
         return true;

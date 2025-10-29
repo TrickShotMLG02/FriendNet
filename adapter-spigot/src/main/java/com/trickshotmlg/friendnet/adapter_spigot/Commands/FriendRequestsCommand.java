@@ -40,10 +40,10 @@ public class FriendRequestsCommand extends AbstractCommand{
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
 
-        MessageManager.send(sender, "requests.listHeader");
+        MessageManager.send(sender, "requestList.header");
 
         for (FriendshipData data : fs.getPendingRequests(((Player) sender).getUniqueId())) {
-            MessageManager.send(sender, "requests.listEntry", Map.of("target", Bukkit.getOfflinePlayer(data.getRequesterId()).getName()));
+            MessageManager.send(sender, "requestList.entry", Map.of("target", Bukkit.getOfflinePlayer(data.getRequesterId()).getName()));
         }
 
         return true;

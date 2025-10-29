@@ -51,9 +51,9 @@ public class FriendRemoveCommand extends AbstractCommand{
         boolean success = fs.removeFriend(player.getUniqueId(), target.getUniqueId());
 
         if (success) {
-            MessageManager.send(sender, "friend.removeSuccess", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friend.remove.sender.success", Map.of("target", target.getName()));
         } else {
-            MessageManager.send(sender, "friend.removeFail", Map.of("target", target.getName()));
+            MessageManager.send(sender, "friend.remove.sender.notFound", Map.of("target", target.getName()));
         }
 
         return true;
