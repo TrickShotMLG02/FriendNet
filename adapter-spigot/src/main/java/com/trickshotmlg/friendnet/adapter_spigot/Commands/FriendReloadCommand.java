@@ -21,7 +21,15 @@ public class FriendReloadCommand extends AbstractCommand {
 
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
+
+        // TODO: Check for errors while reloading
+
+        // TODO: load config file
+
+        // Load Messages from messages.yml file
         MessageManager.loadMessages();
+
+        // TODO: Eventually reload certain listeners/commands
 
         MessageManager.send(sender, "configReloadSuccess");
         return true;
