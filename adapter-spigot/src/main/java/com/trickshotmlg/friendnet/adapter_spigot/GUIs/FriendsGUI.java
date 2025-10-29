@@ -14,16 +14,18 @@ import java.util.UUID;
 public class FriendsGUI extends AbstractGUI {
 
     private final List<FriendshipData> friends;
+    private final List<FriendshipData> requests;
 
     private final int friendRows = 4;
 
     private int currentPage = 0;
     private final int friendsPerPage = friendRows * 9;
 
-    public FriendsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends) {
+    public FriendsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
         //super(plugin, player, ((friends.size() - 1) / 9 + 1) * 9, "Your Friends");
         super(plugin, player, 9 * 6, "Your Friends");
         this.friends = friends;
+        this.requests = requests;
     }
 
     @Override
@@ -65,15 +67,38 @@ public class FriendsGUI extends AbstractGUI {
             //inventory.setItem(bottomRowStart + 8, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
 
+        // Block List Item
+        inventory.setItem(bottomRowStart + 3 - 9, SpigotUtils.createItem(Material.BARRIER, "§eBlocked"));
+
+        // Player Head
+        inventory.setItem(
+                bottomRowStart + 4 - 9,
+                SpigotUtils.createPlayerHead(
+                        player.getUniqueId(),
+                        player.getDisplayName(),
+                        List.of("Statistics:", "Total Friends: " + friends.size(), "Total Requests: " + requests.size())
+                )
+        );
+
+        // Pending Requests Item
+        inventory.setItem(bottomRowStart + 5 - 9, SpigotUtils.createItem(Material.BOOK, "§ePending Requests"));
+
+        // Personal Settings Item
+        inventory.setItem(bottomRowStart + 3, SpigotUtils.createItem(Material.COMPARATOR, "§eSettings"));
+
+        // Page Display Item
+        inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.PAPER, "§7Page " + (currentPage + 1)));
+
+        // Filter Item
+        inventory.setItem(bottomRowStart + 5, SpigotUtils.createItem(Material.HOPPER, "§eFilter"));
+
+
         // Filler for aesthetics
         for (int i = 0; i < inventory.getSize(); i++) {
             if (inventory.getItem(i) == null) {
                 inventory.setItem(i, SpigotUtils.createFillerGlass());
             }
         }
-
-        inventory.setItem(bottomRowStart + 4,
-                SpigotUtils.createItem(Material.PAPER, "§7Page " + (currentPage + 1)));
     }
 
     @Override
@@ -99,6 +124,7 @@ public class FriendsGUI extends AbstractGUI {
         }
     }
 
+    @Deprecated
     private void refreshPage() {
         buildInventory();
         player.updateInventory();

@@ -43,9 +43,10 @@ public class FriendListCommand extends AbstractCommand {
         FriendService fs = pl.getFriendService();
 
         List<FriendshipData> friends = fs.getFriendships(player.getUniqueId()).stream().toList();
+        List<FriendshipData> requests = fs.getPendingRequests(player.getUniqueId()).stream().toList();
 
         // create Friend GUI
-        FriendsGUI gui = new FriendsGUI(pl, player, friends);
+        FriendsGUI gui = new FriendsGUI(pl, player, friends, requests);
 
         gui.open();
 
