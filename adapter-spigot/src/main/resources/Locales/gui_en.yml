@@ -50,6 +50,10 @@ friendsGUI:
       displayName: "&eFilter"
       lore:
         - "&7Click to filter your friends"
+    favorites:
+      displayName: "&eFavorites"
+      lore:
+        - "&7Click to view your favorite friends"
 
   emptyListMessage: "&cYou have no friends yet!"
 
