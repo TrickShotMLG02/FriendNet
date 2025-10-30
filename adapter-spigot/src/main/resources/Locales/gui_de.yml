@@ -1,0 +1,63 @@
+# GUI Titles
+titles:
+  friendsGUI: Deine Freunde
+  friendRequestsGUI: Freundschaftsanfragen
+  friendSettingsGUI: '%target%''s Einstellungen'
+
+# Buttons / Items
+buttons:
+  close:
+    displayName: '&cSchließen'
+    lore:
+      - '&7Klicke hier, um dieses Menü zu schließen'
+  back:
+    displayName: '&eZurück'
+    lore:
+      - '&7Zurück zum vorherigen Menü'
+  favourite:
+    displayName: '&aFavorit'
+    lore:
+      - '&7Markiere diesen Freund als Favorit'
+  removeFriend:
+    displayName: '&cFreund entfernen'
+    lore:
+      - '&7Entferne diesen Spieler von deiner Freundesliste'
+  acceptRequest:
+    displayName: '&aAnnehmen'
+    lore:
+      - '&7Klicke hier, um die Freundschaftsanfrage anzunehmen'
+  denyRequest:
+    displayName: '&cAblehnen'
+    lore:
+      - '&7Klicke hier, um die Freundschaftsanfrage abzulehnen'
+
+# Friend List GUI
+friendsGUI:
+  emptyListMessage: '&cDu hast noch keine Freunde!'
+
+# Friend Requests GUI
+friendRequestsGUI:
+  emptyListMessage: '&cKeine ausstehenden Freundschaftsanfragen'
+
+# Friend Settings GUI
+friendSettingsGUI:
+  toggleFavourite:
+    'true': '&aDieser Freund ist jetzt ein Favorit'
+    'false': '&cDieser Freund ist kein Favorit mehr'
+  removeFriend:
+    confirm: '&cBist du sicher, dass du &e%target% &centfernen möchtest?'
+    success: '&e%target% &bwurde aus deinen Freunden entfernt'
+    fail: '&cFehler beim Entfernen von &e%target%'
+
+# Pagination buttons (for all GUIs)
+pagination:
+  nextPage:
+    displayName: '&aNächste Seite'
+    lore:
+      - '&7Gehe zur nächsten Seite'
+  previousPage:
+    displayName: '&aVorherige Seite'
+    lore:
+      - '&7Gehe zur vorherigen Seite'
+  pageIndicator:
+    displayName: '&7Seite %current%/%max%'
