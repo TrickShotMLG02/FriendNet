@@ -1,5 +1,7 @@
 package com.trickshotmlg.friendnet.core_api.models;
 
+import com.trickshotmlg.friendnet.core_api.enums.Locale;
+
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -19,6 +21,7 @@ public class PlayerData {
     private boolean autoAcceptFriends = false;
     private boolean friendRequestNotifications = true;
     private boolean friendListPublic = true;
+    private Locale locale = Locale.EN;
 
     public boolean isAllowFriendRequests() {
         return allowFriendRequests;
@@ -60,8 +63,13 @@ public class PlayerData {
         this.friendListPublic = friendListPublic;
     }
 
+    public Locale getLocale() {
+        return locale;
+    }
 
-
+    public void setLocale(Locale locale) {
+        this.locale = locale;
+    }
 
     /// The timestamp when the player first joined the server
     private final Timestamp firstSeen;

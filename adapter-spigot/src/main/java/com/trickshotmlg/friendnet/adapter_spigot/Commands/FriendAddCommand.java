@@ -69,6 +69,7 @@ public class FriendAddCommand extends AbstractCommand {
 
             // --- Accept button ---
             TextComponent accept = MessageManager.createButton(
+                    target.getUniqueId(),
                     "chatButtons.acceptRequest.text",
                     Map.of(),
                     "chatButtons.acceptRequest.hover",
@@ -79,6 +80,7 @@ public class FriendAddCommand extends AbstractCommand {
 
             // --- Deny button ---
             TextComponent deny = MessageManager.createButton(
+                    target.getUniqueId(),
                     "chatButtons.denyRequest.text",
                     Map.of(),
                     "chatButtons.denyRequest.hover",

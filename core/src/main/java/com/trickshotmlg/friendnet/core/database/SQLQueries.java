@@ -14,14 +14,15 @@ public class SQLQueries {
     public static final String TABLE_PLAYERS_UPSERT =
             "INSERT INTO players (" +
                     "player_id, allow_friend_requests, show_online_status, auto_accept_friends, " +
-                    "friend_request_notifications, friend_list_public, first_seen, last_seen) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
+                    "friend_request_notifications, friend_list_public, locale, first_seen, last_seen) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                     "ON CONFLICT(player_id) DO UPDATE SET " +
                     "allow_friend_requests = excluded.allow_friend_requests, " +
                     "show_online_status = excluded.show_online_status, " +
                     "auto_accept_friends = excluded.auto_accept_friends, " +
                     "friend_request_notifications = excluded.friend_request_notifications, " +
                     "friend_list_public = excluded.friend_list_public, " +
+                    "locale = excluded.locale, " +
                     "first_seen = excluded.first_seen, " +
                     "last_seen = excluded.last_seen;";
 

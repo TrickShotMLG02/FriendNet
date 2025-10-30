@@ -1,7 +1,11 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core_api.enums.Locale;
+import com.trickshotmlg.friendnet.core_api.interfaces.LocaleManager;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
@@ -36,7 +40,6 @@ public class PlayerStatusListener extends AbstractListener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
-
         // load player data
         Optional<PlayerData> pld = databaseService.find(spigotPlayer.getUniqueId(), PlayerData.class);
         if (pld.isPresent()) {
@@ -58,6 +61,19 @@ public class PlayerStatusListener extends AbstractListener {
 
         //TODO: Check if player has their status set to offline
         //friendService.setOnline(spigotPlayer.getUniqueId(), true);
+
+        // TODO: Remove this junk
+        /*
+        SpigotLocaleManager l = FriendNetPlugin.LocaleManager;
+        l.loadLocales();
+        l.setDefaultLocale(Locale.DE);
+        Player player = event.getPlayer();
+        if (player != null) {
+            UUID uuid = player.getUniqueId();
+            String m = l.getMessage(uuid, "test", "noPermission");
+            spigotPlayer.sendMessage(m);
+        }
+        */
 
         Logger.debug(spigotPlayer.getName() + " joined!");
     }

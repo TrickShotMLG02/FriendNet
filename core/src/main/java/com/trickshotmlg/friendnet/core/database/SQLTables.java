@@ -10,6 +10,7 @@ public class SQLTables {
             "auto_accept_friends BOOLEAN DEFAULT FALSE, " +
             "friend_request_notifications BOOLEAN DEFAULT TRUE, " +
             "friend_list_public BOOLEAN DEFAULT TRUE, " +
+            "locale VARCHAR(10) NOT NULL DEFAULT 'EN', " +
             "first_seen TIMESTAMP NOT NULL, " +
             "last_seen TIMESTAMP" +
             ");";

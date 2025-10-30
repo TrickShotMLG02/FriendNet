@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot;
 
 import com.trickshotmlg.friendnet.adapter_spigot.Commands.FriendCommand;
+import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.GUIListener;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotLogger;
@@ -30,6 +31,8 @@ public final class FriendNetPlugin extends JavaPlugin {
     */
 
     private static boolean DEBUG = true;
+
+    public static SpigotLocaleManager LocaleManager;
 
     private FriendService friendService;
     private PlayerService playerService;
@@ -62,6 +65,9 @@ public final class FriendNetPlugin extends JavaPlugin {
 
         createConfigWithDefaults();
         createMessagesFileWithDefaults();
+
+        LocaleManager = new SpigotLocaleManager(this);
+        LocaleManager.loadLocales();
     }
 
     private void initializeServices() {

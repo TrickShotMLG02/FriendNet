@@ -1,5 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Utils;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.core.Logger;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -9,8 +11,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -21,7 +21,9 @@ import java.util.regex.Pattern;
 
 public final class MessageManager {
 
-    private static FileConfiguration messages;
+    private static String MESSAGEFILE_TYPE = "messages";
+
+    //private static FileConfiguration messages;
     private static JavaPlugin plugin;
 
     private MessageManager() {
@@ -50,24 +52,25 @@ public final class MessageManager {
             plugin.saveResource("messages.yml", false);
         }
 
-        messages = YamlConfiguration.loadConfiguration(file);
+        //messages = YamlConfiguration.loadConfiguration(file);
         Logger.debug("Loading Messages from " + file.getName());
     }
 
     /**
      * Gets a message by key, supports nested paths like "requests.sent".
      */
-    public static String get(String key, boolean prependPrefix) {
-        if (messages == null) {
-            throw new IllegalStateException("Messages not loaded! Call MessageManager.init() first.");
+    public static String get(UUID receiverUUID, String key, boolean prependPrefix) {
+        SpigotLocaleManager lcm = FriendNetPlugin.LocaleManager;
+        if (lcm == null) {
+            throw new IllegalStateException("LocaleManager not initialized!");
         }
 
-        String msg = messages.getString(key);
+        String msg = lcm.getMessage(receiverUUID, MESSAGEFILE_TYPE, key);
         if (msg == null) {
             return ChatColor.RED + "Message not found: " + key;
         }
 
-        String prefix = messages.getString("prefix");
+        String prefix = lcm.getMessage(receiverUUID, MESSAGEFILE_TYPE, "prefix");
         if (prefix.length() > 0 && prependPrefix) {
             msg = prefix + " " + msg;
         }
@@ -77,12 +80,12 @@ public final class MessageManager {
         return msg;
     }
 
-    public static String get(String key) {
-        return get(key, true);
+    public static String get(UUID receiverUUID, String key) {
+        return get(receiverUUID, key, true);
     }
 
-    public static BaseComponent[] formatComponent(String key, Map<String, Object> placeholders, boolean prependPrefix) {
-        String raw = get(key, prependPrefix);
+    public static BaseComponent[] formatComponent(UUID receiverUUID, String key, Map<String, Object> placeholders, boolean prependPrefix) {
+        String raw = get(receiverUUID, key, prependPrefix);
 
         Pattern pattern = Pattern.compile("%([^%]+)%");
         Matcher matcher = pattern.matcher(raw);
@@ -123,8 +126,8 @@ public final class MessageManager {
         return components.toArray(new BaseComponent[0]);
     }
 
-    public static BaseComponent[] formatComponent(String key, Map<String, Object> placeholders) {
-        return formatComponent(key, placeholders, true);
+    public static BaseComponent[] formatComponent(UUID receiverUUID, String key, Map<String, Object> placeholders) {
+        return formatComponent(receiverUUID, key, placeholders, true);
     }
 
     private static net.md_5.bungee.api.ChatColor extractLastColor(String text, net.md_5.bungee.api.ChatColor fallback) {
@@ -159,6 +162,7 @@ public final class MessageManager {
      * @param value           Value for click action (command, URL, etc.)
      */
     public static TextComponent createButton(
+            UUID receiverUUID,
             String messageKey,
             Map<String, Object> placeholders,
             String hoverMessageKey,
@@ -167,13 +171,14 @@ public final class MessageManager {
             String value
     ) {
         // format main message
-        BaseComponent[] base = MessageManager.formatComponent(messageKey, placeholders, false);
+        BaseComponent[] base = MessageManager.formatComponent(receiverUUID, messageKey, placeholders, false);
         TextComponent component = new TextComponent();
         for (BaseComponent c : base) component.addExtra(c);
 
         // set hover if provided
         if (hoverMessageKey != null) {
             BaseComponent[] hover = MessageManager.formatComponent(
+                    receiverUUID,
                     hoverMessageKey,
                     hoverPlaceholders != null ? hoverPlaceholders : Map.of(),
                     false
@@ -193,19 +198,20 @@ public final class MessageManager {
      * Shortcut for buttons without hover text.
      */
     public static TextComponent createButton(
+            UUID receiverUUID,
             String messageKey,
             Map<String, Object> placeholders,
             ClickEvent.Action action,
             String value
     ) {
-        return createButton(messageKey, placeholders, null, null, action, value);
+        return createButton(receiverUUID, messageKey, placeholders, null, null, action, value);
     }
 
     /**
      * Shortcut for buttons with no placeholders and no hover text.
      */
-    public static TextComponent createButton(String messageKey, ClickEvent.Action action, String value) {
-        return createButton(messageKey, Map.of(), null, null, action, value);
+    public static TextComponent createButton(UUID receiverUUID, String messageKey, ClickEvent.Action action, String value) {
+        return createButton(receiverUUID, messageKey, Map.of(), null, null, action, value);
     }
 
 
@@ -233,14 +239,19 @@ public final class MessageManager {
      */
     public static void send(CommandSender sender, String key, Map<String, Object> placeholders) {
         if (sender == null) return;
-        sender.spigot().sendMessage(formatComponent(key, placeholders));
+        if (sender instanceof Player player) {
+            sender.spigot().sendMessage(formatComponent(player.getUniqueId(), key, placeholders));
+        }
     }
 
     /**
      * Sends a message to a specific CommandSender without placeholders.
      */
     public static void send(CommandSender sender, String key) {
-        send(sender, key, Map.of());
+        if (sender == null) return;
+        if (sender instanceof Player player) {
+            sender.spigot().sendMessage(formatComponent(player.getUniqueId(), key, Map.of()));
+        }
     }
 
     /**
@@ -249,7 +260,7 @@ public final class MessageManager {
      */
     public static void send(Player player, String key, Map<String, Object> placeholders) {
         if (player != null && player.isOnline()) {
-            player.spigot().sendMessage(formatComponent(key, placeholders));
+            player.spigot().sendMessage(formatComponent(player.getUniqueId(), key, placeholders));
         }
     }
 
