@@ -1,5 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.Material;
@@ -20,7 +22,16 @@ public class RequestsGUI extends AbstractGUI {
     private final int friendsPerPage = friendRows * 9;
 
     public RequestsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
-        super(plugin, player, 9 * 6, "Your Pending Requests");
+        super(
+                plugin,
+                player,
+                9 * 6,
+                FriendNetPlugin.LocaleManager.getMessage(
+                        player.getUniqueId(),
+                        "gui",
+                        "titles.friendRequestsGUI"
+                )
+        );
         this.friends = friends;
         this.requests = requests;
     }
@@ -58,7 +69,7 @@ public class RequestsGUI extends AbstractGUI {
         }
 
         // Next page
-        if (endIndex < friends.size()) {
+        if (endIndex < requests.size()) {
             inventory.setItem(bottomRowStart + 8, SpigotUtils.createItem(org.bukkit.Material.ARROW, "§eNext Page"));
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==";
             //inventory.setItem(bottomRowStart + 8, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));

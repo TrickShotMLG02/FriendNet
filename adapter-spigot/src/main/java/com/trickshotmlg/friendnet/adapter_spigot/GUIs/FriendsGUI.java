@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.Material;
@@ -7,8 +8,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class FriendsGUI extends AbstractGUI {
@@ -55,42 +56,139 @@ public class FriendsGUI extends AbstractGUI {
 
         // Previous page
         if (currentPage > 0) {
-            inventory.setItem(bottomRowStart, SpigotUtils.createItem(org.bukkit.Material.ARROW, "§ePrevious Page"));
+            String displayName = FriendNetPlugin.LocaleManager.getMessage(
+                    player.getUniqueId(),
+                    "gui",
+                    "pagination.previousPage.displayName"
+            );
+            List<String> lore = SpigotUtils.parseStringList(
+                    FriendNetPlugin.LocaleManager.getMessage(
+                            player.getUniqueId(),
+                            "gui",
+                            "pagination.previousPage.lore"
+                    )
+            );
+
+            inventory.setItem(bottomRowStart, SpigotUtils.createItem(org.bukkit.Material.ARROW, displayName, lore));
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmVkOWQ1YzJiNDgwNzA1OGQ5ODdjNmUxZDYzMDBhMWNjNGI5ZWVlN2IxNmYxZjBhY2FjMTRmZmNkMWE5Njk5ZiJ9fX0=";
             //inventory.setItem(bottomRowStart, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
 
         // Next page
         if (endIndex < friends.size()) {
-            inventory.setItem(bottomRowStart + 8, SpigotUtils.createItem(org.bukkit.Material.ARROW, "§eNext Page"));
+            String displayName = FriendNetPlugin.LocaleManager.getMessage(
+                    player.getUniqueId(),
+                    "gui",
+                    "pagination.nextPage.displayName"
+            );
+            List<String> lore = SpigotUtils.parseStringList(
+                    FriendNetPlugin.LocaleManager.getMessage(
+                            player.getUniqueId(),
+                            "gui",
+                            "pagination.nextPage.lore"
+                    )
+            );
+
+            inventory.setItem(bottomRowStart + 8, SpigotUtils.createItem(org.bukkit.Material.ARROW, displayName, lore));
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==";
             //inventory.setItem(bottomRowStart + 8, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
 
         // Block List Item
-        inventory.setItem(bottomRowStart + 3 - 9, SpigotUtils.createItem(Material.BARRIER, "§eBlocked"));
+        {
+            String displayName = FriendNetPlugin.LocaleManager.getMessage(
+                    player.getUniqueId(),
+                    "gui",
+                    "friendsGUI.buttons.blocklist.displayName"
+            );
+            List<String> lore = SpigotUtils.parseStringList(
+                    FriendNetPlugin.LocaleManager.getMessage(
+                            player.getUniqueId(),
+                            "gui",
+                            "friendsGUI.buttons.blocklist.lore"
+                    )
+            );
+
+            inventory.setItem(bottomRowStart + 3 - 9, SpigotUtils.createItem(Material.BARRIER, displayName, lore));
+        }
 
         // Player Head
-        inventory.setItem(
-                bottomRowStart + 4 - 9,
-                SpigotUtils.createPlayerHead(
-                        player.getUniqueId(),
-                        player.getDisplayName(),
-                        List.of("Statistics:", "Total Friends: " + friends.size(), "Total Requests: " + requests.size())
-                )
-        );
+        {
+            inventory.setItem(
+                    bottomRowStart + 4 - 9,
+                    SpigotUtils.createPlayerHead(
+                            player.getUniqueId(),
+                            player.getDisplayName(),
+                            List.of("Statistics:", "Total Friends: " + friends.size(), "Total Requests: " + requests.size())
+                    )
+            );
+        }
 
         // Pending Requests Item
-        inventory.setItem(bottomRowStart + 5 - 9, SpigotUtils.createItem(Material.BOOK, "§ePending Requests"));
+        {
+            String displayName = FriendNetPlugin.LocaleManager.getMessage(
+                    player.getUniqueId(),
+                    "gui",
+                    "friendsGUI.buttons.requests.displayName"
+            );
+            List<String> lore = SpigotUtils.parseStringList(
+                    FriendNetPlugin.LocaleManager.getMessage(
+                            player.getUniqueId(),
+                            "gui",
+                            "friendsGUI.buttons.requests.lore"
+                    )
+            );
+
+            inventory.setItem(bottomRowStart + 5 - 9, SpigotUtils.createItem(Material.BOOK, displayName, lore));
+        }
 
         // Personal Settings Item
-        inventory.setItem(bottomRowStart + 3, SpigotUtils.createItem(Material.COMPARATOR, "§eSettings"));
+        {
+            String displayName = FriendNetPlugin.LocaleManager.getMessage(
+                    player.getUniqueId(),
+                    "gui",
+                    "friendsGUI.buttons.personalSettings.displayName"
+            );
+            List<String> lore = SpigotUtils.parseStringList(
+                    FriendNetPlugin.LocaleManager.getMessage(
+                            player.getUniqueId(),
+                            "gui",
+                            "friendsGUI.buttons.personalSettings.lore"
+                    )
+            );
+
+            inventory.setItem(bottomRowStart + 3, SpigotUtils.createItem(Material.COMPARATOR, "§eSettings"));
+        }
 
         // Page Display Item
-        inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.PAPER, "§7Page " + (currentPage + 1)));
+        {
+            String displayName = FriendNetPlugin.LocaleManager.getMessage(
+                    player.getUniqueId(),
+                    "gui",
+                    "pagination.pageIndicator.displayName",
+                    Map.of("current", currentPage + 1, "max", (int) Math.ceil((float) friends.size() / (float) friendsPerPage))
+            );
+
+            inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.PAPER, displayName));
+        }
 
         // Filter Item
-        inventory.setItem(bottomRowStart + 5, SpigotUtils.createItem(Material.HOPPER, "§eFilter"));
+        {
+            String displayName = FriendNetPlugin.LocaleManager.getMessage(
+                    player.getUniqueId(),
+                    "gui",
+                    "friendsGUI.buttons.filter.displayName"
+            );
+            List<String> lore = SpigotUtils.parseStringList(
+                    FriendNetPlugin.LocaleManager.getMessage(
+                            player.getUniqueId(),
+                            "gui",
+                            "friendsGUI.buttons.filter.lore"
+                    )
+            );
+
+            inventory.setItem(bottomRowStart + 5, SpigotUtils.createItem(Material.HOPPER, displayName, lore));
+        }
 
 
         // Filler for aesthetics
@@ -105,15 +203,34 @@ public class FriendsGUI extends AbstractGUI {
     public void handleClick(Player player, int slot, ItemStack clicked) {
         if (clicked == null || !clicked.hasItemMeta()) return;
 
+        // all localized displayNames of interactable items
+        String prevPage = FriendNetPlugin.LocaleManager.getMessage(
+                player.getUniqueId(),
+                "gui",
+                "pagination.previousPage.displayName"
+        );
+
+        String nextPage = FriendNetPlugin.LocaleManager.getMessage(
+                player.getUniqueId(),
+                "gui",
+                "pagination.nextPage.displayName"
+        );
+
+        String blocklist = FriendNetPlugin.LocaleManager.getMessage(
+                player.getUniqueId(),
+                "gui",
+                "friendsGUI.buttons.blocklist.displayName"
+        );
+
         String displayName = clicked.getItemMeta().getDisplayName();
         if (displayName == null) return;
 
-        if (displayName.contains("Previous Page")) {
+        if (displayName.contains(prevPage)) {
             if (currentPage > 0) {
                 currentPage--;
                 buildInventory();
             }
-        } else if (displayName.contains("Next Page")) {
+        } else if (displayName.contains(nextPage)) {
             int maxPage = (int) Math.ceil((double) friends.size() / friendsPerPage) - 1;
             if (currentPage < maxPage) {
                 currentPage++;

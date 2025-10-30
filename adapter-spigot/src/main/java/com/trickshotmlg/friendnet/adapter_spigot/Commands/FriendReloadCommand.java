@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import org.bukkit.command.CommandSender;
@@ -26,8 +27,9 @@ public class FriendReloadCommand extends AbstractCommand {
 
         // TODO: load config file
 
-        // Load Messages from messages.yml file
-        MessageManager.loadMessages();
+        // Load Messages from messages_XX.yml file
+        FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
+        pl.reloadPluginConfigs();
 
         // TODO: Eventually reload certain listeners/commands
 

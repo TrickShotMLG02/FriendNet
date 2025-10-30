@@ -8,10 +8,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public final class SpigotUtils {
     private SpigotUtils() {
@@ -160,5 +157,43 @@ public final class SpigotUtils {
         if (list == null || list.isEmpty() || start >= list.size()) return Collections.emptyList();
         end = Math.min(end, list.size());
         return list.subList(start, end);
+    }
+
+    public static net.md_5.bungee.api.ChatColor extractLastColor(String text, net.md_5.bungee.api.ChatColor fallback) {
+        net.md_5.bungee.api.ChatColor color = fallback;
+        for (int i = 0; i < text.length() - 1; i++) {
+            char c = text.charAt(i);
+            if ((c == '§' || c == '&')) {
+                net.md_5.bungee.api.ChatColor code = net.md_5.bungee.api.ChatColor.getByChar(text.charAt(i + 1));
+                if (code != null) {
+                    if (!code.equals(net.md_5.bungee.api.ChatColor.RESET)) {
+                        color = code; // update to last color
+                    } else if (code == net.md_5.bungee.api.ChatColor.RESET) {
+                        color = net.md_5.bungee.api.ChatColor.WHITE; // reset to default
+                    }
+                }
+            }
+        }
+        return color;
+    }
+
+    public static List<String> parseStringList(String input) {
+        if (input == null || input.isEmpty()) return Collections.emptyList();
+
+        // Remove leading and trailing brackets if present
+        input = input.trim();
+        if (input.startsWith("[") && input.endsWith("]")) {
+            input = input.substring(1, input.length() - 1);
+        }
+
+        // Split by comma, preserving color codes or other formatting
+        String[] parts = input.split(",(?=(?:[^§]*§[^,]*)*$)");
+
+        List<String> result = new ArrayList<>();
+        for (String part : parts) {
+            result.add(part.trim());
+        }
+
+        return result;
     }
 }

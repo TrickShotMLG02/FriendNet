@@ -40,16 +40,16 @@ public final class MessageManager {
     }
 
     /**
-     * Loads or reloads the messages.yml file.
+     * Loads or reloads the messages_XX.yml file.
      */
     public static void loadMessages() {
         if (plugin == null) {
             throw new IllegalStateException("MessageManager not initialized! Call init() in onEnable().");
         }
 
-        File file = new File(plugin.getDataFolder(), "messages.yml");
+        File file = new File(plugin.getDataFolder(), "Locales/messages_en.yml");
         if (!file.exists()) {
-            plugin.saveResource("messages.yml", false);
+            plugin.saveResource("Locales/messages_en.yml", false);
         }
 
         //messages = YamlConfiguration.loadConfiguration(file);
@@ -99,7 +99,7 @@ public final class MessageManager {
             if (matcher.start() > lastEnd) {
                 String part = raw.substring(lastEnd, matcher.start());
                 components.addAll(Arrays.asList(TextComponent.fromLegacyText(part)));
-                lastColor = extractLastColor(part, lastColor);
+                lastColor = SpigotUtils.extractLastColor(part, lastColor);
             }
 
             String matcherKey = matcher.group(1);
@@ -128,24 +128,6 @@ public final class MessageManager {
 
     public static BaseComponent[] formatComponent(UUID receiverUUID, String key, Map<String, Object> placeholders) {
         return formatComponent(receiverUUID, key, placeholders, true);
-    }
-
-    private static net.md_5.bungee.api.ChatColor extractLastColor(String text, net.md_5.bungee.api.ChatColor fallback) {
-        net.md_5.bungee.api.ChatColor color = fallback;
-        for (int i = 0; i < text.length() - 1; i++) {
-            char c = text.charAt(i);
-            if ((c == '§' || c == '&')) {
-                net.md_5.bungee.api.ChatColor code = net.md_5.bungee.api.ChatColor.getByChar(text.charAt(i + 1));
-                if (code != null) {
-                    if (!code.equals(net.md_5.bungee.api.ChatColor.RESET)) {
-                        color = code; // update to last color
-                    } else if (code == net.md_5.bungee.api.ChatColor.RESET) {
-                        color = net.md_5.bungee.api.ChatColor.WHITE; // reset to default
-                    }
-                }
-            }
-        }
-        return color;
     }
 
 

@@ -8,6 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Optional;
 
 public class SpigotConfig implements AbstractConfig {
@@ -36,8 +37,10 @@ public class SpigotConfig implements AbstractConfig {
         try {
             file = new File(plugin.getDataFolder(), fileName);
 
+            // Only load if the file exists
             if (!file.exists()) {
-                plugin.saveResource(fileName, false);
+                Logger.warn("Config file not found: " + fileName);
+                return false;
             }
 
             config = YamlConfiguration.loadConfiguration(file);
@@ -67,12 +70,36 @@ public class SpigotConfig implements AbstractConfig {
 
     @Override
     public boolean reset() {
-        return false;
+        throw new UnsupportedOperationException("Not implemented");
+        //return false;
     }
 
     @Override
     public boolean initDefaults() {
-        return false;
+        file = new File(plugin.getDataFolder(), fileName);
+
+        // check if file and directories exist
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            plugin.saveResource(fileName, false);
+        }
+
+        if (!load()) {
+            Logger.error("Failed to load messages file after creating defaults.", null);
+            return false;
+        }
+
+        // Apply defaults from JAR
+        try (InputStreamReader reader = new InputStreamReader(plugin.getResource(fileName), "UTF-8")) {
+            YamlConfiguration defaults = YamlConfiguration.loadConfiguration(reader);
+            config.setDefaults(defaults);
+            config.options().copyDefaults(true);
+            config.save(file);
+            return true;
+        } catch (IOException e) {
+            Logger.error("Failed to apply defaults to messages file.", e);
+            return false;
+        }
     }
 
     @Override

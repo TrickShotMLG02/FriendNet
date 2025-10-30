@@ -40,11 +40,8 @@ public final class FriendNetPlugin extends JavaPlugin {
     private Platform platform;
 
     public FileConfiguration config = this.getConfig();
-    public FileConfiguration messages;
     File defaultConfigFile;
-    File defaultMessagesFile;
     File configFile;
-    File messagesFile;
 
     @Override
     public void onEnable() {
@@ -64,7 +61,6 @@ public final class FriendNetPlugin extends JavaPlugin {
         this.platform = new SpigotPlatform(this);
 
         createConfigWithDefaults();
-        createMessagesFileWithDefaults();
 
         LocaleManager = new SpigotLocaleManager(this);
         LocaleManager.loadLocales();
@@ -124,8 +120,8 @@ public final class FriendNetPlugin extends JavaPlugin {
             super.reloadConfig();
             config = getConfig();
 
-            messagesFile = new File(getDataFolder(), "messages.yml");
-            messages = YamlConfiguration.loadConfiguration(messagesFile);
+            // load locales from disk
+            LocaleManager.loadLocales();
 
             //TODO: Reload listeners
             //reloadListeners();
@@ -134,40 +130,6 @@ public final class FriendNetPlugin extends JavaPlugin {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
-        }
-    }
-
-    public void createMessagesFileWithDefaults() {
-        //Create file
-        defaultMessagesFile = new File(getDataFolder(), "messages.yml");
-        if (!defaultMessagesFile.exists()) {
-            defaultMessagesFile.getParentFile().mkdirs();
-            saveResource("messages.yml", false);
-        }
-
-        messages = new YamlConfiguration();
-        try {
-            messages.load(defaultMessagesFile);
-        } catch (IOException | InvalidConfigurationException e) {
-            e.printStackTrace();
-        }
-
-        //Fix config
-        messages.options().copyDefaults(true);
-        messagesFile = new File(getDataFolder(), "messages.yml");
-
-        InputStreamReader defMessagesStream;
-        try {
-            defMessagesStream = new InputStreamReader(this.getResource("messages.yml"), "UTF8");
-            YamlConfiguration defMessages = YamlConfiguration.loadConfiguration(defMessagesStream);
-            messages.setDefaults(defMessages);
-            messages.save(messagesFile);
-
-            messagesFile = new File(getDataFolder(), "messages.yml");
-            messages = YamlConfiguration.loadConfiguration(messagesFile);
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

@@ -7,7 +7,12 @@ import com.trickshotmlg.friendnet.core_api.interfaces.LocaleManager;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 public class SpigotLocaleManager implements LocaleManager {
 
@@ -46,6 +51,34 @@ public class SpigotLocaleManager implements LocaleManager {
         return playerData.getLocale();
     }
 
+    public File[] getLocaleFilesFromJar() {
+        List<File> files = new ArrayList<>();
+
+        try {
+            URL jarUrl = getClass().getProtectionDomain().getCodeSource().getLocation();
+            File jarFile = new File(jarUrl.toURI());
+
+            try (JarFile jar = new JarFile(jarFile)) {
+                Enumeration<JarEntry> entries = jar.entries();
+
+                while (entries.hasMoreElements()) {
+                    JarEntry entry = entries.nextElement();
+                    String name = entry.getName();
+
+                    if (!entry.isDirectory() && name.startsWith("Locales/") && name.endsWith(".yml")) {
+                        // Create a File object pointing to where it would exist in the data folder
+                        File file = new File(plugin.getDataFolder(), name);
+                        files.add(file);
+                    }
+                }
+            }
+        } catch (IOException | URISyntaxException e) {
+            e.printStackTrace();
+        }
+
+        return files.toArray(new File[0]);
+    }
+
     @Override
     public void loadLocales() {
         configs.clear();
@@ -56,7 +89,9 @@ public class SpigotLocaleManager implements LocaleManager {
             return;
         }
 
-        File[] files = localesDir.listFiles((dir, name) -> name.endsWith(".yml"));
+        //File[] files = localesDir.listFiles((dir, name) -> name.endsWith(".yml"));
+        File[] jarFiles = getLocaleFilesFromJar();
+        File[] files = Arrays.stream(jarFiles).filter(f -> f.getName().endsWith(".yml")).toArray(File[]::new);
         if (files == null) return;
 
         for (File file : files) {
@@ -80,7 +115,7 @@ public class SpigotLocaleManager implements LocaleManager {
             // Create AbstractConfig instance for this file (assuming a concrete implementation exists)
             String relativeFilePath = plugin.getDataFolder().toPath().relativize(file.toPath()).toString().replace("\\", "/");
             AbstractConfig config = new SpigotConfig(plugin, relativeFilePath); // your concrete implementation
-            config.load();
+            config.initDefaults();
 
             configs.computeIfAbsent(type, t -> new HashMap<>()).put(locale, config);
         }
@@ -92,6 +127,22 @@ public class SpigotLocaleManager implements LocaleManager {
         return getMessage(locale, type, path);
     }
 
+    public String getMessage(UUID playerId, String type, String path, Map<String, Object> placeholders) {
+        String message = getMessage(playerId, type, path);
+
+        for (Map.Entry<String, Object> entry : placeholders.entrySet()) {
+            message = message.replace("%" + entry.getKey() + "%", entry.getValue().toString());
+        }
+        return message;
+    }
+
+    /**
+     * Returns the Color Code Formatted message in a specific locale from a key in a message file
+     * @param locale
+     * @param type
+     * @param path
+     * @return
+     */
     private String getMessage(Locale locale, String type, String path) {
         AbstractConfig config = configs.getOrDefault(type, Collections.emptyMap())
                 .getOrDefault(locale, configs.get(type).get(defaultLocale));
@@ -101,6 +152,8 @@ public class SpigotLocaleManager implements LocaleManager {
         if(!msgOpt.isPresent()) return path;
         String raw = msgOpt.get();
 
-        return raw;
+        String msg = raw.replace('&', '§');
+
+        return msg;
     }
 }

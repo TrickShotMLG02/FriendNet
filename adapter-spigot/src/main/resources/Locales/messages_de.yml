@@ -1,0 +1,80 @@
+# Global settings
+
+prefix: '&7[&aFreunde&7]'
+
+noPermission: '&4&lDu hast keine ausreichenden Berechtigungen, um diesen Befehl auszuführen'
+commandNotFound: '&4&lDieser Befehl wurde nicht gefunden'
+configReloadSuccess: '&bPlugin-Konfigurationen wurden erfolgreich neu geladen'
+configReloadError: '&4Fehler beim Neuladen der Plugin-Konfigurationen'
+
+# General command feedback
+
+commandFeedback:
+  playersOnlyCommand: '&cNur Spieler können diesen Befehl benutzen!'
+  commandNotFound: '&cDieser Befehl wurde nicht gefunden!'
+  playerNotFound: '&cDieser Spieler wurde nicht gefunden!'
+  usage: '&eVerwendung: %usage%'
+
+# Chat button text / hover messages (reusable)
+
+chatButtons:
+  acceptRequest:
+    text: '&a[Annehmen]'
+    hover: '&bKlicke hier, um die Anfrage anzunehmen'
+  denyRequest:
+    text: '&c[Ablehnen]'
+  hover: '&bKlicke hier, um die Anfrage abzulehnen'
+
+# Friend request events
+
+friendRequest:
+  send:
+    sender:
+      success: '&aDu hast eine Freundschaftsanfrage an &e%target% &agesendet'
+      cannotSelf: '&cDu kannst dir selbst keine Freundschaftsanfrage senden'
+      alreadyPending: '&cDu hast &e%target% &cbereits eine Freundschaftsanfrage gesendet'
+      disabled: '&e%target% &chat Freundschaftsanfragen deaktiviert'
+    target:
+      success: '&aDu hast eine Freundschaftsanfrage von &e%sender% &aerhalten %acceptRequest% %denyRequest%'
+      alreadyPending: '&e%sender% &chat dir bereits eine Freundschaftsanfrage gesendet'
+
+  accept:
+    sender:
+      success: '&aDu hast die Freundschaftsanfrage von &e%target% &aangenommen'
+      notFound: '&cKeine ausstehende Freundschaftsanfrage von &e%target%'
+    target:
+      success: '&e%sender% &ahat deine Freundschaftsanfrage angenommen'
+      notFound: '&c%sender% hat versucht, eine Anfrage anzunehmen, die nicht existiert'
+
+  deny:
+    sender:
+      success: '&aDu hast die Freundschaftsanfrage von &e%target% &aabgelehnt'
+      notFound: '&cKeine ausstehende Freundschaftsanfrage von &e%target%'
+    target:
+      success: '&e%sender% &ahat deine Freundschaftsanfrage abgelehnt'
+      notFound: '&c%sender% hat versucht, eine Anfrage abzulehnen, die nicht existiert'
+
+  cancel:
+    sender:
+      success: '&aDu hast die Freundschaftsanfrage an &e%target% &aabgebrochen'
+      notFound: '&cDie Freundschaftsanfrage an &e%target% &ckann nicht mehr abgebrochen werden'
+    target:
+      success: '&e%sender% &ahat die Freundschaftsanfrage abgebrochen'
+      notFound: '&c%sender% hat versucht, eine Anfrage abzubrechen, die nicht existiert'
+
+# Friend management events
+
+friend:
+  remove:
+    sender:
+      success: '&e%target% &bist nicht mehr dein Freund'
+      notFound: '&e%target% &cist nicht in deiner Freundesliste'
+    target:
+      success: '&e%sender% &bhat dich aus seiner Freundesliste entfernt'
+      notFound: '&c%sender% hat versucht, dich zu entfernen, aber du bist nicht in seiner Freundesliste'
+
+# Friend request list display
+
+requestList:
+  header: '&aDu hast ausstehende Freundschaftsanfragen von folgenden Spielern:'
+  entry: '&e%target%'

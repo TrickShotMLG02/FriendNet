@@ -1,0 +1,81 @@
+# GUI Titles
+titles:
+  friendsGUI: "Your Friends"
+  friendRequestsGUI: "Friend Requests"
+  friendSettingsGUI: "%target%'s Settings"
+
+# Buttons / Items
+buttons:
+  close:
+    displayName: "&cClose"
+    lore:
+      - "&7Click to close this menu"
+  back:
+    displayName: "&eBack"
+    lore:
+      - "&7Go back to the previous menu"
+  favourite:
+    displayName: "&aFavourite"
+    lore:
+      - "&7Toggle this friend as a favourite"
+  removeFriend:
+    displayName: "&cRemove Friend"
+    lore:
+      - "&7Remove this player from your friends list"
+  acceptRequest:
+    displayName: "&aAccept"
+    lore:
+      - "&7Click to accept the friend request"
+  denyRequest:
+    displayName: "&cDeny"
+    lore:
+      - "&7Click to deny the friend request"
+
+# Friend List GUI
+friendsGUI:
+  buttons:
+    requests:
+      displayName: "&ePending Requests"
+      lore:
+        - "&7Click to view your pending requests"
+    personalSettings:
+      displayName: "&eSettings"
+      lore:
+        - "&7Click to change your settings"
+    blocklist:
+      displayName: "&eBlocked Players"
+      lore:
+        - "&7Click to view your blocked players"
+    filter:
+      displayName: "&eFilter"
+      lore:
+        - "&7Click to filter your friends"
+
+  emptyListMessage: "&cYou have no friends yet!"
+
+# Friend Requests GUI
+friendRequestsGUI:
+  emptyListMessage: "&cNo pending friend requests"
+
+# Friend Settings GUI
+friendSettingsGUI:
+  toggleFavourite:
+    on: "&aThis friend is now a favourite"
+    off: "&cThis friend is no longer a favourite"
+  removeFriend:
+    confirm: "&cAre you sure you want to remove &e%target%&c?"
+    success: "&e%target% &bwas removed from your friends"
+    fail: "&cFailed to remove &e%target%"
+
+# Pagination buttons (for all GUIs)
+pagination:
+  nextPage:
+    displayName: "&aNext Page"
+    lore:
+      - "&7Go to the next page"
+  previousPage:
+    displayName: "&aPrevious Page"
+    lore:
+      - "&7Go to the previous page"
+  pageIndicator:
+    displayName: "&7Page %current%/%max%"
