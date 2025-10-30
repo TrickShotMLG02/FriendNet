@@ -31,7 +31,7 @@ public interface LocaleManager {
 
     /**
      * Loads all available locale files from the locales directory.
-     * Each file must be named like "en_US.yml" or "de_DE.yml".
+     * Each file must be named like "*_en.yml" or "*_de.yml".
      */
     public void loadLocales();
 

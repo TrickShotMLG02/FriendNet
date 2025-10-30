@@ -13,7 +13,7 @@ public class SpigotLocaleManager implements LocaleManager {
 
     private final FriendNetPlugin plugin;
     private Locale defaultLocale = Locale.EN;
-    private final Map<UUID, Locale> playerLocales = new HashMap<>();
+
     private Map<String, Map<Locale, AbstractConfig>> configs = new HashMap<>();
 
     public SpigotLocaleManager(FriendNetPlugin plugin) {

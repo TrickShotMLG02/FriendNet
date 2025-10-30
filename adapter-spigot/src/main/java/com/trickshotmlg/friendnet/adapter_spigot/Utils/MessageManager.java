@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 public final class MessageManager {
 
-    private static String MESSAGEFILE_TYPE = "messages";
+    private static final String MESSAGE_FILE_TYPE = "messages";
 
     //private static FileConfiguration messages;
     private static JavaPlugin plugin;
@@ -65,12 +65,12 @@ public final class MessageManager {
             throw new IllegalStateException("LocaleManager not initialized!");
         }
 
-        String msg = lcm.getMessage(receiverUUID, MESSAGEFILE_TYPE, key);
+        String msg = lcm.getMessage(receiverUUID, MESSAGE_FILE_TYPE, key);
         if (msg == null) {
             return ChatColor.RED + "Message not found: " + key;
         }
 
-        String prefix = lcm.getMessage(receiverUUID, MESSAGEFILE_TYPE, "prefix");
+        String prefix = lcm.getMessage(receiverUUID, MESSAGE_FILE_TYPE, "prefix");
         if (prefix.length() > 0 && prependPrefix) {
             msg = prefix + " " + msg;
         }
