@@ -84,6 +84,8 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
     }
 
     public List<String> handleTabComplete(CommandSender sender, String[] args) {
+
+        // TODO: only return list of commands that a player has permission for
         if (args.length == 1 && !subCommands.isEmpty()) {
             return subCommands.keySet().stream()
                     .filter(s -> s.startsWith(args[0].toLowerCase()))
@@ -123,6 +125,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
         List<String> subNames = new ArrayList<>();
         for (AbstractCommand sub : getSubCommands()) {
+            // TODO: only add if that player has permission for command
             subNames.add(sub.getName());
         }
 
