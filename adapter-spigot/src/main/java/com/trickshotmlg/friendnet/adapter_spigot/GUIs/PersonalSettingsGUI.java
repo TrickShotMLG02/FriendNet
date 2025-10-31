@@ -70,6 +70,116 @@ public class PersonalSettingsGUI extends AbstractGUI {
             ));
         }
 
+        // Show Online Status Item
+        {
+            int row = 1;
+            int col = 3;
+            int slot = 9 * row + col;
+            ItemStack showOnlineStatusItem = SpigotUtils.createItem(
+                    Material.BARRIER,
+                    player,
+                    "gui",
+                    "friendsGUI.buttons.blocklist.displayName",
+                    "friendsGUI.buttons.blocklist.lore"
+            );
+            inventory.setItem(9 * row + col, showOnlineStatusItem);
+
+            slot += 9;
+            setInteractableItem(slot, new ToggleItemStack(
+                    playerService.getPlayerData(player.getUniqueId()).isShowOnlineStatus(),
+                    player,
+                    newState -> new PlayerSettingsActions(playerService, player).setShowOnlineStatus(newState)
+            ));
+        }
+
+        // Auto Accept Friend Requests Item
+        {
+            int row = 1;
+            int col = 4;
+            int slot = 9 * row + col;
+            ItemStack autoAcceptFriendsItem = SpigotUtils.createItem(
+                    Material.BARRIER,
+                    player,
+                    "gui",
+                    "friendsGUI.buttons.blocklist.displayName",
+                    "friendsGUI.buttons.blocklist.lore"
+            );
+            inventory.setItem(9 * row + col, autoAcceptFriendsItem);
+
+            slot += 9;
+            setInteractableItem(slot, new ToggleItemStack(
+                    playerService.getPlayerData(player.getUniqueId()).isAutoAcceptFriends(),
+                    player,
+                    newState -> new PlayerSettingsActions(playerService, player).setAutoAcceptFriends(newState)
+            ));
+        }
+
+        // Friend Request Notifications Item
+        {
+            int row = 1;
+            int col = 5;
+            int slot = 9 * row + col;
+            ItemStack friendRequestNotificationsItem = SpigotUtils.createItem(
+                    Material.BARRIER,
+                    player,
+                    "gui",
+                    "friendsGUI.buttons.blocklist.displayName",
+                    "friendsGUI.buttons.blocklist.lore"
+            );
+            inventory.setItem(9 * row + col, friendRequestNotificationsItem);
+
+            slot += 9;
+            setInteractableItem(slot, new ToggleItemStack(
+                    playerService.getPlayerData(player.getUniqueId()).isFriendRequestNotifications(),
+                    player,
+                    newState -> new PlayerSettingsActions(playerService, player).setFriendRequestNotifications(newState)
+            ));
+        }
+
+        // Public Friend list Item
+        {
+            int row = 1;
+            int col = 6;
+            int slot = 9 * row + col;
+            ItemStack publicFriendListItem = SpigotUtils.createItem(
+                    Material.BARRIER,
+                    player,
+                    "gui",
+                    "friendsGUI.buttons.blocklist.displayName",
+                    "friendsGUI.buttons.blocklist.lore"
+            );
+            inventory.setItem(9 * row + col, publicFriendListItem);
+
+            slot += 9;
+            setInteractableItem(slot, new ToggleItemStack(
+                    playerService.getPlayerData(player.getUniqueId()).isFriendListPublic(),
+                    player,
+                    newState -> new PlayerSettingsActions(playerService, player).setFriendListPublic(newState)
+            ));
+        }
+
+        // Locale Selector Item
+        {
+            int row = 1;
+            int col = 7;
+            int slot = 9 * row + col;
+            ItemStack localeItem = SpigotUtils.createItem(
+                    Material.BARRIER,
+                    player,
+                    "gui",
+                    "friendsGUI.buttons.blocklist.displayName",
+                    "friendsGUI.buttons.blocklist.lore"
+            );
+            inventory.setItem(9 * row + col, localeItem);
+
+            slot += 9;
+            setInteractableItem(slot, new ActionItemStack(
+                    localeItem,
+                    player,
+                    () -> this.openChild(new LocaleSelectionGUI(plugin, player))
+            ));
+        }
+
         // Filler for aesthetics
         for (int i = 0; i < inventory.getSize(); i++) {
             if (inventory.getItem(i) == null) {
