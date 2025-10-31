@@ -81,6 +81,19 @@ public abstract class AbstractGUI {
     public abstract void handleClick(Player player, int slot, ItemStack clicked);
 
     /**
+     * Function to check if the clicked item is the same as another item
+     * @param clicked The ItemStack that was clicked
+     * @param toCheck The ItemStack that should be compared (can also be null)
+     * @return True if the items match, else false
+     */
+    protected boolean checkItemClicked(ItemStack clicked, ItemStack toCheck) {
+        if (clicked == null || toCheck == null) {
+            return false;
+        }
+        return clicked.equals(toCheck);
+    }
+
+    /**
      * Helper Function to create an ItemStack
      * @param material The material to use for the ItemStack
      * @param name The name of the Item

@@ -81,7 +81,7 @@ public class FriendsGUI extends AbstractGUI {
         // Block List Item
         {
             blocklistItem = SpigotUtils.createItem(
-                    Material.COMPARATOR,
+                    Material.BARRIER,
                     player,
                     "gui",
                     "friendsGUI.buttons.blocklist.displayName",
@@ -106,7 +106,7 @@ public class FriendsGUI extends AbstractGUI {
         // Pending Requests Item
         {
             requestsItem = SpigotUtils.createItem(
-                    Material.COMPARATOR,
+                    Material.BOOK,
                     player,
                     "gui",
                     "friendsGUI.buttons.requests.displayName",
@@ -131,7 +131,7 @@ public class FriendsGUI extends AbstractGUI {
         // Favorite Friends Item
         {
             favoritesItem = SpigotUtils.createItem(
-                    Material.COMPARATOR,
+                    Material.NETHER_STAR,
                     player,
                     "gui",
                     "friendsGUI.buttons.favorites.displayName",
@@ -150,7 +150,7 @@ public class FriendsGUI extends AbstractGUI {
         // Filter Item
         {
             filterItem = SpigotUtils.createItem(
-                    Material.COMPARATOR,
+                    Material.HOPPER,
                     player,
                     "gui",
                     "friendsGUI.buttons.filter.displayName",
@@ -171,34 +171,31 @@ public class FriendsGUI extends AbstractGUI {
 
     @Override
     public void handleClick(Player player, int slot, ItemStack clicked) {
-        if (clicked == null || !clicked.hasItemMeta()) return;
+        if (clicked == null) return;
 
-        String displayName = clicked.getItemMeta().getDisplayName();
-        if (displayName == null) return;
-
-        if (displayName.equals(prevPageItem.getItemMeta().getDisplayName())) {
+        if (checkItemClicked(clicked, prevPageItem)) {
             if (currentPage > 0) {
                 currentPage--;
                 buildInventory();
             }
         }
-        else if (displayName.equals(nextPageItem.getItemMeta().getDisplayName())) {
+        else if (checkItemClicked(clicked, nextPageItem)) {
             int maxPage = (int) Math.ceil((double) friends.size() / friendsPerPage) - 1;
             if (currentPage < maxPage) {
                 currentPage++;
                 buildInventory();
             }
         }
-        else if (displayName.contains(filterItem.getItemMeta().getDisplayName())) {
+        else if (checkItemClicked(clicked, blocklistItem)) {
 
         }
-        else if (displayName.contains(blocklistItem.getItemMeta().getDisplayName())) {
+        else if (checkItemClicked(clicked, favoritesItem)) {
 
         }
-        else if (displayName.contains(settingsItem.getItemMeta().getDisplayName())) {
+        else if (checkItemClicked(clicked, settingsItem)) {
 
         }
-        else if (displayName.contains(requestsItem.getItemMeta().getDisplayName())) {
+        else if (checkItemClicked(clicked, requestsItem)) {
             RequestsGUI reqGui = new RequestsGUI(plugin, player, friends, requests);
             this.openChild(reqGui);
         }

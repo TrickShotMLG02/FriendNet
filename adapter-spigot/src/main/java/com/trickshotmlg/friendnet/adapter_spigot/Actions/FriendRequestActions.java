@@ -54,6 +54,8 @@ public class FriendRequestActions {
         Set<FriendshipData> requests = friendService.getPendingRequests(sender.getUniqueId());
         int accepted = 0;
 
+        // TODO: send message like No pending requests
+
         for (FriendshipData r : requests) {
             OfflinePlayer target = Bukkit.getOfflinePlayer(r.getRequesterId());
 
@@ -100,6 +102,8 @@ public class FriendRequestActions {
     public int denyAllRequests(Player sender) {
         Set<FriendshipData> requests = friendService.getPendingRequests(sender.getUniqueId());
         int denied = 0;
+
+        // TODO: send message like No pending requests
 
         for (FriendshipData r : requests) {
             OfflinePlayer target = Bukkit.getOfflinePlayer(r.getRequesterId());
