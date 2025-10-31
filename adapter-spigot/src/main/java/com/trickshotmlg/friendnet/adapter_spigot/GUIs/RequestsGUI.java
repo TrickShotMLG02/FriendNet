@@ -69,7 +69,7 @@ public class RequestsGUI extends AbstractGUI {
         }
 
         // Next page
-        if (endIndex < friends.size()) {
+        if (endIndex < requests.size()) {
 
             inventory.setItem(bottomRowStart + 8, GUIUtils.CreateNextPageItem(player));
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==";
@@ -78,7 +78,7 @@ public class RequestsGUI extends AbstractGUI {
 
         // Page Display Item
         {
-            int maxPage = (int) Math.ceil((float) friends.size() / (float) friendsPerPage);
+            int maxPage = (int) Math.ceil((float) requests.size() / (float) friendsPerPage);
             inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(player, currentPage, maxPage));
         }
 
