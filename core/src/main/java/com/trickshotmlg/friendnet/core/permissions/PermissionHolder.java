@@ -27,8 +27,10 @@ public class PermissionHolder {
 
     public static final Permission FRIEND_REQUESTS_LIST = new Permission("list", FRIEND_REQUESTS);
     public static final Permission FRIEND_REQUESTS_ACCEPT = new Permission("accept", FRIEND_REQUESTS);
+    public static final Permission FRIEND_REQUESTS_ACCEPT_ALL = new Permission("acceptall", FRIEND_REQUESTS);
     public static final Permission FRIEND_REQUESTS_CANCEL = new Permission("cancel", FRIEND_REQUESTS);
     public static final Permission FRIEND_REQUESTS_DENY = new Permission("deny", FRIEND_REQUESTS);
+    public static final Permission FRIEND_REQUESTS_DENY_ALL = new Permission("denyall", FRIEND_REQUESTS);
 
     // TODO: Implement more permissions
 }

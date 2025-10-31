@@ -23,7 +23,9 @@ public class FriendCommand extends AbstractCommand {
         registerSubCommand(new FriendAddCommand(plugin));
         registerSubCommand(new FriendRemoveCommand(plugin));
         registerSubCommand(new FriendAcceptCommand(plugin));
+        registerSubCommand(new FriendAcceptAllCommand(plugin));
         registerSubCommand(new FriendDenyCommand(plugin));
+        registerSubCommand(new FriendDenyAllCommand(plugin));
         registerSubCommand(new FriendCancelCommand(plugin));
 
 
