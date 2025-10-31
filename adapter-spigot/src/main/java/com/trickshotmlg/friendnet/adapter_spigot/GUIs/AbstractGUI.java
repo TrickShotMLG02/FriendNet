@@ -126,6 +126,4 @@ public abstract class AbstractGUI {
     }
 
     public Map<Integer, InteractableItemStack> getInteractableSlots() { return interactableSlots; }
-
-    public Inventory getInventory() { return inventory; }
 }
