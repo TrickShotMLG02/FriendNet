@@ -1,10 +1,12 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.PlayerSettingsActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ToggleItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -12,17 +14,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class PersonalSettingsGUI extends AbstractGUI {
 
-    // ItemStacks that have an associated Action
-    ItemStack backItem;
-    ItemStack allowRequestsItem;
-    ItemStack onlineStatusItem;
-    ItemStack autoAcceptItem;
-    ItemStack requestNotificationsItems;
-    ItemStack friendListPublicItem;
-    ItemStack languageItem;
-
-    // Other values
     private int currentPage = 0;
+    private final PlayerService playerService;
 
     public PersonalSettingsGUI(JavaPlugin plugin, Player player) {
         super(
@@ -35,6 +28,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     "titles.friendRequestsGUI"
             )
         );
+
+        playerService = ((FriendNetPlugin) plugin).getPlayerService();
     }
 
 
@@ -57,7 +52,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
         {
             int row = 1;
             int col = 2;
-            allowRequestsItem = SpigotUtils.createItem(
+            int slot = 9 * row + col;
+            ItemStack allowRequestsItem = SpigotUtils.createItem(
                     Material.BARRIER,
                     player,
                     "gui",
@@ -65,16 +61,12 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     "friendsGUI.buttons.blocklist.lore"
             );
             inventory.setItem(9 * row + col, allowRequestsItem);
-        }
 
-        {
-            int row = 2;
-            int col = 2;
-            int slot = 9 * row + col;
-
+            slot += 9;
             setInteractableItem(slot, new ToggleItemStack(
+                    playerService.getPlayerData(player.getUniqueId()).isAllowFriendRequests(),
                     player,
-                    newState -> player.sendMessage("Toggle is now " + (newState ? "ON" : "OFF"))
+                    newState -> new PlayerSettingsActions(playerService, player).setAllowFriendRequests(newState)
             ));
         }
 
