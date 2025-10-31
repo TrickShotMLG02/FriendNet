@@ -10,7 +10,13 @@ import org.bukkit.entity.Player;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Handles all friend request actions that involve interaction between players.
+ * This class bridges between the platform-independent FriendService and
+ * Bukkit-specific messaging and player management.
+ */
 public class FriendRequestActions {
+
     private final FriendService friendService;
 
     public FriendRequestActions(FriendService friendService) {
@@ -18,10 +24,11 @@ public class FriendRequestActions {
     }
 
     /**
+     * Accepts a single pending friend request sent to the given player.
      *
-     * @param sender
-     * @param requester
-     * @return
+     * @param sender    The player accepting the request.
+     * @param requester The player who originally sent the friend request.
+     * @return {@code true} if the request was successfully accepted, {@code false} if no such request existed.
      */
     public boolean acceptRequest(Player sender, OfflinePlayer requester) {
         boolean success = friendService.acceptFriendRequest(sender.getUniqueId(), requester.getUniqueId());
@@ -37,16 +44,17 @@ public class FriendRequestActions {
     }
 
     /**
+     * Accepts all pending friend requests for a given player.
+     * Sends feedback messages for each processed request.
      *
-     * @param sender
-     * @return
+     * @param sender The player whose pending requests should be accepted.
+     * @return The number of requests successfully accepted.
      */
     public int acceptAllRequests(Player sender) {
         Set<FriendshipData> requests = friendService.getPendingRequests(sender.getUniqueId());
-
         int accepted = 0;
 
-        for(FriendshipData r : requests) {
+        for (FriendshipData r : requests) {
             OfflinePlayer target = Bukkit.getOfflinePlayer(r.getRequesterId());
 
             boolean success = friendService.acceptFriendRequest(sender.getUniqueId(), target.getUniqueId());
@@ -64,17 +72,18 @@ public class FriendRequestActions {
     }
 
     /**
+     * Denies a specific pending friend request sent to the given player.
      *
-     * @param sender
-     * @param requester
-     * @return
+     * @param sender    The player denying the request.
+     * @param requester The player who sent the friend request.
+     * @return {@code true} if the request was successfully denied, {@code false} if no such request existed.
      */
     public boolean denyRequest(Player sender, OfflinePlayer requester) {
         boolean success = friendService.denyFriendRequest(sender.getUniqueId(), requester.getUniqueId());
+
         if (success) {
             MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", requester.getName()));
-        }
-        else {
+        } else {
             MessageManager.send(sender, "friendRequest.deny.sender.notFound", Map.of("target", requester.getName()));
         }
 
@@ -82,24 +91,24 @@ public class FriendRequestActions {
     }
 
     /**
+     * Denies all pending friend requests for the given player.
+     * Sends feedback messages for each denied request.
      *
-     * @param sender
-     * @return
+     * @param sender The player whose pending requests should be denied.
+     * @return The number of requests successfully denied.
      */
     public int denyAllRequests(Player sender) {
         Set<FriendshipData> requests = friendService.getPendingRequests(sender.getUniqueId());
-
         int denied = 0;
 
-        for(FriendshipData r : requests) {
+        for (FriendshipData r : requests) {
             OfflinePlayer target = Bukkit.getOfflinePlayer(r.getRequesterId());
 
             boolean success = friendService.denyFriendRequest(sender.getUniqueId(), target.getUniqueId());
             if (success) {
                 MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", target.getName()));
                 denied++;
-            }
-            else {
+            } else {
                 MessageManager.send(sender, "friendRequest.deny.sender.notFound", Map.of("target", target.getName()));
             }
         }
@@ -108,10 +117,12 @@ public class FriendRequestActions {
     }
 
     /**
+     * Cancels a previously sent friend request.
+     * This is used when a player retracts a pending request before it is accepted or denied.
      *
-     * @param requester
-     * @param target
-     * @return
+     * @param requester The player cancelling the request.
+     * @param target    The player who received the request.
+     * @return {@code true} if the request was successfully cancelled, {@code false} if it no longer existed.
      */
     public boolean cancelRequest(Player requester, OfflinePlayer target) {
         boolean success = friendService.cancelRequest(requester.getUniqueId(), target.getUniqueId());
@@ -126,24 +137,24 @@ public class FriendRequestActions {
     }
 
     /**
+     * Cancels all friend requests previously sent by the given player.
+     * Sends feedback messages for each processed request.
      *
-     * @param sender
-     * @return
+     * @param sender The player whose outgoing friend requests should be cancelled.
+     * @return The number of requests successfully cancelled.
      */
     public int cancelAllRequests(Player sender) {
         Set<FriendshipData> requests = friendService.getSentRequests(sender.getUniqueId());
-
         int cancelled = 0;
 
-        for(FriendshipData r : requests) {
+        for (FriendshipData r : requests) {
             OfflinePlayer target = Bukkit.getOfflinePlayer(r.getRequesterId());
 
             boolean success = friendService.cancelRequest(sender.getUniqueId(), target.getUniqueId());
             if (success) {
                 MessageManager.send(sender, "friendRequest.cancel.sender.success", Map.of("target", target.getName()));
                 cancelled++;
-            }
-            else {
+            } else {
                 MessageManager.send(sender, "friendRequest.cancel.sender.notFound", Map.of("target", target.getName()));
             }
         }
