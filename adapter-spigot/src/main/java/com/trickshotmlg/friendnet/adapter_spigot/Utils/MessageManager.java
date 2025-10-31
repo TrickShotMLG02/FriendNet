@@ -11,6 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -224,16 +225,16 @@ public final class MessageManager {
         if (sender instanceof Player player) {
             sender.spigot().sendMessage(formatComponent(player.getUniqueId(), key, placeholders));
         }
+        else if (sender instanceof ConsoleCommandSender console) {
+            console.spigot().sendMessage(formatComponent(null, key, placeholders));
+        }
     }
 
     /**
      * Sends a message to a specific CommandSender without placeholders.
      */
     public static void send(CommandSender sender, String key) {
-        if (sender == null) return;
-        if (sender instanceof Player player) {
-            sender.spigot().sendMessage(formatComponent(player.getUniqueId(), key, Map.of()));
-        }
+        send(sender, key, Map.of());
     }
 
     /**

@@ -46,9 +46,12 @@ public class SpigotLocaleManager implements LocaleManager {
 
     @Override
     public Locale getPlayerLocale(UUID playerId) {
-        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
-        if (playerData == null) return defaultLocale;
-        return playerData.getLocale();
+        try {
+            PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+            return playerData.getLocale();
+        } catch (Exception e) {
+           return defaultLocale;
+        }
     }
 
     public File[] getLocaleFilesFromJar() {
