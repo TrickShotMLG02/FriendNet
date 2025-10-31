@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Utils;
 
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -134,6 +135,19 @@ public final class SpigotUtils {
 
     public static ItemStack createItem(Material material, String displayName, List<String> lore) {
         return createItem(material, displayName, lore, 1);
+    }
+
+    public static ItemStack createItem(Material material, Player player, String type, String displayNameKey, String loreKey, int amount) {
+        String displayName = FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), type, displayNameKey);
+        List<String> lore = SpigotUtils.parseStringList(
+                FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), type, loreKey)
+        );
+
+        return createItem(material, displayName, lore, amount);
+    }
+
+    public static ItemStack createItem(Material material, Player player, String type, String displayNameKey, String loreKey) {
+        return createItem(material, player, type, displayNameKey, loreKey, 1);
     }
 
     public static ItemStack createItem(Material material, String displayName, List<String> lore, int amount) {

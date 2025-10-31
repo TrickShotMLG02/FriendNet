@@ -1,7 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
-import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.Material;
@@ -63,16 +63,23 @@ public class RequestsGUI extends AbstractGUI {
 
         // Previous page
         if (currentPage > 0) {
-            inventory.setItem(bottomRowStart, SpigotUtils.createItem(org.bukkit.Material.ARROW, "§ePrevious Page"));
+            inventory.setItem(bottomRowStart, GUIUtils.CreatePreviousPageItem(player));
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmVkOWQ1YzJiNDgwNzA1OGQ5ODdjNmUxZDYzMDBhMWNjNGI5ZWVlN2IxNmYxZjBhY2FjMTRmZmNkMWE5Njk5ZiJ9fX0=";
             //inventory.setItem(bottomRowStart, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
 
         // Next page
-        if (endIndex < requests.size()) {
-            inventory.setItem(bottomRowStart + 8, SpigotUtils.createItem(org.bukkit.Material.ARROW, "§eNext Page"));
+        if (endIndex < friends.size()) {
+
+            inventory.setItem(bottomRowStart + 8, GUIUtils.CreateNextPageItem(player));
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==";
             //inventory.setItem(bottomRowStart + 8, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
+        }
+
+        // Page Display Item
+        {
+            int maxPage = (int) Math.ceil((float) friends.size() / (float) friendsPerPage);
+            inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(player, currentPage, maxPage));
         }
 
         // Deny All Item
