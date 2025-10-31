@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
@@ -47,14 +48,8 @@ public class FriendAcceptCommand extends AbstractCommand {
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
-        boolean success = fs.acceptFriendRequest(player.getUniqueId(), target.getUniqueId());
 
-        if (success) {
-            MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", target.getName()));
-            MessageManager.send(target, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
-        } else {
-            MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", target.getName()));
-        }
+        boolean success = new FriendRequestActions(fs).acceptRequest(player, target);
 
         return true;
     }

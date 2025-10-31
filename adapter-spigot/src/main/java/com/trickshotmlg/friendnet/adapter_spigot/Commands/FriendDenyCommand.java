@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
@@ -46,13 +47,7 @@ public class FriendDenyCommand extends AbstractCommand{
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
-        boolean success = fs.denyFriendRequest(player.getUniqueId(), target.getUniqueId());
-        if (success) {
-            MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", target.getName()));
-        }
-        else {
-            MessageManager.send(sender, "friendRequest.deny.sender.notFound", Map.of("target", target.getName()));
-        }
+        boolean success = new FriendRequestActions(fs).denyRequest(player, target);
         return true;
     }
 

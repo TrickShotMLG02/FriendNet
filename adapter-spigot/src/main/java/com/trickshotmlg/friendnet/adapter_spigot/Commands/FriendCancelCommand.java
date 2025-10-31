@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
@@ -47,13 +48,8 @@ public class FriendCancelCommand extends AbstractCommand{
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
-        boolean success = fs.cancelRequest(player.getUniqueId(), target.getUniqueId());
 
-        if (success) {
-            MessageManager.send(sender, "friendRequest.cancel.sender.success", Map.of("target", target.getName()));
-        } else {
-            MessageManager.send(sender, "friendRequest.cancel.sender.notFound", Map.of("target", target.getName()));
-        }
+        boolean success = new FriendRequestActions(fs).cancelRequest(player, target);
 
         return true;
     }
