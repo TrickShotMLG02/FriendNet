@@ -30,7 +30,10 @@ public class GUIListener extends AbstractListener {
                 // forward event to InteractableItem
                 interactable.onClick();
                 interactable.refresh();
-                event.getInventory().setItem(slot, interactable.getItemStack());
+
+                if (gui.getInteractableSlots().get(slot) == interactable) {
+                    event.getInventory().setItem(slot, interactable.getItemStack());
+                }
             } else {
                 // fall back to legacy handling
                 gui.handleClick(player, slot, clicked);

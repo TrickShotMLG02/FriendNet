@@ -60,6 +60,15 @@ friendsGUI:
 # Friend Requests GUI
 friendRequestsGUI:
   emptyListMessage: "&cNo pending friend requests"
+  buttons:
+    acceptAllRequests:
+      displayName: "&aAccept all"
+      lore:
+        - "&7Click to accept all friend requests"
+    denyAllRequests:
+      displayName: "&cDeny all"
+      lore:
+        - "&7Click to deny all friend requests"
 
 # Friend Settings GUI
 friendSettingsGUI:

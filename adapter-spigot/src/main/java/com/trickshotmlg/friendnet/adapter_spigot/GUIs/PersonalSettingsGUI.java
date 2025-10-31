@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ToggleItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
@@ -41,10 +42,15 @@ public class PersonalSettingsGUI extends AbstractGUI {
     protected void buildInventory() {
         inventory.clear();
 
-        // Back item
+        // Back Item
         {
-            backItem = GUIUtils.CreateBackItem(player);
-            inventory.setItem(0, backItem);
+            setInteractableItem(0,
+                    new ActionItemStack(
+                            GUIUtils.CreateBackItem(player),
+                            player,
+                            () -> goBack()
+                    )
+            );
         }
 
         // Allow Requests Item
@@ -58,7 +64,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     "friendsGUI.buttons.blocklist.displayName",
                     "friendsGUI.buttons.blocklist.lore"
             );
-            inventory.setItem(9 * row + col, backItem);
+            inventory.setItem(9 * row + col, allowRequestsItem);
         }
 
         {
@@ -66,7 +72,10 @@ public class PersonalSettingsGUI extends AbstractGUI {
             int col = 2;
             int slot = 9 * row + col;
 
-            setInteractableItem(slot, new ToggleItemStack(player, newState -> player.sendMessage("Toggle is now " + (newState ? "ON" : "OFF"))));
+            setInteractableItem(slot, new ToggleItemStack(
+                    player,
+                    newState -> player.sendMessage("Toggle is now " + (newState ? "ON" : "OFF"))
+            ));
         }
 
         // Filler for aesthetics

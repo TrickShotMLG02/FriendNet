@@ -14,15 +14,6 @@ import java.util.UUID;
 
 public class FriendsGUI extends AbstractGUI {
 
-    // ItemStacks that have an associated Action
-    ItemStack prevPageItem;
-    ItemStack nextPageItem;
-    ItemStack requestsItem;
-    ItemStack blocklistItem;
-    ItemStack favoritesItem;
-    ItemStack settingsItem;
-    ItemStack filterItem;
-
     private final List<FriendshipData> friends;
     private final List<FriendshipData> requests;
 
@@ -41,6 +32,7 @@ public class FriendsGUI extends AbstractGUI {
     @Override
     protected void buildInventory() {
         // Clear previous contents
+        interactableSlots.clear();
         inventory.clear();
 
         int startIndex = currentPage * friendsPerPage;
@@ -65,31 +57,56 @@ public class FriendsGUI extends AbstractGUI {
 
         // Previous page
         if (currentPage > 0) {
-            prevPageItem = GUIUtils.CreatePreviousPageItem(player);
-            inventory.setItem(bottomRowStart, prevPageItem);
+            setInteractableItem(bottomRowStart,
+                    new ActionItemStack(
+                            GUIUtils.CreatePreviousPageItem(player),
+                            player,
+                            () -> {
+                                if (currentPage > 0) {
+                                    currentPage--;
+                                    buildInventory();
+                                }
+                            }
+                    )
+            );
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmVkOWQ1YzJiNDgwNzA1OGQ5ODdjNmUxZDYzMDBhMWNjNGI5ZWVlN2IxNmYxZjBhY2FjMTRmZmNkMWE5Njk5ZiJ9fX0=";
             //inventory.setItem(bottomRowStart, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
 
         // Next page
         if (endIndex < friends.size()) {
-            nextPageItem = GUIUtils.CreateNextPageItem(player);
-            inventory.setItem(bottomRowStart + 8, nextPageItem);
+            setInteractableItem(bottomRowStart + 8,
+                    new ActionItemStack(
+                            GUIUtils.CreateNextPageItem(player),
+                            player,
+                            () -> {
+                                int maxPage = (int) Math.ceil((double) friends.size() / friendsPerPage) - 1;
+                                if (currentPage < maxPage) {
+                                    currentPage++;
+                                    buildInventory();
+                                }
+                            }
+                    )
+            );
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==";
             //inventory.setItem(bottomRowStart + 8, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
 
         // Block List Item
         {
-            blocklistItem = SpigotUtils.createItem(
-                    Material.BARRIER,
+            ActionItemStack actionItemStack = new ActionItemStack(
+                    SpigotUtils.createItem(
+                            Material.BARRIER,
+                            player,
+                            "gui",
+                            "friendsGUI.buttons.blocklist.displayName",
+                            "friendsGUI.buttons.blocklist.lore"
+                    ),
                     player,
-                    "gui",
-                    "friendsGUI.buttons.blocklist.displayName",
-                    "friendsGUI.buttons.blocklist.lore"
+                    () -> {}
             );
 
-            inventory.setItem(bottomRowStart + 3 - 9, blocklistItem);
+            setInteractableItem(bottomRowStart + 3 - 9, actionItemStack);
         }
 
         // Player Head
@@ -106,40 +123,53 @@ public class FriendsGUI extends AbstractGUI {
 
         // Pending Requests Item
         {
-            requestsItem = SpigotUtils.createItem(
-                    Material.BOOK,
+            ActionItemStack actionItemStack = new ActionItemStack(
+                    SpigotUtils.createItem(
+                            Material.BOOK,
+                            player,
+                            "gui",
+                            "friendsGUI.buttons.requests.displayName",
+                            "friendsGUI.buttons.requests.lore"
+                    ),
                     player,
-                    "gui",
-                    "friendsGUI.buttons.requests.displayName",
-                    "friendsGUI.buttons.requests.lore"
+                    () -> this.openChild(new RequestsGUI(plugin, player, friends, requests))
             );
 
-            inventory.setItem(bottomRowStart + 5 - 9, requestsItem);
+            setInteractableItem(bottomRowStart + 5 - 9, actionItemStack);
         }
 
         // Personal Settings Item
         {
-            settingsItem = SpigotUtils.createItem(
-                    Material.COMPARATOR,
+            ActionItemStack actionItemStack = new ActionItemStack(
+                    SpigotUtils.createItem(
+                            Material.COMPARATOR,
+                            player,
+                            "gui",
+                            "friendsGUI.buttons.personalSettings.displayName",
+                            "friendsGUI.buttons.personalSettings.lore"
+                    ),
                     player,
-                    "gui",
-                    "friendsGUI.buttons.personalSettings.displayName",
-                    "friendsGUI.buttons.personalSettings.lore"
+                    () -> this.openChild(new PersonalSettingsGUI(plugin, player))
             );
-            inventory.setItem(bottomRowStart + 3, settingsItem);
+
+            setInteractableItem(bottomRowStart + 3, actionItemStack);
         }
 
         // Favorite Friends Item
         {
-            favoritesItem = SpigotUtils.createItem(
-                    Material.NETHER_STAR,
+            ActionItemStack actionItemStack = new ActionItemStack(
+                    SpigotUtils.createItem(
+                            Material.NETHER_STAR,
+                            player,
+                            "gui",
+                            "friendsGUI.buttons.favorites.displayName",
+                            "friendsGUI.buttons.favorites.lore"
+                    ),
                     player,
-                    "gui",
-                    "friendsGUI.buttons.favorites.displayName",
-                    "friendsGUI.buttons.favorites.lore"
+                    () -> {}
             );
 
-            inventory.setItem(bottomRowStart + 6, favoritesItem);
+            setInteractableItem(bottomRowStart + 6, actionItemStack);
         }
 
         // Page Display Item
@@ -150,26 +180,20 @@ public class FriendsGUI extends AbstractGUI {
 
         // Filter Item
         {
-            filterItem = SpigotUtils.createItem(
-                    Material.HOPPER,
+            ActionItemStack actionItemStack = new ActionItemStack(
+                    SpigotUtils.createItem(
+                            Material.HOPPER,
+                            player,
+                            "gui",
+                            "friendsGUI.buttons.filter.displayName",
+                            "friendsGUI.buttons.filter.lore"
+                    ),
                     player,
-                    "gui",
-                    "friendsGUI.buttons.filter.displayName",
-                    "friendsGUI.buttons.filter.lore"
+                    () -> {}
             );
 
-            inventory.setItem(bottomRowStart + 5, filterItem);
+            setInteractableItem(bottomRowStart + 5, actionItemStack);
         }
-
-        // Test Item
-        {
-            setInteractableItem(bottomRowStart + 5,
-                    new ActionItemStack(Material.COMMAND_BLOCK, player,
-                            () -> this.openChild(new PersonalSettingsGUI(plugin, player))
-                    )
-            );
-        }
-
 
         // Filler for aesthetics
         for (int i = 0; i < inventory.getSize(); i++) {
@@ -179,40 +203,14 @@ public class FriendsGUI extends AbstractGUI {
         }
     }
 
+    /**
+     * @param player  The player that clicked
+     * @param slot    The slot number that was clicked
+     * @param clicked The ItemStack that was clicked
+     */
     @Override
     public void handleClick(Player player, int slot, ItemStack clicked) {
-        if (clicked == null) return;
 
-        if (checkItemClicked(clicked, prevPageItem)) {
-            if (currentPage > 0) {
-                currentPage--;
-                buildInventory();
-            }
-        }
-        else if (checkItemClicked(clicked, nextPageItem)) {
-            int maxPage = (int) Math.ceil((double) friends.size() / friendsPerPage) - 1;
-            if (currentPage < maxPage) {
-                currentPage++;
-                buildInventory();
-            }
-        }
-        else if (checkItemClicked(clicked, blocklistItem)) {
-
-        }
-        else if (checkItemClicked(clicked, favoritesItem)) {
-
-        }
-        else if (checkItemClicked(clicked, settingsItem)) {
-            PersonalSettingsGUI settingsGUI = new PersonalSettingsGUI(plugin, player);
-            this.openChild(settingsGUI);
-        }
-        else if (checkItemClicked(clicked, requestsItem)) {
-            RequestsGUI reqGui = new RequestsGUI(plugin, player, friends, requests);
-            this.openChild(reqGui);
-        }
-        else {
-            // Handle friend item clicks later (open detail GUI, etc.)
-        }
     }
 
     @Deprecated

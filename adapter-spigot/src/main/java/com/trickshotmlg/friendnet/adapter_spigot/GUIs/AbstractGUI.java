@@ -82,7 +82,9 @@ public abstract class AbstractGUI {
      * @param slot The slot number that was clicked
      * @param clicked The ItemStack that was clicked
      */
-    public abstract void handleClick(Player player, int slot, ItemStack clicked);
+    public void handleClick(Player player, int slot, ItemStack clicked) {
+
+    }
 
     /**
      * Function to check if the clicked item is the same as another item

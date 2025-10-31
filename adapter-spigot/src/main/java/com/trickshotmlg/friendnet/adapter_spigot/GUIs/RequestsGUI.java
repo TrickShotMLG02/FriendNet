@@ -1,6 +1,8 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
@@ -39,6 +41,7 @@ public class RequestsGUI extends AbstractGUI {
     @Override
     protected void buildInventory() {
         // Clear previous contents
+        interactableSlots.clear();
         inventory.clear();
 
         int startIndex = currentPage * friendsPerPage;
@@ -63,7 +66,18 @@ public class RequestsGUI extends AbstractGUI {
 
         // Previous page
         if (currentPage > 0) {
-            inventory.setItem(bottomRowStart, GUIUtils.CreatePreviousPageItem(player));
+            setInteractableItem(bottomRowStart,
+                    new ActionItemStack(
+                            GUIUtils.CreatePreviousPageItem(player),
+                            player,
+                            () -> {
+                                if (currentPage > 0) {
+                                    currentPage--;
+                                    buildInventory();
+                                }
+                            }
+                    )
+            );
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmVkOWQ1YzJiNDgwNzA1OGQ5ODdjNmUxZDYzMDBhMWNjNGI5ZWVlN2IxNmYxZjBhY2FjMTRmZmNkMWE5Njk5ZiJ9fX0=";
             //inventory.setItem(bottomRowStart, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
@@ -71,7 +85,19 @@ public class RequestsGUI extends AbstractGUI {
         // Next page
         if (endIndex < requests.size()) {
 
-            inventory.setItem(bottomRowStart + 8, GUIUtils.CreateNextPageItem(player));
+            setInteractableItem(bottomRowStart + 8,
+                    new ActionItemStack(
+                            GUIUtils.CreateNextPageItem(player),
+                            player,
+                            () -> {
+                                int maxPage = (int) Math.ceil((double) friends.size() / friendsPerPage) - 1;
+                                if (currentPage < maxPage) {
+                                    currentPage++;
+                                    buildInventory();
+                                }
+                            }
+                    )
+            );
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==";
             //inventory.setItem(bottomRowStart + 8, SpigotUtils.getSkull(texture, "§ePrevious Page", 1));
         }
@@ -83,48 +109,62 @@ public class RequestsGUI extends AbstractGUI {
         }
 
         // Deny All Item
-        inventory.setItem(bottomRowStart + 3, SpigotUtils.createItem(Material.RED_WOOL, "§eDeny All"));
+        {
+            ItemStack denyAllItem = SpigotUtils.createItem(
+                    Material.RED_WOOL,
+                    player,
+                    "gui",
+                    "friendRequestsGUI.buttons.denyAllRequests.displayName",
+                    "friendRequestsGUI.buttons.denyAllRequests.lore"
+            );
+            setInteractableItem(bottomRowStart + 3,
+                    new ActionItemStack(
+                            denyAllItem,
+                            player,
+                            () -> new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService())
+                                        .denyAllRequests(player)
+                    )
+            );
+        }
 
         // Page Display Item
         //inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.PAPER, "§7Page " + (currentPage + 1)));
 
         // Back Item
-        inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.BLACK_WOOL, "§7Back"));
+        {
+            setInteractableItem(bottomRowStart + 4,
+                    new ActionItemStack(
+                            GUIUtils.CreateBackItem(player),
+                            player,
+                            () -> goBack()
+                    )
+            );
+        }
 
         // Accept All Item
-        inventory.setItem(bottomRowStart + 5, SpigotUtils.createItem(Material.LIME_WOOL, "§eAccept All"));
-
+        {
+            ItemStack acceptAllItem = SpigotUtils.createItem(
+                    Material.LIME_WOOL,
+                    player,
+                    "gui",
+                    "friendRequestsGUI.buttons.acceptAllRequests.displayName",
+                    "friendRequestsGUI.buttons.acceptAllRequests.lore"
+            );
+            setInteractableItem(bottomRowStart + 5,
+                    new ActionItemStack(
+                            acceptAllItem,
+                            player,
+                            () -> new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService())
+                                    .acceptAllRequests(player)
+                    )
+            );
+        }
 
         // Filler for aesthetics
         for (int i = 0; i < inventory.getSize(); i++) {
             if (inventory.getItem(i) == null) {
                 inventory.setItem(i, SpigotUtils.createFillerGlass());
             }
-        }
-    }
-
-    @Override
-    public void handleClick(Player player, int slot, ItemStack clicked) {
-        if (clicked == null || !clicked.hasItemMeta()) return;
-
-        String displayName = clicked.getItemMeta().getDisplayName();
-        if (displayName == null) return;
-
-        if (displayName.contains("Previous Page")) {
-            if (currentPage > 0) {
-                currentPage--;
-                buildInventory();
-            }
-        } else if (displayName.contains("Next Page")) {
-            int maxPage = (int) Math.ceil((double) friends.size() / friendsPerPage) - 1;
-            if (currentPage < maxPage) {
-                currentPage++;
-                buildInventory();
-            }
-        } else if (displayName.contains("Back")) {
-            goBack();
-        } else {
-            // Handle friend item clicks later (open detail GUI, etc.)
         }
     }
 
