@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.AbstractGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -23,7 +24,17 @@ public class GUIListener extends AbstractListener {
             event.setCancelled(true); // prevent taking items
             int slot = event.getRawSlot();
             ItemStack clicked = event.getCurrentItem();
-            gui.handleClick(player, slot, clicked);
+
+            InteractableItemStack interactable = gui.getInteractableSlots().get(slot);
+            if (interactable != null) {
+                // forward event to InteractableItem
+                interactable.onClick();
+                interactable.refresh();
+                gui.getInventory().setItem(slot, interactable.getItemStack());
+            } else {
+                // fall back to legacy handling
+                gui.handleClick(player, slot, clicked);
+            }
         }
     }
 

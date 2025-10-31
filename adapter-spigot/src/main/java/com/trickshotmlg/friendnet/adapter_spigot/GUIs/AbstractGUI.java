@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -8,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -21,13 +23,15 @@ public abstract class AbstractGUI {
 
     protected AbstractGUI parentGUI; // Optional for going back
 
+    protected Map<Integer, InteractableItemStack> interactableSlots = new HashMap<>();
+
     private static final Map<Player, AbstractGUI> openGUIs = new WeakHashMap<>();
 
-    public AbstractGUI(JavaPlugin plugin, Player player, int size, String titleKey) {
+    public AbstractGUI(JavaPlugin plugin, Player player, int size, String title) {
         this.plugin = plugin;
         this.player = player;
         this.size = size;
-        this.titleKey = titleKey;
+        this.titleKey = title;
     }
 
     public static AbstractGUI getOpenGUI(Player player) {
@@ -110,4 +114,18 @@ public abstract class AbstractGUI {
         }
         return item;
     }
+
+    /**
+     * Wrapper function to set an interactable item to a slot in the inventory
+     * @param slot The slot number to set the item to
+     * @param item The InteractableItem to set
+     */
+    protected void setInteractableItem(int slot, InteractableItemStack item) {
+        interactableSlots.put(slot, item);
+        inventory.setItem(slot, item.getItemStack());
+    }
+
+    public Map<Integer, InteractableItemStack> getInteractableSlots() { return interactableSlots; }
+
+    public Inventory getInventory() { return inventory; }
 }

@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
@@ -160,6 +161,15 @@ public class FriendsGUI extends AbstractGUI {
             inventory.setItem(bottomRowStart + 5, filterItem);
         }
 
+        // Test Item
+        {
+            setInteractableItem(bottomRowStart + 5,
+                    new ActionItemStack(Material.COMMAND_BLOCK, player,
+                            () -> this.openChild(new PersonalSettingsGUI(plugin, player))
+                    )
+            );
+        }
+
 
         // Filler for aesthetics
         for (int i = 0; i < inventory.getSize(); i++) {
@@ -193,7 +203,8 @@ public class FriendsGUI extends AbstractGUI {
 
         }
         else if (checkItemClicked(clicked, settingsItem)) {
-
+            PersonalSettingsGUI settingsGUI = new PersonalSettingsGUI(plugin, player);
+            this.openChild(settingsGUI);
         }
         else if (checkItemClicked(clicked, requestsItem)) {
             RequestsGUI reqGui = new RequestsGUI(plugin, player, friends, requests);
