@@ -57,8 +57,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     Material.BARRIER,
                     player,
                     "gui",
-                    "friendsGUI.buttons.blocklist.displayName",
-                    "friendsGUI.buttons.blocklist.lore"
+                    "personalSettingsGUI.buttons.toggleAllowRequests.displayName",
+                    "personalSettingsGUI.buttons.toggleAllowRequests.lore"
             );
             inventory.setItem(9 * row + col, allowRequestsItem);
 
@@ -79,8 +79,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     Material.BARRIER,
                     player,
                     "gui",
-                    "friendsGUI.buttons.blocklist.displayName",
-                    "friendsGUI.buttons.blocklist.lore"
+                    "personalSettingsGUI.buttons.toggleShowOnlineStatus.displayName",
+                    "personalSettingsGUI.buttons.toggleShowOnlineStatus.lore"
             );
             inventory.setItem(9 * row + col, showOnlineStatusItem);
 
@@ -101,8 +101,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     Material.BARRIER,
                     player,
                     "gui",
-                    "friendsGUI.buttons.blocklist.displayName",
-                    "friendsGUI.buttons.blocklist.lore"
+                    "personalSettingsGUI.buttons.toggleAutoAcceptRequests.displayName",
+                    "personalSettingsGUI.buttons.toggleAutoAcceptRequests.lore"
             );
             inventory.setItem(9 * row + col, autoAcceptFriendsItem);
 
@@ -123,8 +123,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     Material.BARRIER,
                     player,
                     "gui",
-                    "friendsGUI.buttons.blocklist.displayName",
-                    "friendsGUI.buttons.blocklist.lore"
+                    "personalSettingsGUI.buttons.toggleRequestNotifications.displayName",
+                    "personalSettingsGUI.buttons.toggleRequestNotifications.lore"
             );
             inventory.setItem(9 * row + col, friendRequestNotificationsItem);
 
@@ -145,8 +145,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     Material.BARRIER,
                     player,
                     "gui",
-                    "friendsGUI.buttons.blocklist.displayName",
-                    "friendsGUI.buttons.blocklist.lore"
+                    "personalSettingsGUI.buttons.togglePublicFriendList.displayName",
+                    "personalSettingsGUI.buttons.togglePublicFriendList.lore"
             );
             inventory.setItem(9 * row + col, publicFriendListItem);
 
@@ -167,8 +167,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     Material.BARRIER,
                     player,
                     "gui",
-                    "friendsGUI.buttons.blocklist.displayName",
-                    "friendsGUI.buttons.blocklist.lore"
+                    "personalSettingsGUI.buttons.setLanguage.displayName",
+                    "personalSettingsGUI.buttons.setLanguage.lore"
             );
             inventory.setItem(9 * row + col, localeItem);
 

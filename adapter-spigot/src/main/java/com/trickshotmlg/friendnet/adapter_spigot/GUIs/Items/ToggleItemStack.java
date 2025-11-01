@@ -36,6 +36,32 @@ public class ToggleItemStack extends InteractableItemStack {
     }
 
     public ToggleItemStack(boolean initialState, Material onMaterial, Material offMaterial, Player player, Consumer<Boolean> onToggle) {
+        this(
+                initialState,
+                onMaterial,
+                offMaterial,
+                player,
+                "gui",
+                "buttons.toggle.active.displayName",
+                "buttons.toggle.inactive.displayName",
+                "buttons.toggle.active.lore",
+                "buttons.toggle.inactive.lore",
+                onToggle
+        );
+    }
+
+    public ToggleItemStack(
+            boolean initialState,
+            Material onMaterial,
+            Material offMaterial,
+            Player player,
+            String type,
+            String displayNameKeyOn,
+            String displayNameKeyOff,
+            String loreKeyOn,
+            String loreKeyOff,
+            Consumer<Boolean> onToggle
+    ) {
         super(new ItemStack(initialState ? onMaterial : offMaterial));
         this.state = initialState;
         this.onMaterial = onMaterial;
@@ -43,32 +69,16 @@ public class ToggleItemStack extends InteractableItemStack {
         this.onToggle = onToggle;
         this.player = player;
 
-        this.displayNameOn = FriendNetPlugin.LocaleManager.getMessage(
-                player.getUniqueId(),
-                "gui",
-                "interactables.toggle.on.diplayName"
-        );
+        this.displayNameOn = FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), type, displayNameKeyOn);
 
         this.loreOn = SpigotUtils.parseStringList(
-                FriendNetPlugin.LocaleManager.getMessage(
-                        player.getUniqueId(),
-                        "gui",
-                        "interactables.toggle.on.lore"
-                )
+                FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), type, loreKeyOn)
         );
 
-        this.displayNameOff = FriendNetPlugin.LocaleManager.getMessage(
-                player.getUniqueId(),
-                "gui",
-                "interactables.toggle.off.diplayName"
-        );
+        this.displayNameOff = FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), type, displayNameKeyOff);
 
         this.loreOff = SpigotUtils.parseStringList(
-                FriendNetPlugin.LocaleManager.getMessage(
-                        player.getUniqueId(),
-                        "gui",
-                        "interactables.toggle.off.lore"
-                )
+                FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), type, loreKeyOff)
         );
 
         refresh();

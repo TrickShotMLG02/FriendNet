@@ -8,6 +8,24 @@ titles:
 
 # Buttons / Items
 buttons:
+  toggle:
+    active:
+      displayName: "&aOn"
+      lore:
+        - "&7Click to toggle"
+    inactive:
+      displayName: "&4Off"
+      lore:
+        - "&7Click to toggle"
+  selector:
+    active:
+      displayName: "&aSelected"
+      lore:
+        - "&7This option is already selected"
+    inactive:
+      displayName: "&4Not Selected"
+      lore:
+        - "&7Click to select"
   close:
     displayName: "&cClose"
     lore:
@@ -81,6 +99,35 @@ friendSettingsGUI:
     confirm: "&cAre you sure you want to remove &e%target%&c?"
     success: "&e%target% &bwas removed from your friends"
     fail: "&cFailed to remove &e%target%"
+
+# Personal Settings GUI
+personalSettingsGUI:
+  buttons:
+    toggleAllowRequests:
+      displayName: "&eAllow Friend Requests"
+      lore:
+        - "&7Toggle to allow or block incoming friend requests."
+    toggleShowOnlineStatus:
+      displayName: "&eShow Online Status"
+      lore:
+        - "&7Toggle whether your online status is visible to friends."
+    toggleAutoAcceptRequests:
+      displayName: "&eAuto-Accept Friend Requests"
+      lore:
+        - "&7Automatically accept incoming friend requests."
+    toggleRequestNotifications:
+      displayName: "&eFriend Request Notifications"
+      lore:
+        - "&7Receive notifications for incoming friend requests."
+    togglePublicFriendList:
+      displayName: "&ePublic Friend List"
+      lore:
+        - "&7Allow others to see your friend list."
+    setLanguage:
+      displayName: "&eSet Language"
+      lore:
+        - "&7Choose your preferred language."
+
 
 # Pagination buttons (for all GUIs)
 pagination:

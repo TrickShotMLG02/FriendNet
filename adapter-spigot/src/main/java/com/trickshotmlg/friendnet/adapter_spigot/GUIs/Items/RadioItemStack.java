@@ -31,7 +31,18 @@ public class RadioItemStack extends ToggleItemStack {
     }
 
     public RadioItemStack(RadioGroup group, boolean initialState, Material onMaterial, Material offMaterial, Player player, Consumer<Boolean> onSelect) {
-        super(initialState, onMaterial, offMaterial, player, onSelect);
+        super(
+                initialState,
+                onMaterial,
+                offMaterial,
+                player,
+                "gui",
+                "buttons.selector.active.displayName",
+                "buttons.selector.inactive.displayName",
+                "buttons.selector.active.lore",
+                "buttons.selector.inactive.lore",
+                onSelect
+        );
         this.group = group;
         group.add(this);
     }

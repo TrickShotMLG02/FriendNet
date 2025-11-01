@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
@@ -14,9 +15,6 @@ import java.util.UUID;
 
 public class FriendsGUI extends AbstractGUI {
 
-    private final List<FriendshipData> friends;
-    private final List<FriendshipData> requests;
-
     private final int friendRows = 4;
 
     private int currentPage = 0;
@@ -25,8 +23,6 @@ public class FriendsGUI extends AbstractGUI {
     public FriendsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
         //super(plugin, player, ((friends.size() - 1) / 9 + 1) * 9, "Your Friends");
         super(plugin, player, 9 * 6, "titles.friendsGUI");
-        this.friends = friends;
-        this.requests = requests;
     }
 
     @Override
@@ -34,6 +30,10 @@ public class FriendsGUI extends AbstractGUI {
         // Clear previous contents
         interactableSlots.clear();
         inventory.clear();
+
+        List<FriendshipData> friends = ((FriendNetPlugin) plugin).getFriendService().getFriendships(player.getUniqueId()).stream().toList();
+        List<FriendshipData> requests = ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList();
+
 
         int startIndex = currentPage * friendsPerPage;
         int endIndex = Math.min(startIndex + friendsPerPage, friends.size());
@@ -132,7 +132,9 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.requests.lore"
                     ),
                     player,
-                    () -> this.openChild(new RequestsGUI(plugin, player, friends, requests))
+                    () -> {
+                        this.openChild(new RequestsGUI(plugin, player));
+                    }
             );
 
             setInteractableItem(bottomRowStart + 5 - 9, actionItemStack);

@@ -15,23 +15,18 @@ import java.util.List;
 import java.util.UUID;
 
 public class RequestsGUI extends AbstractGUI {
-    private final List<FriendshipData> friends;
-    private final List<FriendshipData> requests;
-
     private final int friendRows = 4;
 
     private int currentPage = 0;
-    private final int friendsPerPage = friendRows * 9;
+    private final int requestsPerPage = friendRows * 9;
 
-    public RequestsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
+    public RequestsGUI(JavaPlugin plugin, Player player) {
         super(
                 plugin,
                 player,
                 9 * 6,
                 "titles.friendRequestsGUI"
         );
-        this.friends = friends;
-        this.requests = requests;
     }
 
     @Override
@@ -40,8 +35,11 @@ public class RequestsGUI extends AbstractGUI {
         interactableSlots.clear();
         inventory.clear();
 
-        int startIndex = currentPage * friendsPerPage;
-        int endIndex = Math.min(startIndex + friendsPerPage, friends.size());
+        List<FriendshipData> requests = ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList();
+
+        int startIndex = currentPage * requestsPerPage;
+        int endIndex = Math.min(startIndex + requestsPerPage, requests.size());
+
 
         List<FriendshipData> visibleRequests = SpigotUtils.safeSubList(requests, startIndex, endIndex);
 
@@ -86,7 +84,7 @@ public class RequestsGUI extends AbstractGUI {
                             GUIUtils.CreateNextPageItem(player),
                             player,
                             () -> {
-                                int maxPage = (int) Math.ceil((double) friends.size() / friendsPerPage) - 1;
+                                int maxPage = (int) Math.ceil((double) requests.size() / requestsPerPage) - 1;
                                 if (currentPage < maxPage) {
                                     currentPage++;
                                     buildInventory();
@@ -100,7 +98,7 @@ public class RequestsGUI extends AbstractGUI {
 
         // Page Display Item
         {
-            int maxPage = (int) Math.ceil((float) requests.size() / (float) friendsPerPage);
+            int maxPage = (int) Math.ceil((float) requests.size() / (float) requestsPerPage);
             inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(player, currentPage, maxPage));
         }
 
@@ -117,8 +115,12 @@ public class RequestsGUI extends AbstractGUI {
                     new ActionItemStack(
                             denyAllItem,
                             player,
-                            () -> new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService())
-                                        .denyAllRequests(player)
+                            () -> {
+                                new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService())
+                                        .denyAllRequests(player);
+
+                                buildInventory();
+                            }
                     )
             );
         }
@@ -150,8 +152,12 @@ public class RequestsGUI extends AbstractGUI {
                     new ActionItemStack(
                             acceptAllItem,
                             player,
-                            () -> new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService())
-                                    .acceptAllRequests(player)
+                            () -> {
+                                new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService())
+                                        .acceptAllRequests(player);
+
+                                buildInventory();
+                            }
                     )
             );
         }
