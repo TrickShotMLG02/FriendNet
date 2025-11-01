@@ -12,16 +12,16 @@ import java.util.function.Consumer;
 
 public class ToggleItemStack extends InteractableItemStack {
 
-    private boolean state;
-    private final Material onMaterial;
-    private final Material offMaterial;
-    private final Consumer<Boolean> onToggle;
-    private final Player player;
+    protected boolean state;
+    protected final Material onMaterial;
+    protected final Material offMaterial;
+    protected final Consumer<Boolean> onToggle;
+    protected final Player player;
 
-    private final String displayNameOn;
-    private final List<String> loreOn;
-    private final String displayNameOff;
-    private final List<String> loreOff;
+    protected final String displayNameOn;
+    protected final List<String> loreOn;
+    protected final String displayNameOff;
+    protected final List<String> loreOff;
 
     public ToggleItemStack(Player player) {
         this(false, Material.LIME_STAINED_GLASS_PANE, Material.RED_STAINED_GLASS_PANE, player, null);
@@ -83,7 +83,7 @@ public class ToggleItemStack extends InteractableItemStack {
         if (onToggle != null) onToggle.accept(state);
     }
 
-    private void updateMeta() {
+    protected void updateMeta() {
         ItemMeta meta = itemStack.getItemMeta();
         meta.setDisplayName(state ? displayNameOn : displayNameOff);
         meta.setLore(state ? loreOn : loreOff);
