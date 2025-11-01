@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.RadioItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.LocaleUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.RadioGroup;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
@@ -16,7 +17,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -33,10 +33,21 @@ public class LocaleSelectionGUI extends AbstractGUI{
     public LocaleSelectionGUI(JavaPlugin plugin, Player player) {
         super(plugin, player, 9 * 4, "Locale Selection");
 
-        // TODO: sort this and maybe try to get the actual language names from java
-        availableLocales = LocaleKey.values().stream().toList();
-
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
+        PlayerData pd = playerService.getPlayerData(player.getUniqueId());
+        LocaleKey selectedLocale;
+        if (pd != null) {
+            selectedLocale = pd.getLocale();
+        } else {
+            selectedLocale = LocaleKey.getDefaultLocale();
+        }
+
+        availableLocales = LocaleKey.values().stream().sorted(
+                Comparator.comparing(
+                        lk -> LocaleUtils.getLocalizedLanguageName(selectedLocale, lk)
+                )
+        ).toList();
+
     }
 
     @Override
@@ -86,7 +97,8 @@ public class LocaleSelectionGUI extends AbstractGUI{
         for (int i = 0; i < visibleLocales.size(); i++) {
             LocaleKey locale = visibleLocales.get(i);
 
-            ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, locale.getCode());
+            //ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, locale.getCode());
+            ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, "§e" + LocaleUtils.getLocalizedLanguageName(selectedLocale, locale));
             inventory.setItem(i + localesStartIndexOffset, localeItem);
             setInteractableItem(i + localesStartIndexOffset + 9, localeToggles.get(i + localesPerPage * currentPage));
         }
