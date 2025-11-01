@@ -66,7 +66,15 @@ public class LocaleSelectionGUI extends AbstractGUI{
                             localeSelectionGroup,
                             locale == selectedLocale,
                             player,
-                            newState -> player.sendMessage("Selected locale " + locale.toString())
+                            newState -> {
+                                pd.setLocale(locale);
+
+                                // manually set all
+                                updateRadioSelection(visibleLocales.size(), localeToggles);
+
+                                // rebuild build inventory to update items with new locale
+                                buildInventory();
+                            }
                     )
             );
         }
@@ -142,6 +150,17 @@ public class LocaleSelectionGUI extends AbstractGUI{
             if (inventory.getItem(i) == null) {
                 inventory.setItem(i, SpigotUtils.createFillerGlass());
             }
+        }
+    }
+
+    /**
+     * Function to update the appearance of the InteractableItemStacks to their changed ItemStack
+     * @param count The amount of items to update (equal to amount of rendered items in inventory from localeToggles)
+     * @param localeToggles The list containing all InteractableItemStacks that can be redrawn
+     */
+    private void updateRadioSelection(int count, List<InteractableItemStack> localeToggles) {
+        for (int i = 0; i < count; i++) {
+            setInteractableItem(i + localesStartIndexOffset + 9, localeToggles.get(i + localesPerPage * currentPage));
         }
     }
 }

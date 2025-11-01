@@ -47,7 +47,6 @@ public class RadioItemStack extends ToggleItemStack {
 
     public void setSelected(boolean selected) {
         this.state = selected;
-        player.sendMessage("Selected " + selected);
         itemStack.setType(selected ? onMaterial : offMaterial);
         updateMeta();
     }
