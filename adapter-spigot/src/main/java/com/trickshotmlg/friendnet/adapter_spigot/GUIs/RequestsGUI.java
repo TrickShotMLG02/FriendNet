@@ -28,11 +28,7 @@ public class RequestsGUI extends AbstractGUI {
                 plugin,
                 player,
                 9 * 6,
-                FriendNetPlugin.LocaleManager.getMessage(
-                        player.getUniqueId(),
-                        "gui",
-                        "titles.friendRequestsGUI"
-                )
+                "titles.friendRequestsGUI"
         );
         this.friends = friends;
         this.requests = requests;

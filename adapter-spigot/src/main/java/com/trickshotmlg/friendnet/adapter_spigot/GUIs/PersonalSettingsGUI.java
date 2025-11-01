@@ -25,7 +25,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             FriendNetPlugin.LocaleManager.getMessage(
                     player.getUniqueId(),
                     "gui",
-                    "titles.friendRequestsGUI"
+                    "titles.personalSettingsGUI"
             )
         );
 

@@ -3,6 +3,8 @@ titles:
   friendsGUI: "Your Friends"
   friendRequestsGUI: "Friend Requests"
   friendSettingsGUI: "%target%'s Settings"
+  personalSettingsGUI: "Your Settings"
+  localeSelectionGUI: "Change your Language"
 
 # Buttons / Items
 buttons:

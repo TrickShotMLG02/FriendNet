@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -27,11 +28,11 @@ public abstract class AbstractGUI {
 
     private static final Map<Player, AbstractGUI> openGUIs = new WeakHashMap<>();
 
-    public AbstractGUI(JavaPlugin plugin, Player player, int size, String title) {
+    public AbstractGUI(JavaPlugin plugin, Player player, int size, String titleKey) {
         this.plugin = plugin;
         this.player = player;
         this.size = size;
-        this.titleKey = title;
+        this.titleKey = titleKey;
     }
 
     public static AbstractGUI getOpenGUI(Player player) {
@@ -43,10 +44,24 @@ public abstract class AbstractGUI {
      */
     public void open() {
         // TODO: Localize titleKey
-        inventory = Bukkit.createInventory(null, size, titleKey);
+        inventory = Bukkit.createInventory(null, size, getInventoryTitle());
         buildInventory(); // fill it with items
         player.openInventory(inventory);
         openGUIs.put(player, this);
+    }
+
+    protected String getInventoryTitle() {
+        FriendNetPlugin pl = (FriendNetPlugin) plugin;
+        return pl.LocaleManager.getMessage(player.getUniqueId(), "gui", titleKey);
+    }
+
+    //TODO: Fix this method, interactable Item Stacks do not work afterwards
+    @Deprecated
+    public void updateInventoryTitle() {
+        Inventory oldInv = player.getOpenInventory().getTopInventory();
+        Inventory newInv = Bukkit.createInventory(player, oldInv.getSize(), getInventoryTitle());
+        newInv.setContents(oldInv.getContents());
+        player.openInventory(newInv);
     }
 
     /**

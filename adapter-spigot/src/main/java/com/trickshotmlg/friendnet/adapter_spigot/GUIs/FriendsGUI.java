@@ -24,7 +24,7 @@ public class FriendsGUI extends AbstractGUI {
 
     public FriendsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
         //super(plugin, player, ((friends.size() - 1) / 9 + 1) * 9, "Your Friends");
-        super(plugin, player, 9 * 6, "Your Friends");
+        super(plugin, player, 9 * 6, "titles.friendsGUI");
         this.friends = friends;
         this.requests = requests;
     }

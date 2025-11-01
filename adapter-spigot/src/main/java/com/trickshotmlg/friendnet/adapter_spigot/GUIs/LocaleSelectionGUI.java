@@ -74,6 +74,9 @@ public class LocaleSelectionGUI extends AbstractGUI{
 
                                 // rebuild build inventory to update items with new locale
                                 buildInventory();
+
+                                // TODO: find way to update inventory title
+                                //updateInventoryTitle();
                             }
                     )
             );
