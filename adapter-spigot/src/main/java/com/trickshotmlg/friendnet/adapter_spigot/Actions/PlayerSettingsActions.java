@@ -1,7 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
-import com.trickshotmlg.friendnet.core_api.enums.Locale;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import org.bukkit.entity.Player;
 
@@ -66,7 +66,7 @@ public class PlayerSettingsActions {
         return false;
     }
 
-    public boolean setLocale(Locale locale) {
+    public boolean setLocale(LocaleKey locale) {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setLocale(locale);

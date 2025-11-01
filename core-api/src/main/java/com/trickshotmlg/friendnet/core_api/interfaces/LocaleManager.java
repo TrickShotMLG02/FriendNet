@@ -1,33 +1,21 @@
 package com.trickshotmlg.friendnet.core_api.interfaces;
 
-import com.trickshotmlg.friendnet.core_api.enums.Locale;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 
 import java.util.UUID;
 
 public interface LocaleManager {
 
     /**
-     *
-     * @param locale
-     */
-    void setDefaultLocale(Locale locale);
-
-    /**
-     *
-     * @return
-     */
-    Locale getDefaultLocale();
-
-    /**
      * Sets the preferred locale for a player.
      */
-    void setPlayerLocale(UUID playerId, Locale locale);
+    void setPlayerLocale(UUID playerId, LocaleKey locale);
 
     /**
      * Gets the preferred locale for a player.
      * Falls back to the default locale if none is set.
      */
-    Locale getPlayerLocale(UUID playerId);
+    LocaleKey getPlayerLocale(UUID playerId);
 
     /**
      * Loads all available locale files from the locales directory.

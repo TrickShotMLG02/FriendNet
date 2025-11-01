@@ -4,6 +4,12 @@ Mode: Standalone
 # The backend to use: MySQL, SQLite, MariaDB
 DatabaseType: MySQL
 
+SupportedLocales:
+  - en_US
+  - de
+
+DefaultLocale: "en_US"
+
 # The settings for MySQL Connection
 MySQL:
   host: localhost:3306

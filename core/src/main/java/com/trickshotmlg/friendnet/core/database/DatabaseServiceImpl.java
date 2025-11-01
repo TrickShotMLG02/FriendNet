@@ -2,12 +2,12 @@ package com.trickshotmlg.friendnet.core.database;
 
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
-import com.trickshotmlg.friendnet.core_api.enums.Locale;
 import com.trickshotmlg.friendnet.core_api.enums.ServiceState;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
 import java.io.File;
@@ -113,7 +113,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                             playerData.setAutoAcceptFriends(rs.getBoolean("auto_accept_friends"));
                             playerData.setFriendRequestNotifications(rs.getBoolean("friend_request_notifications"));
                             playerData.setFriendListPublic(rs.getBoolean("friend_list_public"));
-                            playerData.setLocale(Locale.valueOf(rs.getString("locale")));
+                            playerData.setLocale(LocaleKey.getOrFallback(rs.getString("locale")));
 
                             // Cast to T to satisfy the generic method signature
                             return Optional.of(clazz.cast(playerData));
@@ -230,7 +230,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                 ps.setBoolean(4, entity.isAutoAcceptFriends());
                 ps.setBoolean(5, entity.isFriendRequestNotifications());
                 ps.setBoolean(6, entity.isFriendListPublic());
-                ps.setString(7, entity.getLocale().toString());
+                ps.setString(7, entity.getLocale().getCode());
                 ps.setTimestamp(8, entity.getFirstSeen());
                 ps.setTimestamp(9, entity.getLastSeen());
 

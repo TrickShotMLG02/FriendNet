@@ -1,11 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 
-import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
-import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.core.Logger;
-import com.trickshotmlg.friendnet.core_api.enums.Locale;
-import com.trickshotmlg.friendnet.core_api.interfaces.LocaleManager;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;

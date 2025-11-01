@@ -5,11 +5,10 @@ import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.RadioItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
-import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.RadioGroup;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
-import com.trickshotmlg.friendnet.core_api.enums.Locale;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -23,7 +22,7 @@ import java.util.List;
 
 public class LocaleSelectionGUI extends AbstractGUI{
 
-    private final List<Locale> availableLocales;
+    private final List<LocaleKey> availableLocales;
 
     private int currentPage = 0;
     private final int localesPerPage = 5;
@@ -34,7 +33,8 @@ public class LocaleSelectionGUI extends AbstractGUI{
     public LocaleSelectionGUI(JavaPlugin plugin, Player player) {
         super(plugin, player, 9 * 4, "Locale Selection");
 
-        availableLocales = Arrays.stream(Locale.values()).sorted(Comparator.comparing(Enum::name)).toList();;
+        // TODO: sort this and maybe try to get the actual language names from java
+        availableLocales = LocaleKey.values().stream().toList();
 
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
     }
@@ -48,11 +48,11 @@ public class LocaleSelectionGUI extends AbstractGUI{
         int startIndex = currentPage * localesPerPage;
         int endIndex = Math.min(startIndex + localesPerPage, availableLocales.size());
 
-        List<Locale> visibleLocales = SpigotUtils.safeSubList(availableLocales, startIndex, endIndex);
+        List<LocaleKey> visibleLocales = SpigotUtils.safeSubList(availableLocales, startIndex, endIndex);
 
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         // TODO: set to default locale
-        Locale selectedLocale = Locale.EN;
+        LocaleKey selectedLocale = LocaleKey.getDefaultLocale();
         if (pd != null) {
             selectedLocale = pd.getLocale();
         }
@@ -60,11 +60,11 @@ public class LocaleSelectionGUI extends AbstractGUI{
         RadioGroup localeSelectionGroup = new RadioGroup(inventory);
         List<InteractableItemStack> localeToggles = new ArrayList<>();
 
-        for (Locale locale : availableLocales) {
+        for (LocaleKey locale : availableLocales) {
             localeToggles.add(
                     new RadioItemStack(
                             localeSelectionGroup,
-                            locale == selectedLocale,
+                            locale.equals(selectedLocale),
                             player,
                             newState -> {
                                 pd.setLocale(locale);
@@ -84,9 +84,9 @@ public class LocaleSelectionGUI extends AbstractGUI{
 
         // Populate locales for this page
         for (int i = 0; i < visibleLocales.size(); i++) {
-            Locale locale = visibleLocales.get(i);
+            LocaleKey locale = visibleLocales.get(i);
 
-            ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, locale.name());
+            ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, locale.getCode());
             inventory.setItem(i + localesStartIndexOffset, localeItem);
             setInteractableItem(i + localesStartIndexOffset + 9, localeToggles.get(i + localesPerPage * currentPage));
         }

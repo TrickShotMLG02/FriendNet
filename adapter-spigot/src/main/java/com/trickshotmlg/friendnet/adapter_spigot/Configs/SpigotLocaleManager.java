@@ -1,9 +1,9 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Configs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
-import com.trickshotmlg.friendnet.core_api.enums.Locale;
 import com.trickshotmlg.friendnet.core_api.interfaces.AbstractConfig;
 import com.trickshotmlg.friendnet.core_api.interfaces.LocaleManager;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
 import java.io.File;
@@ -13,30 +13,21 @@ import java.net.URL;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SpigotLocaleManager implements LocaleManager {
 
     private final FriendNetPlugin plugin;
-    private Locale defaultLocale = Locale.EN;
 
-    private Map<String, Map<Locale, AbstractConfig>> configs = new HashMap<>();
+    private Map<String, Map<LocaleKey, AbstractConfig>> configs = new HashMap<>();
 
     public SpigotLocaleManager(FriendNetPlugin plugin) {
         this.plugin = plugin;
     }
 
     @Override
-    public void setDefaultLocale(Locale locale) {
-        defaultLocale = locale;
-    }
-
-    @Override
-    public Locale getDefaultLocale() {
-        return defaultLocale;
-    }
-
-    @Override
-    public void setPlayerLocale(UUID playerId, Locale locale) {
+    public void setPlayerLocale(UUID playerId, LocaleKey locale) {
         PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
         if (playerData == null) {
             return;
@@ -45,12 +36,12 @@ public class SpigotLocaleManager implements LocaleManager {
     }
 
     @Override
-    public Locale getPlayerLocale(UUID playerId) {
+    public LocaleKey getPlayerLocale(UUID playerId) {
         try {
             PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
             return playerData.getLocale();
         } catch (Exception e) {
-           return defaultLocale;
+           return LocaleKey.getDefaultLocale();
         }
     }
 
@@ -84,7 +75,24 @@ public class SpigotLocaleManager implements LocaleManager {
 
     @Override
     public void loadLocales() {
+        // clear registry and re-create it from supported locals of config
+        LocaleKey.clearRegistry();
+        for (String code : plugin.getConfig().getStringList("SupportedLocales")) {
+            LocaleKey.of(code);
+        }
+
+        // set default locale
+        LocaleKey defLoc = new LocaleKey(plugin.getConfig().getString("DefaultLocale"));
+        if (LocaleKey.exists(defLoc)) {
+            LocaleKey.setDefaultLocale(defLoc);
+        } else {
+            // set default locale to first found locale
+            LocaleKey.setDefaultLocale(LocaleKey.values().stream().toList().get(0));
+        }
+
+
         configs.clear();
+
 
         File localesDir = new File(plugin.getDataFolder(), "Locales");
         if (!localesDir.exists() || !localesDir.isDirectory()) {
@@ -92,41 +100,66 @@ public class SpigotLocaleManager implements LocaleManager {
             return;
         }
 
-        //File[] files = localesDir.listFiles((dir, name) -> name.endsWith(".yml"));
-        File[] jarFiles = getLocaleFilesFromJar();
-        File[] files = Arrays.stream(jarFiles).filter(f -> f.getName().endsWith(".yml")).toArray(File[]::new);
+        File[] files = localesDir.listFiles((dir, name) -> name.endsWith(".yml"));
+        //File[] jarFiles = getLocaleFilesFromJar();
+        //File[] files = Arrays.stream(jarFiles).filter(f -> f.getName().endsWith(".yml")).toArray(File[]::new);
         if (files == null) return;
 
+        // Regex to detect locale at the end of filename: "_xx" or "_xx_XX"
+        Pattern localePattern = Pattern.compile("_(\\w{2}(?:_\\w{2})?)$");
+
         for (File file : files) {
-            String filename = file.getName(); // e.g., messages_en.yml
-            int underscore = filename.lastIndexOf('_');
-            int dot = filename.lastIndexOf('.');
+            String filename = file.getName(); // e.g., messages_en.yml or gui_de_DE.yml
+            int lastDot = filename.lastIndexOf('.');
+            if (lastDot == -1) continue; // skip files without extension
 
-            if (underscore == -1 || dot == -1 || underscore >= dot) continue;
+            String nameWithoutExtension = filename.substring(0, lastDot);
 
-            String type = filename.substring(0, underscore).toLowerCase(); // messages, gui, etc
-            String localeCode = filename.substring(underscore + 1, dot).toUpperCase();
+            // Detect locale using regex
+            Matcher matcher = localePattern.matcher(nameWithoutExtension);
+            String baseName;
+            String localeCode;
 
-            Locale locale;
-            try {
-                locale = Locale.valueOf(localeCode);
-            } catch (IllegalArgumentException e) {
-                // unknown locale, skip
+            if (matcher.find()) {
+                localeCode = matcher.group(1); // "en", "de_CH"
+                baseName = nameWithoutExtension.substring(0, matcher.start()); // before "_xx" or "_xx_XX"
+            } else {
+                localeCode = ""; // no locale -> default
+                baseName = nameWithoutExtension;
+            }
+
+            // Get locale key
+            LocaleKey locale;
+            if (LocaleKey.exists(new LocaleKey(localeCode))) {
+                locale = LocaleKey.fetch(localeCode).get();
+            }
+            else {
+                // skip this file, since its locale code is not in the supported locales config value
                 continue;
             }
 
-            // Create AbstractConfig instance for this file (assuming a concrete implementation exists)
-            String relativeFilePath = plugin.getDataFolder().toPath().relativize(file.toPath()).toString().replace("\\", "/");
+            // Create AbstractConfig instance for this file
+            String relativeFilePath = plugin.getDataFolder().toPath()
+                    .relativize(file.toPath())
+                    .toString()
+                    .replace("\\", "/");
             AbstractConfig config = new SpigotConfig(plugin, relativeFilePath); // your concrete implementation
-            config.initDefaults();
 
-            configs.computeIfAbsent(type, t -> new HashMap<>()).put(locale, config);
+            try {
+                config.initDefaults();
+            } catch (Exception e) {
+                //throw new RuntimeException(e);
+            }
+
+            // Store config by base name and locale
+            configs.computeIfAbsent(baseName.toLowerCase(), t -> new HashMap<>())
+                    .put(locale, config);
         }
     }
 
     @Override
     public String getMessage(UUID playerId, String type, String path) {
-        Locale locale = getPlayerLocale(playerId); // uses default if none
+        LocaleKey locale = getPlayerLocale(playerId); // uses default if none
         return getMessage(locale, type, path);
     }
 
@@ -146,17 +179,42 @@ public class SpigotLocaleManager implements LocaleManager {
      * @param path
      * @return
      */
-    private String getMessage(Locale locale, String type, String path) {
-        AbstractConfig config = configs.getOrDefault(type, Collections.emptyMap())
-                .getOrDefault(locale, configs.get(type).get(defaultLocale));
-        if(config == null) return path; // fallback to path string
+    private String getMessage(LocaleKey locale, String type, String path) {
+        Map<LocaleKey, AbstractConfig> localeConfigs = configs.get(type);
+        if (localeConfigs == null || localeConfigs.isEmpty()) {
+            return path; // No configs for this type at all
+        }
 
+        LocaleKey defaultLocale = LocaleKey.getDefaultLocale();
+        AbstractConfig configExact = localeConfigs.get(locale);
+        AbstractConfig configRoot = null;
+        AbstractConfig configDefault = defaultLocale != null ? localeConfigs.get(defaultLocale) : null;
+
+        // Try to get root-language config (e.g., "de" from "de_CH")
+        if (locale.getLanguage() != null && !locale.getLanguage().equalsIgnoreCase(locale.toString())) {
+            configRoot = localeConfigs.get(LocaleKey.getOrFallback(locale.getLanguage()));
+        }
+
+        // Try reading from most specific to most general
+        String message = tryGetString(configExact, path);
+        if (message == null) message = tryGetString(configRoot, path);
+        if (message == null) message = tryGetString(configDefault, path);
+
+        // Fallback to showing the path itself
+        if (message == null || message.isEmpty()) {
+            return path;
+        }
+
+        return message.replace('&', '§');
+    }
+
+    /**
+     * Safely tries to get a string from a config.
+     */
+    private String tryGetString(AbstractConfig config, String path) {
+        if (config == null) return null;
         Optional<String> msgOpt = config.getString(path);
-        if(!msgOpt.isPresent()) return path;
-        String raw = msgOpt.get();
-
-        String msg = raw.replace('&', '§');
-
-        return msg;
+        if (!msgOpt.isPresent() || msgOpt.get().isEmpty()) return null;
+        return msgOpt.get();
     }
 }
