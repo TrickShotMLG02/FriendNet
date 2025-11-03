@@ -5,6 +5,7 @@ public class SQLTables {
     public static final String TABLE_CREATE_PLAYERDATA =
             "CREATE TABLE IF NOT EXISTS players (" +
             "player_id UUID PRIMARY KEY, " +
+            "last_display_name VARCHAR(64), " +
             "allow_friend_requests BOOLEAN DEFAULT TRUE, " +
             "show_online_status BOOLEAN DEFAULT TRUE, " +
             "auto_accept_friends BOOLEAN DEFAULT FALSE, " +

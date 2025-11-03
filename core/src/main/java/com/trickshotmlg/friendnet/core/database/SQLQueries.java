@@ -13,10 +13,11 @@ public class SQLQueries {
 
     public static final String TABLE_PLAYERS_UPSERT =
             "INSERT INTO players (" +
-                    "player_id, allow_friend_requests, show_online_status, auto_accept_friends, " +
+                    "player_id, last_display_name, allow_friend_requests, show_online_status, auto_accept_friends, " +
                     "friend_request_notifications, friend_list_public, locale, first_seen, last_seen) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
                     "ON CONFLICT(player_id) DO UPDATE SET " +
+                    "last_display_name = excluded.last_display_name, " +
                     "allow_friend_requests = excluded.allow_friend_requests, " +
                     "show_online_status = excluded.show_online_status, " +
                     "auto_accept_friends = excluded.auto_accept_friends, " +

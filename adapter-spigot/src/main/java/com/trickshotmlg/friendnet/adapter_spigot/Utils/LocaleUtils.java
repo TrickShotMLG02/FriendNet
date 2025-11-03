@@ -32,12 +32,4 @@ public class LocaleUtils {
             return new Locale(parts[0]);
         }
     }
-
-    // Example usage
-    public static void main(String[] args) {
-        System.out.println(getLocalizedLanguageName("de_CH", "en_US")); // "Englisch"
-        System.out.println(getLocalizedLanguageName("en_US", "de_CH")); // "German"
-        System.out.println(getLocalizedLanguageName("fr_FR", "de_CH")); // "allemand"
-        System.out.println(getLocalizedLanguageName("de_DE", "fr_FR")); // "Französisch"
-    }
 }

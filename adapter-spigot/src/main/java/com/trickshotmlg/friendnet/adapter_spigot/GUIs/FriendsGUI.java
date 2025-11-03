@@ -224,7 +224,8 @@ public class FriendsGUI extends AbstractGUI {
     private ItemStack createFriendItem(FriendshipData friend) {
 
         UUID friendID = friend.getOtherPlayerId(this.player.getUniqueId());
-        String friendName = SpigotUtils.getPlayerDisplayName(friendID);
+        // TODO: Make sure that the player data is present of the player. Maybe cache only usernames or keep full PlayerData and not remove on Disconnect
+        String friendName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendID);
 
         return SpigotUtils.createPlayerHead(friendID, friendName, List.of("N/A"));
     }

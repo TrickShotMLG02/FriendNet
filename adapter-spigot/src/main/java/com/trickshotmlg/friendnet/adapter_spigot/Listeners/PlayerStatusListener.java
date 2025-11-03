@@ -82,6 +82,7 @@ public class PlayerStatusListener extends AbstractListener {
         PlayerData playerData = playerService.getPlayerData(spigotPlayer.getUniqueId());
         // TODO: set player status to offline
         playerData.setLastSeen();
+        playerData.setLastDisplayName(event.getPlayer().getDisplayName());
         databaseService.save(playerData);
 
         // TODO: Remove this junk

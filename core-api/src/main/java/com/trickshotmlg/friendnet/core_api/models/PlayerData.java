@@ -10,7 +10,7 @@ public class PlayerData {
 
     /// The UUID of the player this data belongs to.
     private final UUID playerId;
-
+    private String lastDisplayName = null;
 
 
     // --- Settings --- //
@@ -19,7 +19,15 @@ public class PlayerData {
     private boolean autoAcceptFriends = false;
     private boolean friendRequestNotifications = true;
     private boolean friendListPublic = true;
-    private LocaleKey locale;
+    private LocaleKey locale = new LocaleKey("en");
+
+    public String getLastDisplayName() {
+        return lastDisplayName;
+    }
+
+    public void setLastDisplayName(String lastDisplayName) {
+        this.lastDisplayName = lastDisplayName;
+    }
 
     public boolean isAllowFriendRequests() {
         return allowFriendRequests;

@@ -106,6 +106,7 @@ public class DatabaseServiceImpl implements DatabaseService {
 
                             // Create PlayerData instance
                             PlayerData playerData = new PlayerData(playerId, firstSeen, lastSeen);
+                            playerData.setLastDisplayName(rs.getString("last_display_name"));
 
                             // Load boolean settings
                             playerData.setAllowFriendRequests(rs.getBoolean("allow_friend_requests"));
@@ -225,14 +226,15 @@ public class DatabaseServiceImpl implements DatabaseService {
 
             try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_UPSERT)){
                 ps.setObject(1, entity.getPlayerId());
-                ps.setBoolean(2, entity.isAllowFriendRequests());
-                ps.setBoolean(3, entity.isShowOnlineStatus());
-                ps.setBoolean(4, entity.isAutoAcceptFriends());
-                ps.setBoolean(5, entity.isFriendRequestNotifications());
-                ps.setBoolean(6, entity.isFriendListPublic());
-                ps.setString(7, entity.getLocale().getCode());
-                ps.setTimestamp(8, entity.getFirstSeen());
-                ps.setTimestamp(9, entity.getLastSeen());
+                ps.setString(2, entity.getLastDisplayName());
+                ps.setBoolean(3, entity.isAllowFriendRequests());
+                ps.setBoolean(4, entity.isShowOnlineStatus());
+                ps.setBoolean(5, entity.isAutoAcceptFriends());
+                ps.setBoolean(6, entity.isFriendRequestNotifications());
+                ps.setBoolean(7, entity.isFriendListPublic());
+                ps.setString(8, entity.getLocale().getCode());
+                ps.setTimestamp(9, entity.getFirstSeen());
+                ps.setTimestamp(10, entity.getLastSeen());
 
                 ps.executeUpdate();
             }

@@ -1,6 +1,8 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Utils;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -35,6 +37,29 @@ public final class SpigotUtils {
      * Get a player's display name if online, otherwise fall back to name or empty string.
      */
     public static String getPlayerDisplayName(UUID uuid) {
+        return getPlayerDisplayName(null, uuid);
+    }
+
+    public static String getPlayerDisplayName(FriendNetPlugin plugin, UUID uuid) {
+
+        Optional<Player> onlinePlayer = getOnlinePlayer(uuid);
+
+        // player is currently online, fetch current display name
+        if (onlinePlayer.isPresent()) {
+            return onlinePlayer.get().getDisplayName();
+        }
+
+        // try to fetch last known player display name
+        if (plugin != null) {
+            PlayerService ps = plugin.getPlayerService();
+            PlayerData pd = ps.getPlayerData(uuid);
+
+            if (pd != null) {
+                return pd.getLastDisplayName();
+            }
+        }
+
+        // if all fails, fall back to bukkit functionality
         return getOnlinePlayer(uuid)
                 .map(Player::getDisplayName)
                 .orElseGet(() -> getOfflinePlayer(uuid).getName() != null ? getOfflinePlayer(uuid).getName() : "");
