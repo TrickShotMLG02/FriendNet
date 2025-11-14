@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.core_api.interfaces;
 
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 
+import java.util.StringJoiner;
 import java.util.UUID;
 
 /**
@@ -54,4 +55,11 @@ public interface PlatformPlayer {
      * @return {@code true} if the player has the permission, {@code false} otherwise
      */
     boolean hasPermission(String permission);
+
+    default String toStringRepresentation() {
+        StringJoiner sj = new StringJoiner(", ", getClass().getSimpleName() + "{", "}");
+        sj.add("uuid=" + getUniqueId());
+        sj.add("name=" + getName());
+        return sj.toString();
+    }
 }

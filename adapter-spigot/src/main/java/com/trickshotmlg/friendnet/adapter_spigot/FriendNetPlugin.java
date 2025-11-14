@@ -10,6 +10,8 @@ import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core.database.DatabaseServiceImpl;
+import com.trickshotmlg.friendnet.core.events.PlayerJoinEvent;
+import com.trickshotmlg.friendnet.core_api.events.EventBus;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
@@ -25,11 +27,6 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
 public final class FriendNetPlugin extends JavaPlugin {
-    /*
-    https://github.com/TrickShotMLG02/MinecraftPluginDevelopment/blob/ModularLobby/ModularLobby/src/main/java/com/trickshotdev/modularlobby/Spigot/ModularLobby.java
-    Check this for more about configs, message files and other stuff
-    */
-
     private static boolean DEBUG = true;
 
     public static SpigotLocaleManager LocaleManager;
@@ -54,7 +51,15 @@ public final class FriendNetPlugin extends JavaPlugin {
         initializeServices();
         registerListeners();
         registerCommands();
+        registerEvents();
         Logger.info("FriendNet enabled!");
+    }
+
+    @Override
+    public void onDisable() {
+        EventBus.clear();
+
+        Logger.info("FriendNet disabled!");
     }
 
     private void initializePlatform() {
@@ -82,6 +87,13 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     private void registerCommands() {
         new FriendCommand(this);
+    }
+
+    private void registerEvents() {
+        // TODO: Remove this as it is only for testing purposes
+        EventBus.subscribe(PlayerJoinEvent.class, playerJoinEvent -> {
+            Logger.info("Player joined event received: " + playerJoinEvent);
+        });
     }
 
     public FriendService getFriendService() {

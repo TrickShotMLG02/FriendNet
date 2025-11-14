@@ -76,4 +76,9 @@ public class SpigotPlayer implements PlatformPlayer {
     public boolean hasPermission(String permission) {
         return player.hasPermission(permission);
     }
+
+    @Override
+    public String toString() {
+        return toStringRepresentation();
+    }
 }
