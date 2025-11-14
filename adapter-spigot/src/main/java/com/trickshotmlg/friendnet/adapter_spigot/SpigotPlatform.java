@@ -4,7 +4,6 @@ import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
 import com.trickshotmlg.friendnet.core_api.interfaces.PlatformPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -12,9 +11,9 @@ import java.util.stream.Collectors;
 
 public class SpigotPlatform implements Platform {
 
-    private final JavaPlugin plugin;
+    private final FriendNetPlugin plugin;
 
-    public SpigotPlatform(JavaPlugin plugin) {
+    public SpigotPlatform(FriendNetPlugin plugin) {
         this.plugin = plugin;
     }
 
