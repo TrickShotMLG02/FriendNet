@@ -43,7 +43,6 @@ public abstract class AbstractGUI {
      * Function to open the inventory for the player
      */
     public void open() {
-        // TODO: Localize titleKey
         inventory = Bukkit.createInventory(null, size, getInventoryTitle());
         buildInventory(); // fill it with items
         player.openInventory(inventory);

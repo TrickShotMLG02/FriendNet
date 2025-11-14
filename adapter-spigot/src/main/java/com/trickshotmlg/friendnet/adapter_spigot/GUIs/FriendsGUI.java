@@ -124,8 +124,9 @@ public class FriendsGUI extends AbstractGUI {
         // Pending Requests Item
         {
             ActionItemStack actionItemStack = new ActionItemStack(
+                    // TODO: Use Book if no new requests, use book and quill on pending requests
                     SpigotUtils.createItem(
-                            Material.BOOK,
+                            requests.size() > 0 ? Material.WRITABLE_BOOK : Material.BOOK,
                             player,
                             "gui",
                             "friendsGUI.buttons.requests.displayName",

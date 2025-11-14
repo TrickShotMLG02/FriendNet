@@ -31,7 +31,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
     private final PlayerService playerService;
 
     public LocaleSelectionGUI(JavaPlugin plugin, Player player) {
-        super(plugin, player, 9 * 4, "Locale Selection");
+        super(plugin, player, 9 * 4, "titles.localeSelectionGUI");
 
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());

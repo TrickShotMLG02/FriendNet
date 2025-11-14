@@ -49,7 +49,7 @@ public class FriendCommand extends AbstractCommand {
      */
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
-        MessageManager.send(sender, "commandFeedback.usage", Map.of("usage", getUsageMessage()));
+        MessageManager.send(sender, "commandFeedback.usage", Map.of("usage", getUsageMessage(sender)));
         return true;
     }
 

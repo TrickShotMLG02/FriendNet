@@ -85,10 +85,18 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
     public List<String> handleTabComplete(CommandSender sender, String[] args) {
 
-        // TODO: only return list of commands that a player has permission for
         if (args.length == 1 && !subCommands.isEmpty()) {
-            return subCommands.keySet().stream()
-                    .filter(s -> s.startsWith(args[0].toLowerCase()))
+            return subCommands.entrySet().stream()
+                    .filter(entry -> {
+                        String cmdName = entry.getKey();
+                        AbstractCommand cmd = entry.getValue();
+
+                        boolean cmdNamePredicate = cmdName.toLowerCase().startsWith(args[0].toLowerCase());
+                        boolean cmdPredicate = cmd.hasPermission(sender);
+
+                        return cmdNamePredicate && cmdPredicate;
+                    })
+                    .map(Map.Entry::getKey)
                     .toList();
         }
 
@@ -116,7 +124,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
         return null;
     }
 
-    protected String getUsageMessage() {
+    protected String getUsageMessage(CommandSender sender) {
         if (getSubCommands().isEmpty()) {
             return getUsage() != null ? getUsage() : "/" + getName();
         }
@@ -125,12 +133,19 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
         List<String> subNames = new ArrayList<>();
         for (AbstractCommand sub : getSubCommands()) {
-            // TODO: only add if that player has permission for command
-            subNames.add(sub.getName());
+            if (sender != null && sub.hasPermission(sender)) {
+                subNames.add(sub.getName());
+            }
         }
+
+        subNames.sort(String.CASE_INSENSITIVE_ORDER);
 
         sb.append(String.join(" | ", subNames)).append(">");
         return sb.toString();
+    }
+
+    protected String getUsageMessage() {
+        return getUsageMessage(null);
     }
 
     @Override
