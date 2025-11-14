@@ -1,4 +1,6 @@
-package com.trickshotmlg.friendnet.core_api.events;
+package com.trickshotmlg.friendnet.core.events;
+
+import com.trickshotmlg.friendnet.core_api.interfaces.events.IEvent;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;

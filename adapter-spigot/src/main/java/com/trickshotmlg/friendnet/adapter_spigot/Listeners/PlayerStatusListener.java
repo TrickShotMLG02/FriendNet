@@ -3,7 +3,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.enums.EventSource;
-import com.trickshotmlg.friendnet.core_api.events.EventBus;
+import com.trickshotmlg.friendnet.core.events.EventBus;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;

@@ -1,6 +1,7 @@
-package com.trickshotmlg.friendnet.core_api.events;
+package com.trickshotmlg.friendnet.core.events;
 
 import com.trickshotmlg.friendnet.core_api.enums.EventSource;
+import com.trickshotmlg.friendnet.core_api.interfaces.events.IEvent;
 
 import java.util.StringJoiner;
 
@@ -23,6 +24,7 @@ public abstract class AbstractEvent implements IEvent {
     public String toString() {
         StringJoiner sj = new StringJoiner(", ", getClass().getSimpleName() + "{", "}");
         sj.add("event_source=" + source);
+        sj.add("timestamp=" + timestamp);
 
         // Automatically include all declared fields from the subclass
         try {

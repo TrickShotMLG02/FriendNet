@@ -11,18 +11,16 @@ import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core.database.DatabaseServiceImpl;
 import com.trickshotmlg.friendnet.core.events.PlayerJoinEvent;
-import com.trickshotmlg.friendnet.core_api.events.EventBus;
+import com.trickshotmlg.friendnet.core.events.EventBus;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
-import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 

@@ -1,4 +1,4 @@
-package com.trickshotmlg.friendnet.core_api.events;
+package com.trickshotmlg.friendnet.core_api.interfaces.events;
 
 import com.trickshotmlg.friendnet.core_api.enums.EventSource;
 
