@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.FriendStatusNotifier;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
@@ -10,11 +11,13 @@ import org.bukkit.entity.Player;
 
 public class PlayerSettingsActions {
 
+    private final FriendNetPlugin plugin;
     private final PlayerService playerService;
     private final PlayerDataSaveQueue playerDataSaveQueue;
     private final Player player;
 
     public PlayerSettingsActions(FriendNetPlugin plugin, Player player) {
+        this.plugin = plugin;
         this.playerService = plugin.getPlayerService();
         this.playerDataSaveQueue = plugin.getPlayerDataSaveQueue();
         this.player = player;
@@ -34,7 +37,26 @@ public class PlayerSettingsActions {
     public boolean setShowOnlineStatus(boolean showOnlineStatus) {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
+            boolean changed = pd.isShowOnlineStatus() != showOnlineStatus;
+            boolean wasVisibleOnline = playerService.isOnline(player.getUniqueId());
+
             pd.setShowOnlineStatus(showOnlineStatus);
+            if (changed) {
+                if (showOnlineStatus) {
+                    pd.setLastSeen();
+                    playerService.setOnline(player.getUniqueId(), true);
+                    FriendStatusNotifier.notifyOnline(plugin, player.getUniqueId());
+                } else {
+                    if (wasVisibleOnline) {
+                        pd.setLastSeen();
+                    }
+                    playerService.setOnline(player.getUniqueId(), false);
+                    if (wasVisibleOnline) {
+                        FriendStatusNotifier.notifyOffline(plugin, player.getUniqueId());
+                    }
+                }
+            }
+
             completeSettingsChange("playerSettings.showOnlineStatus", showOnlineStatus);
             return true;
         }

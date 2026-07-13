@@ -63,7 +63,7 @@ public final class SpigotUtils {
             PlayerService ps = plugin.getPlayerService();
             PlayerData pd = ps.getPlayerData(uuid);
 
-            if (pd != null) {
+            if (pd != null && pd.getLastDisplayName() != null && !pd.getLastDisplayName().isBlank()) {
                 return pd.getLastDisplayName();
             }
         }

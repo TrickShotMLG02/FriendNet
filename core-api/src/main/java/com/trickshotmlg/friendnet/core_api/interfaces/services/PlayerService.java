@@ -19,6 +19,8 @@ public interface PlayerService {
 
     public boolean isOnline(UUID playerId);
 
+    public boolean setOnline(UUID playerId, boolean online);
+
     public PlayerData getPlayerData(UUID playerId);
 
     public boolean putPlayerData(PlayerData playerData);

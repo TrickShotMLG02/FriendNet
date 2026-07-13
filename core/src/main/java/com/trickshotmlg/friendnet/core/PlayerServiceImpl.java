@@ -5,12 +5,14 @@ import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
 import java.sql.Timestamp;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class PlayerServiceImpl implements PlayerService {
 
     private final Map<UUID, PlayerData> players = new ConcurrentHashMap<>();
+    private final Set<UUID> onlinePlayers = ConcurrentHashMap.newKeySet();
 
     /**
      * @param playerId
@@ -46,7 +48,19 @@ public class PlayerServiceImpl implements PlayerService {
      */
     @Override
     public boolean isOnline(UUID playerId) {
-        return players.containsKey(playerId) && getPlayerData(playerId).isShowOnlineStatus();
+        return onlinePlayers.contains(playerId)
+                && players.containsKey(playerId)
+                && getPlayerData(playerId).isShowOnlineStatus();
+    }
+
+    @Override
+    public boolean setOnline(UUID playerId, boolean online) {
+        if (online) {
+            onlinePlayers.add(playerId);
+        } else {
+            onlinePlayers.remove(playerId);
+        }
+        return true;
     }
 
     /**
@@ -75,6 +89,7 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     public boolean removePlayerData(UUID playerId) {
         players.remove(playerId);
+        onlinePlayers.remove(playerId);
         return true;
     }
 

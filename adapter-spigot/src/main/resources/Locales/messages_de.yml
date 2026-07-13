@@ -68,6 +68,9 @@ friendRequest:
 # Friend management events
 
 friend:
+  status:
+    online: '&e%player% &aist jetzt online'
+    offline: '&e%player% &cist jetzt offline'
   remove:
     sender:
       success: '&e%target% &bist nicht mehr dein Freund'
