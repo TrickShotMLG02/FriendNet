@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.core_api.interfaces.services;
 
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
+import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
@@ -16,8 +17,10 @@ public interface DatabaseService extends BaseService {
     public <T> Optional<Set<T>> findAll(UUID playerId, Class<T> clazz);
 
     public void save(FriendshipData entity);
+    public void save(BlocklistData entity);
     public void save(PlayerData entity);
 
     public void delete(FriendshipData entity);
+    public void delete(BlocklistData entity);
     public void delete(PlayerData entity);
 }

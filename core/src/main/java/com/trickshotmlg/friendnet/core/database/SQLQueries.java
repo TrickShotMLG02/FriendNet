@@ -80,11 +80,33 @@ public class SQLQueries {
     public static final String TABLE_FRIENDSHIPS_DELETE =
             "DELETE FROM friendships WHERE (player1_id = ? AND player2_id = ?) OR (player2_id = ? AND player1_id = ?)";
 
+    public static final String TABLE_BLOCKLIST_UPSERT =
+            "INSERT INTO blocklist (blocker_id, blocked_id, created_at) " +
+                    "VALUES (?, ?, ?) " +
+                    "ON CONFLICT(blocker_id, blocked_id) DO UPDATE SET " +
+                    "created_at = excluded.created_at;";
+
+    public static final String TABLE_BLOCKLIST_UPSERT_MYSQL =
+            "INSERT INTO blocklist (blocker_id, blocked_id, created_at) " +
+                    "VALUES (?, ?, ?) " +
+                    "ON DUPLICATE KEY UPDATE " +
+                    "created_at = VALUES(created_at);";
+
+    public static final String TABLE_BLOCKLIST_SELECT =
+            "SELECT * FROM blocklist WHERE blocker_id = ?";
+
+    public static final String TABLE_BLOCKLIST_DELETE =
+            "DELETE FROM blocklist WHERE blocker_id = ? AND blocked_id = ?";
+
     public static String playersUpsert(DatabaseType databaseType) {
         return databaseType == DatabaseType.SQLite ? TABLE_PLAYERS_UPSERT : TABLE_PLAYERS_UPSERT_MYSQL;
     }
 
     public static String friendshipsUpsert(DatabaseType databaseType) {
         return databaseType == DatabaseType.SQLite ? TABLE_FRIENDSHIPS_UPSERT : TABLE_FRIENDSHIPS_UPSERT_MYSQL;
+    }
+
+    public static String blocklistUpsert(DatabaseType databaseType) {
+        return databaseType == DatabaseType.SQLite ? TABLE_BLOCKLIST_UPSERT : TABLE_BLOCKLIST_UPSERT_MYSQL;
     }
 }

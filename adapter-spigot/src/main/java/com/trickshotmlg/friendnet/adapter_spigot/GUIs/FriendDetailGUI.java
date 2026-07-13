@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
@@ -66,13 +67,13 @@ public class FriendDetailGUI extends AbstractGUI {
 
         inventory.setItem(13, SpigotUtils.createPlayerHead(friendId, getFriendDisplayName(), createFriendLore(friendshipData, playerData)));
 
-        setInteractableItem(29, new ActionItemStack(
+        setInteractableItem(28, new ActionItemStack(
                 createFavouriteItem(friendshipData.isFavourite()),
                 player,
                 () -> toggleFavourite(friendshipData)
         ));
 
-        setInteractableItem(31, new ActionItemStack(
+        setInteractableItem(30, new ActionItemStack(
                 SpigotUtils.createItem(
                         Material.WRITABLE_BOOK,
                         player,
@@ -84,7 +85,19 @@ public class FriendDetailGUI extends AbstractGUI {
                 this::sendMessageShortcut
         ));
 
-        setInteractableItem(33, new ActionItemStack(
+        setInteractableItem(32, new ActionItemStack(
+                SpigotUtils.createItem(
+                        Material.BARRIER,
+                        player,
+                        "gui",
+                        "friendDetailGUI.buttons.blockPlayer.displayName",
+                        "friendDetailGUI.buttons.blockPlayer.lore"
+                ),
+                player,
+                this::blockPlayer
+        ));
+
+        setInteractableItem(34, new ActionItemStack(
                 SpigotUtils.createItem(
                         Material.REDSTONE_BLOCK,
                         player,
@@ -151,6 +164,11 @@ public class FriendDetailGUI extends AbstractGUI {
         }
 
         MessageManager.send(player, "friend.remove.sender.notFound", Map.of("target", getFriendDisplayName()));
+        goBack();
+    }
+
+    private void blockPlayer() {
+        new BlocklistActions((FriendNetPlugin) plugin).block(player, friendId);
         goBack();
     }
 

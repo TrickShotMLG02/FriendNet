@@ -78,6 +78,20 @@ friend:
     enabled: '&e%target% &aist jetzt ein Favorit'
     disabled: '&e%target% &cist kein Favorit mehr'
 
+# Blocklist events
+blocklist:
+  block:
+    success: '&e%target% &cwurde blockiert'
+    already: '&e%target% &cist bereits blockiert'
+    self: '&cDu kannst dich nicht selbst blockieren'
+  unblock:
+    success: '&e%target% &aist nicht mehr blockiert'
+  clear:
+    success: '&e%count% &aSpieler wurden aus deiner Blockliste entfernt'
+  friendRequest:
+    senderBlocked: '&cDu hast &e%target% &cblockiert. Entblocke den Spieler, bevor du eine Anfrage sendest.'
+    targetBlocked: '&e%target% &cnimmt keine Freundschaftsanfragen von dir an.'
+
 # Player settings feedback
 
 playerSettings:
