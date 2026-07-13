@@ -39,6 +39,12 @@ public abstract class AbstractGUI {
         return openGUIs.get(player);
     }
 
+    public static void unregisterOpenGUI(Player player, AbstractGUI gui) {
+        if (openGUIs.get(player) == gui) {
+            openGUIs.remove(player);
+        }
+    }
+
     /**
      * Function to open the inventory for the player
      */
@@ -46,6 +52,10 @@ public abstract class AbstractGUI {
         inventory = Bukkit.createInventory(null, size, getInventoryTitle());
         buildInventory(); // fill it with items
         player.openInventory(inventory);
+        registerOpenGUI();
+    }
+
+    protected void registerOpenGUI() {
         openGUIs.put(player, this);
     }
 
@@ -74,6 +84,10 @@ public abstract class AbstractGUI {
     public void close() {
         openGUIs.remove(player);
         player.closeInventory();
+    }
+
+    public boolean ownsInventory(Inventory inventory) {
+        return this.inventory != null && this.inventory.equals(inventory);
     }
 
     /**

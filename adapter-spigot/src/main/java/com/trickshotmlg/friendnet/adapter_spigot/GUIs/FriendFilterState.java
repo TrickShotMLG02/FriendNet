@@ -3,7 +3,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 public class FriendFilterState {
     private boolean favoritesOnly;
     private boolean onlineOnly;
-    private boolean sortByName;
+    private String nameSearchQuery = "";
     private boolean sortByRecentlySeen;
     private boolean reverseSort;
 
@@ -23,15 +23,20 @@ public class FriendFilterState {
         this.onlineOnly = onlineOnly;
     }
 
-    public boolean isSortByName() {
-        return sortByName;
+    public String getNameSearchQuery() {
+        return nameSearchQuery;
     }
 
-    public void setSortByName(boolean sortByName) {
-        this.sortByName = sortByName;
-        if (sortByName) {
-            sortByRecentlySeen = false;
-        }
+    public void setNameSearchQuery(String nameSearchQuery) {
+        this.nameSearchQuery = nameSearchQuery == null ? "" : nameSearchQuery.trim();
+    }
+
+    public boolean hasNameSearchQuery() {
+        return !nameSearchQuery.isBlank();
+    }
+
+    public void clearNameSearchQuery() {
+        nameSearchQuery = "";
     }
 
     public boolean isSortByRecentlySeen() {
@@ -40,9 +45,6 @@ public class FriendFilterState {
 
     public void setSortByRecentlySeen(boolean sortByRecentlySeen) {
         this.sortByRecentlySeen = sortByRecentlySeen;
-        if (sortByRecentlySeen) {
-            sortByName = false;
-        }
     }
 
     public boolean isReverseSort() {
@@ -56,7 +58,7 @@ public class FriendFilterState {
     public void reset() {
         favoritesOnly = false;
         onlineOnly = false;
-        sortByName = false;
+        nameSearchQuery = "";
         sortByRecentlySeen = false;
         reverseSort = false;
     }

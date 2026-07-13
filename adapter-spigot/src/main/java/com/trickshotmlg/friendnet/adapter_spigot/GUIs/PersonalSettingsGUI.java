@@ -22,11 +22,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             plugin,
             player,
             9 * 4,
-            FriendNetPlugin.LocaleManager.getMessage(
-                    player.getUniqueId(),
-                    "gui",
-                    "titles.personalSettingsGUI"
-            )
+            "titles.personalSettingsGUI"
         );
 
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
