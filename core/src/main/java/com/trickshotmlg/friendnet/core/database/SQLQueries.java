@@ -48,6 +48,9 @@ public class SQLQueries {
     public static final String TABLE_PLAYERS_SELECT =
             "SELECT * FROM players WHERE player_id = ?";
 
+    public static final String TABLE_PLAYERS_SELECT_BY_LAST_DISPLAY_NAME =
+            "SELECT * FROM players WHERE LOWER(last_display_name) = LOWER(?)";
+
     public static final String TABLE_PLAYERS_DELETE =
             "DELETE FROM players WHERE player_id = ?";
 

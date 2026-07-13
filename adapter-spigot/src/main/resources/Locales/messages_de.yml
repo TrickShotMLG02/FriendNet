@@ -31,11 +31,13 @@ friendRequest:
   send:
     sender:
       success: '&aDu hast eine Freundschaftsanfrage an &e%target% &agesendet'
+      autoAccepted: '&e%target% &ahat deine Freundschaftsanfrage automatisch angenommen'
       cannotSelf: '&cDu kannst dir selbst keine Freundschaftsanfrage senden'
       alreadyPending: '&cDu hast &e%target% &cbereits eine Freundschaftsanfrage gesendet'
       disabled: '&e%target% &chat Freundschaftsanfragen deaktiviert'
     target:
       success: '&aDu hast eine Freundschaftsanfrage von &e%sender% &aerhalten %acceptRequest% %denyRequest%'
+      autoAccepted: '&aDu hast eine Freundschaftsanfrage von &e%sender% &aautomatisch angenommen'
       alreadyPending: '&e%sender% &chat dir bereits eine Freundschaftsanfrage gesendet'
 
   accept:
