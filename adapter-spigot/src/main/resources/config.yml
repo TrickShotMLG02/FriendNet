@@ -4,6 +4,10 @@ Mode: Standalone
 # The backend to use: MySQL, SQLite, MariaDB
 DatabaseType: SQLite
 
+# Interval for coalesced standalone player-data writes.
+# In Proxy mode, the proxy should be the authoritative writer instead.
+PlayerDataFlushIntervalSeconds: 30
+
 SupportedLocales:
   - en_US
   - de

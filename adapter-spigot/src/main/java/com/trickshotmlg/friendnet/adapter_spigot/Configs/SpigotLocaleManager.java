@@ -35,6 +35,9 @@ public class SpigotLocaleManager implements LocaleManager {
             return;
         }
         playerData.setLocale(locale);
+        if (plugin.getPlayerDataSaveQueue() != null) {
+            plugin.getPlayerDataSaveQueue().markDirty(playerId);
+        }
     }
 
     @Override

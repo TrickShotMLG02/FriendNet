@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.PlayerSettingsActions;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.RadioItemStack;
@@ -78,9 +79,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
                             locale.equals(selectedLocale),
                             player,
                             newState -> {
-                                if (pd != null) {
-                                    pd.setLocale(locale);
-                                }
+                                new PlayerSettingsActions((FriendNetPlugin) plugin, player).setLocale(locale);
 
                                 // manually set all
                                 updateRadioSelection(visibleLocales.size(), localeToggles);

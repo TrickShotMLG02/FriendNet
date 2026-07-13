@@ -66,7 +66,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             setInteractableItem(slot, new ToggleItemStack(
                     playerService.getPlayerData(player.getUniqueId()).isAllowFriendRequests(),
                     player,
-                    newState -> new PlayerSettingsActions(playerService, player).setAllowFriendRequests(newState)
+                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setAllowFriendRequests(newState)
             ));
         }
 
@@ -88,7 +88,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             setInteractableItem(slot, new ToggleItemStack(
                     playerService.getPlayerData(player.getUniqueId()).isShowOnlineStatus(),
                     player,
-                    newState -> new PlayerSettingsActions(playerService, player).setShowOnlineStatus(newState)
+                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setShowOnlineStatus(newState)
             ));
         }
 
@@ -110,7 +110,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             setInteractableItem(slot, new ToggleItemStack(
                     playerService.getPlayerData(player.getUniqueId()).isAutoAcceptFriends(),
                     player,
-                    newState -> new PlayerSettingsActions(playerService, player).setAutoAcceptFriends(newState)
+                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setAutoAcceptFriends(newState)
             ));
         }
 
@@ -132,7 +132,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             setInteractableItem(slot, new ToggleItemStack(
                     playerService.getPlayerData(player.getUniqueId()).isFriendRequestNotifications(),
                     player,
-                    newState -> new PlayerSettingsActions(playerService, player).setFriendRequestNotifications(newState)
+                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setFriendRequestNotifications(newState)
             ));
         }
 
@@ -154,7 +154,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             setInteractableItem(slot, new ToggleItemStack(
                     playerService.getPlayerData(player.getUniqueId()).isFriendListPublic(),
                     player,
-                    newState -> new PlayerSettingsActions(playerService, player).setFriendListPublic(newState)
+                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setFriendListPublic(newState)
             ));
         }
 
