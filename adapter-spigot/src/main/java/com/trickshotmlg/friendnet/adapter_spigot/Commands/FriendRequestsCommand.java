@@ -1,11 +1,12 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
-import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -39,13 +40,10 @@ public class FriendRequestsCommand extends AbstractCommand{
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
+        List<FriendshipData> friends = fs.getFriendships(player.getUniqueId()).stream().toList();
+        List<FriendshipData> requests = fs.getPendingRequests(player.getUniqueId()).stream().toList();
 
-        MessageManager.send(sender, "requestList.header");
-
-        for (FriendshipData data : fs.getPendingRequests(((Player) sender).getUniqueId())) {
-            MessageManager.send(sender, "requestList.entry", Map.of("target", Bukkit.getOfflinePlayer(data.getRequesterId()).getName()));
-        }
-
+        new RequestsGUI(getPlugin(), player).openWithParent(new FriendsGUI(pl, player, friends, requests));
         return true;
     }
 

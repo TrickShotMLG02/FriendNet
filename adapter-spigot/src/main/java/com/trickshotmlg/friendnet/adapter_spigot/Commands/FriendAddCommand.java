@@ -2,11 +2,11 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver.KnownPlayerTarget;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
-import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
-import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -18,7 +18,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 public class FriendAddCommand extends AbstractCommand {
 
@@ -51,18 +50,16 @@ public class FriendAddCommand extends AbstractCommand {
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
-        PlayerService ps = pl.getPlayerService();
-        DatabaseService databaseService = pl.getDatabaseService();
         BlocklistActions blocklistActions = new BlocklistActions(pl);
-        Optional<KnownFriendTarget> optionalTarget = resolveKnownTarget(args[0], ps, databaseService);
+        Optional<KnownPlayerTarget> optionalTarget = KnownPlayerResolver.resolve(pl, args[0]);
 
         if (optionalTarget.isEmpty()) {
             MessageManager.send(sender, "commandFeedback.playerNotFound");
             return true;
         }
 
-        KnownFriendTarget target = optionalTarget.get();
-        UUID targetId = target.playerData().getPlayerId();
+        KnownPlayerTarget target = optionalTarget.get();
+        var targetId = target.playerId();
         String targetName = target.displayName();
 
         if (targetId.equals(player.getUniqueId())) {
@@ -155,35 +152,6 @@ public class FriendAddCommand extends AbstractCommand {
         return true;
     }
 
-    private Optional<KnownFriendTarget> resolveKnownTarget(String name, PlayerService playerService, DatabaseService databaseService) {
-        Player onlineTarget = Bukkit.getPlayerExact(name);
-        if (onlineTarget != null) {
-            PlayerData playerData = playerService.getPlayerData(onlineTarget.getUniqueId());
-            if (playerData == null) {
-                playerData = databaseService.find(onlineTarget.getUniqueId(), PlayerData.class)
-                        .orElseGet(() -> playerService.initPlayer(onlineTarget.getUniqueId()));
-                playerData.setLastDisplayName(onlineTarget.getDisplayName());
-                playerService.putPlayerData(playerData);
-            }
-            return Optional.of(new KnownFriendTarget(onlineTarget, playerData, onlineTarget.getName()));
-        }
-
-        return databaseService.findPlayerByLastDisplayName(name)
-                .map(playerData -> {
-                    playerService.putPlayerData(playerData);
-                    return new KnownFriendTarget(null, playerData, displayNameOrFallback(playerData));
-                });
-    }
-
-    private String displayNameOrFallback(PlayerData playerData) {
-        String displayName = playerData.getLastDisplayName();
-        if (displayName != null && !displayName.isBlank()) {
-            return displayName;
-        }
-
-        return playerData.getPlayerId().toString();
-    }
-
     /**
      * @param sender
      * @param args
@@ -191,16 +159,28 @@ public class FriendAddCommand extends AbstractCommand {
      */
     @Override
     protected List<String> tabComplete(CommandSender sender, String[] args) {
-        if (args.length == 1) {
+        if (args.length == 1 && sender instanceof Player player) {
+            FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
+            FriendService fs = pl.getFriendService();
+            BlocklistActions blocklistActions = new BlocklistActions(pl);
+            String prefix = args[0].toLowerCase();
+
             return Bukkit.getOnlinePlayers().stream()
+                    .filter(candidate -> !candidate.getUniqueId().equals(player.getUniqueId()))
+                    .filter(candidate -> !fs.areFriends(player.getUniqueId(), candidate.getUniqueId()))
+                    .filter(candidate -> !fs.requestPending(candidate.getUniqueId(), player.getUniqueId()))
+                    .filter(candidate -> !fs.requestPending(player.getUniqueId(), candidate.getUniqueId()))
+                    .filter(candidate -> !blocklistActions.hasEitherBlocked(player.getUniqueId(), candidate.getUniqueId()))
+                    .filter(candidate -> {
+                        PlayerData playerData = pl.getPlayerService().getPlayerData(candidate.getUniqueId());
+                        return playerData == null || playerData.isAllowFriendRequests();
+                    })
                     .map(Player::getName)
-                    .filter(n -> n.toLowerCase().startsWith(args[0].toLowerCase()) && n != sender.getName())
+                    .filter(name -> name.toLowerCase().startsWith(prefix))
+                    .sorted(String.CASE_INSENSITIVE_ORDER)
                     .toList();
         }
 
         return List.of();
-    }
-
-    private record KnownFriendTarget(Player onlinePlayer, PlayerData playerData, String displayName) {
     }
 }

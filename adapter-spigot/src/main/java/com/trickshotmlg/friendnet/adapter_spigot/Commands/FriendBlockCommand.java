@@ -1,13 +1,12 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
-import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver.KnownPlayerTarget;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
-import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
-import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,17 +14,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
-public class FriendCancelCommand extends AbstractCommand{
+public class FriendBlockCommand extends AbstractCommand {
 
-    protected FriendCancelCommand(JavaPlugin plugin) {
+    protected FriendBlockCommand(JavaPlugin plugin) {
         super(
                 plugin,
-                "cancel",
-                "Cancel a friend request sent to a player",
-                "/friend cancel <player>",
-                PermissionHolder.FRIEND_REQUESTS_CANCEL
+                "block",
+                "Block a player",
+                "/friend block <player>",
+                PermissionHolder.FRIEND_BLOCK
         );
     }
 
@@ -48,27 +46,26 @@ public class FriendCancelCommand extends AbstractCommand{
             return true;
         }
 
-        new FriendRequestActions(pl).cancelRequest(player, target.get().playerId(), target.get().displayName());
-
+        new BlocklistActions(pl).block(player, target.get().playerId());
         return true;
     }
-
 
     @Override
     protected List<String> tabComplete(CommandSender sender, String[] args) {
         if (args.length == 1 && sender instanceof Player player) {
             FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
-            FriendService fs = pl.getFriendService();
-            Set<FriendshipData> requests = fs.getSentRequests(player.getUniqueId());
+            BlocklistActions blocklistActions = new BlocklistActions(pl);
+            String prefix = args[0].toLowerCase();
 
-            return requests.stream()
-                    .map(f -> KnownPlayerResolver.displayName(pl, f.getOtherPlayerId(player.getUniqueId())))
-                    .filter(n -> n.toLowerCase().startsWith(args[0].toLowerCase()))
+            return Bukkit.getOnlinePlayers().stream()
+                    .filter(candidate -> !candidate.getUniqueId().equals(player.getUniqueId()))
+                    .filter(candidate -> !blocklistActions.isBlocked(player.getUniqueId(), candidate.getUniqueId()))
+                    .map(Player::getName)
+                    .filter(name -> name.toLowerCase().startsWith(prefix))
                     .sorted(String.CASE_INSENSITIVE_ORDER)
                     .toList();
         }
 
         return List.of();
     }
-
 }
