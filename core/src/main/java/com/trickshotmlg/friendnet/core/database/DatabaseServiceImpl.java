@@ -106,24 +106,7 @@ public class DatabaseServiceImpl implements DatabaseService {
 
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
-                            // Retrieve timestamps
-                            Timestamp firstSeen = rs.getTimestamp("first_seen");
-                            Timestamp lastSeen = rs.getTimestamp("last_seen");
-
-                            // Create PlayerData instance
-                            PlayerData playerData = new PlayerData(playerId, firstSeen, lastSeen);
-                            playerData.setLastDisplayName(rs.getString("last_display_name"));
-
-                            // Load boolean settings
-                            playerData.setAllowFriendRequests(rs.getBoolean("allow_friend_requests"));
-                            playerData.setShowOnlineStatus(rs.getBoolean("show_online_status"));
-                            playerData.setAutoAcceptFriends(rs.getBoolean("auto_accept_friends"));
-                            playerData.setFriendRequestNotifications(rs.getBoolean("friend_request_notifications"));
-                            playerData.setFriendListPublic(rs.getBoolean("friend_list_public"));
-                            playerData.setLocale(LocaleKey.getOrFallback(rs.getString("locale")));
-
-                            // Cast to T to satisfy the generic method signature
-                            return Optional.of(clazz.cast(playerData));
+                            return Optional.of(clazz.cast(mapPlayerData(rs)));
                         }
                     }
                 } catch (SQLException e) {
@@ -142,6 +125,49 @@ public class DatabaseServiceImpl implements DatabaseService {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<PlayerData> findPlayerByLastDisplayName(String lastDisplayName) {
+        if (lastDisplayName == null || lastDisplayName.isBlank()) {
+            return Optional.empty();
+        }
+
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
+
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_SELECT_BY_LAST_DISPLAY_NAME)) {
+                ps.setString(1, lastDisplayName);
+
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(mapPlayerData(rs));
+                    }
+                }
+            } catch (SQLException e) {
+                Logger.error("Failed to fetch player by last display name: " + lastDisplayName, e);
+            }
+        } catch (SQLException e) {
+            Logger.error("Could not establish database connection", e);
+        }
+
+        return Optional.empty();
+    }
+
+    private PlayerData mapPlayerData(ResultSet rs) throws SQLException {
+        UUID playerId = UUID.fromString(rs.getString("player_id"));
+        Timestamp firstSeen = rs.getTimestamp("first_seen");
+        Timestamp lastSeen = rs.getTimestamp("last_seen");
+
+        PlayerData playerData = new PlayerData(playerId, firstSeen, lastSeen);
+        playerData.setLastDisplayName(rs.getString("last_display_name"));
+        playerData.setAllowFriendRequests(rs.getBoolean("allow_friend_requests"));
+        playerData.setShowOnlineStatus(rs.getBoolean("show_online_status"));
+        playerData.setAutoAcceptFriends(rs.getBoolean("auto_accept_friends"));
+        playerData.setFriendRequestNotifications(rs.getBoolean("friend_request_notifications"));
+        playerData.setFriendListPublic(rs.getBoolean("friend_list_public"));
+        playerData.setLocale(LocaleKey.getOrFallback(rs.getString("locale")));
+        return playerData;
     }
 
     /**

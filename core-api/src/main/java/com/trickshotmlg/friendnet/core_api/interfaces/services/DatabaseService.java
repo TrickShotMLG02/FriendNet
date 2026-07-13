@@ -15,6 +15,7 @@ public interface DatabaseService extends BaseService {
 
     public <T> Optional<T> find(UUID playerId, Class<T> clazz);
     public <T> Optional<Set<T>> findAll(UUID playerId, Class<T> clazz);
+    public Optional<PlayerData> findPlayerByLastDisplayName(String lastDisplayName);
 
     public void save(FriendshipData entity);
     public void save(BlocklistData entity);
