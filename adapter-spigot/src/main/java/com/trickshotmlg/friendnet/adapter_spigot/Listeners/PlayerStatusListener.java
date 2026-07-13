@@ -1,6 +1,8 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.enums.EventSource;
 import com.trickshotmlg.friendnet.core.events.EventBus;
@@ -29,6 +31,7 @@ public class PlayerStatusListener extends AbstractListener {
     private final FriendService friendService;
     private final PlayerService playerService;
     private final DatabaseService databaseService;
+    private final PlayerDataSaveQueue playerDataSaveQueue;
 
     public PlayerStatusListener(JavaPlugin plugin, FriendService friendService, PlayerService playerService, DatabaseService databaseService) {
         super(plugin);
@@ -37,6 +40,7 @@ public class PlayerStatusListener extends AbstractListener {
         this.friendService = friendService;
         this.playerService = playerService;
         this.databaseService = databaseService;
+        this.playerDataSaveQueue = ((FriendNetPlugin) plugin).getPlayerDataSaveQueue();
     }
 
     @EventHandler
@@ -62,7 +66,7 @@ public class PlayerStatusListener extends AbstractListener {
                 playerData = initializedPlayerData;
             }
             playerService.putPlayerData(playerData);
-            databaseService.save(playerData);
+            playerDataSaveQueue.saveNow(playerData);
 
             // load player friendships into memory
             Optional<Set<FriendshipData>> friendships = databaseService.findAll(playerId, FriendshipData.class);
@@ -107,7 +111,7 @@ public class PlayerStatusListener extends AbstractListener {
         playerData.setLastSeen();
         playerData.setLastDisplayName(event.getPlayer().getDisplayName());
         PlayerData playerDataToSave = playerData;
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> databaseService.save(playerDataToSave));
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> playerDataSaveQueue.saveNow(playerDataToSave));
 
         // TODO: Remove this junk
         //friendService.acceptFriendRequest(UUID.fromString("0f8fbcdd-dd36-4409-a689-dc9fb761b55d"), spigotPlayer.getUniqueId());

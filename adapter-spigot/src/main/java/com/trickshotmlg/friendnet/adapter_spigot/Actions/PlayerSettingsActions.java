@@ -1,5 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
@@ -9,10 +11,12 @@ import org.bukkit.entity.Player;
 public class PlayerSettingsActions {
 
     private final PlayerService playerService;
+    private final PlayerDataSaveQueue playerDataSaveQueue;
     private final Player player;
 
-    public PlayerSettingsActions(PlayerService playerService, Player player) {
-        this.playerService = playerService;
+    public PlayerSettingsActions(FriendNetPlugin plugin, Player player) {
+        this.playerService = plugin.getPlayerService();
+        this.playerDataSaveQueue = plugin.getPlayerDataSaveQueue();
         this.player = player;
     }
 
@@ -20,6 +24,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setAllowFriendRequests(allowFriendRequests);
+            markDirty();
             return true;
         }
 
@@ -30,6 +35,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setShowOnlineStatus(showOnlineStatus);
+            markDirty();
             return true;
         }
 
@@ -40,6 +46,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setAutoAcceptFriends(autoAcceptFriends);
+            markDirty();
             return true;
         }
 
@@ -50,6 +57,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setFriendRequestNotifications(friendRequestNotifications);
+            markDirty();
             return true;
         }
 
@@ -60,6 +68,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setFriendListPublic(friendListPublic);
+            markDirty();
             return true;
         }
 
@@ -70,9 +79,16 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setLocale(locale);
+            markDirty();
             return true;
         }
 
         return false;
+    }
+
+    private void markDirty() {
+        if (playerDataSaveQueue != null) {
+            playerDataSaveQueue.markDirty(player.getUniqueId());
+        }
     }
 }

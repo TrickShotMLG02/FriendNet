@@ -3,6 +3,7 @@ package com.trickshotmlg.friendnet.adapter_spigot;
 import com.trickshotmlg.friendnet.adapter_spigot.Commands.FriendCommand;
 import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.GUIListener;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotLogger;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
@@ -36,6 +37,7 @@ public final class FriendNetPlugin extends JavaPlugin {
     private FriendService friendService;
     private PlayerService playerService;
     private DatabaseService databaseService;
+    private PlayerDataSaveQueue playerDataSaveQueue;
     private Platform platform;
 
     public FileConfiguration config = this.getConfig();
@@ -60,6 +62,9 @@ public final class FriendNetPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         EventBus.clear();
+        if (playerDataSaveQueue != null) {
+            playerDataSaveQueue.stopAndFlush();
+        }
         if (databaseService != null) {
             databaseService.stop();
         }
@@ -80,10 +85,12 @@ public final class FriendNetPlugin extends JavaPlugin {
         this.databaseService = new DatabaseServiceImpl(createDatabaseFromConfig());
         this.playerService = new PlayerServiceImpl();
         this.friendService = new FriendServiceImpl(this.databaseService, this.playerService);
+        this.playerDataSaveQueue = new PlayerDataSaveQueue(this, playerService, databaseService, isStandaloneMode());
 
         this.databaseService.init();
         this.databaseService.postInit();
         this.databaseService.start();
+        this.playerDataSaveQueue.start(getPlayerDataFlushIntervalTicks());
     }
 
     private Database createDatabaseFromConfig() {
@@ -134,8 +141,21 @@ public final class FriendNetPlugin extends JavaPlugin {
         return playerService;
     }
 
+    public PlayerDataSaveQueue getPlayerDataSaveQueue() {
+        return playerDataSaveQueue;
+    }
+
     public DatabaseService getDatabaseService() {
         return databaseService;
+    }
+
+    private boolean isStandaloneMode() {
+        return "Standalone".equalsIgnoreCase(config.getString("Mode", "Standalone"));
+    }
+
+    private long getPlayerDataFlushIntervalTicks() {
+        int seconds = config.getInt("PlayerDataFlushIntervalSeconds", 30);
+        return Math.max(5, seconds) * 20L;
     }
 
     public void createConfigWithDefaults() {
