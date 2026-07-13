@@ -4,7 +4,6 @@ import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
-import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -37,9 +36,8 @@ public class FriendAcceptAllCommand extends AbstractCommand {
         }
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
-        FriendService fs = pl.getFriendService();
 
-        int count = new FriendRequestActions(fs).acceptAllRequests(player);
+        new FriendRequestActions(pl).acceptAllRequests(player);
 
         return true;
     }

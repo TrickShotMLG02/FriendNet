@@ -1,11 +1,11 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
@@ -41,12 +41,15 @@ public class FriendRequestActions {
      * @return {@code true} if the request was successfully accepted, {@code false} if no such request existed.
      */
     public boolean acceptRequest(Player sender, OfflinePlayer requester) {
-        boolean success = friendService.acceptFriendRequest(sender.getUniqueId(), requester.getUniqueId());
-        String requesterName = getDisplayName(requester);
+        return acceptRequest(sender, requester.getUniqueId(), getDisplayName(requester));
+    }
+
+    public boolean acceptRequest(Player sender, UUID requesterId, String requesterName) {
+        boolean success = friendService.acceptFriendRequest(sender.getUniqueId(), requesterId);
 
         if (success) {
             MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", requesterName));
-            MessageManager.send(requester, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
+            MessageManager.send(requesterId, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
         } else {
             MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", requesterName));
         }
@@ -71,14 +74,14 @@ public class FriendRequestActions {
         }
 
         for (FriendshipData r : requests) {
-            OfflinePlayer target = Bukkit.getOfflinePlayer(r.getRequesterId());
-            String targetName = getDisplayName(target);
+            UUID requesterId = r.getRequesterId();
+            String targetName = getDisplayName(requesterId);
 
-            boolean success = friendService.acceptFriendRequest(sender.getUniqueId(), target.getUniqueId());
+            boolean success = friendService.acceptFriendRequest(sender.getUniqueId(), requesterId);
 
             if (success) {
                 MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", targetName));
-                MessageManager.send(target, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
+                MessageManager.send(requesterId, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
                 accepted++;
             } else {
                 MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", targetName));
@@ -96,8 +99,11 @@ public class FriendRequestActions {
      * @return {@code true} if the request was successfully denied, {@code false} if no such request existed.
      */
     public boolean denyRequest(Player sender, OfflinePlayer requester) {
-        boolean success = friendService.denyFriendRequest(sender.getUniqueId(), requester.getUniqueId());
-        String requesterName = getDisplayName(requester);
+        return denyRequest(sender, requester.getUniqueId(), getDisplayName(requester));
+    }
+
+    public boolean denyRequest(Player sender, UUID requesterId, String requesterName) {
+        boolean success = friendService.denyFriendRequest(sender.getUniqueId(), requesterId);
 
         if (success) {
             MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", requesterName));
@@ -125,10 +131,10 @@ public class FriendRequestActions {
         }
 
         for (FriendshipData r : requests) {
-            OfflinePlayer target = Bukkit.getOfflinePlayer(r.getRequesterId());
-            String targetName = getDisplayName(target);
+            UUID requesterId = r.getRequesterId();
+            String targetName = getDisplayName(requesterId);
 
-            boolean success = friendService.denyFriendRequest(sender.getUniqueId(), target.getUniqueId());
+            boolean success = friendService.denyFriendRequest(sender.getUniqueId(), requesterId);
             if (success) {
                 MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", targetName));
                 denied++;
@@ -149,8 +155,11 @@ public class FriendRequestActions {
      * @return {@code true} if the request was successfully cancelled, {@code false} if it no longer existed.
      */
     public boolean cancelRequest(Player requester, OfflinePlayer target) {
-        boolean success = friendService.cancelRequest(requester.getUniqueId(), target.getUniqueId());
-        String targetName = getDisplayName(target);
+        return cancelRequest(requester, target.getUniqueId(), getDisplayName(target));
+    }
+
+    public boolean cancelRequest(Player requester, UUID targetId, String targetName) {
+        boolean success = friendService.cancelRequest(requester.getUniqueId(), targetId);
 
         if (success) {
             MessageManager.send(requester, "friendRequest.cancel.sender.success", Map.of("target", targetName));
@@ -178,10 +187,10 @@ public class FriendRequestActions {
         }
 
         for (FriendshipData r : requests) {
-            OfflinePlayer target = Bukkit.getOfflinePlayer(r.getOtherPlayerId(sender.getUniqueId()));
-            String targetName = getDisplayName(target);
+            UUID targetId = r.getOtherPlayerId(sender.getUniqueId());
+            String targetName = getDisplayName(targetId);
 
-            boolean success = friendService.cancelRequest(sender.getUniqueId(), target.getUniqueId());
+            boolean success = friendService.cancelRequest(sender.getUniqueId(), targetId);
             if (success) {
                 MessageManager.send(sender, "friendRequest.cancel.sender.success", Map.of("target", targetName));
                 cancelled++;
@@ -191,6 +200,14 @@ public class FriendRequestActions {
         }
 
         return cancelled;
+    }
+
+    private String getDisplayName(UUID playerId) {
+        if (plugin != null) {
+            return KnownPlayerResolver.displayName(plugin, playerId);
+        }
+
+        return playerId != null ? playerId.toString() : "Unknown";
     }
 
     private String getDisplayName(OfflinePlayer player) {
