@@ -2,6 +2,9 @@
 locale:
   texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjFjMjMwOTdlZjE3NjJkNTFkZjI5N2Y5YzQ0NTcwOGQ5NDM5ZmY5MTc0NmQyZjY3N2IyOGRkZGZhMjczMTYifX19"
 
+format:
+  timestamp: "dd.MM.yyyy HH:mm"
+
 titles:
   friendsGUI: "Deine Freunde"
   friendRequestsGUI: "Freundschaftsanfragen"
@@ -12,6 +15,7 @@ titles:
   favoriteFriendsGUI: "Favorisierte Freunde"
   friendFilterGUI: "Freundesfilter"
   friendNameSearchGUI: "Freunde suchen"
+  friendDetailGUI: "%target%"
 
 # Buttons / Items
 buttons:
@@ -203,6 +207,30 @@ friendSettingsGUI:
     confirm: "&cBist du sicher, dass du &e%target% &centfernen möchtest?"
     success: "&e%target% &bwurde aus deinen Freunden entfernt"
     fail: "&cFehler beim Entfernen von &e%target%"
+
+# Friend Detail GUI
+friendDetailGUI:
+  buttons:
+    favourite:
+      add:
+        displayName: "&aFavorit hinzufuegen"
+        lore:
+          - "&7Markiere diesen Freund als Favorit."
+      remove:
+        displayName: "&cFavorit entfernen"
+        lore:
+          - "&7Entferne diesen Freund aus deinen Favoriten."
+    message:
+      displayName: "&eNachricht senden"
+      lore:
+        - "&7Bereite eine private Nachricht vor."
+    removeFriend:
+      displayName: "&cFreund entfernen"
+      lore:
+        - "&7Entferne diesen Spieler aus deiner Freundesliste."
+  message:
+    prompt: "&eKlicke hier, um &a%target% &eeine Nachricht zu senden"
+    hover: "&7Befehl vorschlagen: &e%command%"
 
 # Personal Settings GUI
 personalSettingsGUI:

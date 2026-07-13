@@ -24,7 +24,7 @@ import java.util.UUID;
 
 public class FavoriteFriendsGUI extends AbstractGUI {
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final String DEFAULT_TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm";
 
     private final int friendRows = 3;
     private final int friendsPerPage = friendRows * 9;
@@ -55,7 +55,13 @@ public class FavoriteFriendsGUI extends AbstractGUI {
 
         for (int i = 0; i < visibleFriends.size(); i++) {
             FriendshipData friend = visibleFriends.get(i);
-            inventory.setItem(i, createFriendItem(friend));
+            UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+            setInteractableItem(i, new ActionItemStack(
+                    createFriendItem(friend),
+                    player,
+                    () -> openChild(new FriendDetailGUI(plugin, player, friendId)),
+                    ActionItemStack.SoundProfile.NAVIGATION
+            ));
         }
 
         int bottomRowStart = inventory.getSize() - 9;
@@ -149,7 +155,20 @@ public class FavoriteFriendsGUI extends AbstractGUI {
             return locale("friendEntries.lastSeen.unknown");
         }
 
-        return DATE_TIME_FORMATTER.format(timestamp.toInstant().atZone(ZoneId.systemDefault()));
+        return getTimestampFormatter().format(timestamp.toInstant().atZone(ZoneId.systemDefault()));
+    }
+
+    private DateTimeFormatter getTimestampFormatter() {
+        String pattern = locale("format.timestamp");
+        if (pattern == null || pattern.isBlank() || pattern.equals("format.timestamp")) {
+            pattern = DEFAULT_TIMESTAMP_FORMAT;
+        }
+
+        try {
+            return DateTimeFormatter.ofPattern(pattern);
+        } catch (IllegalArgumentException e) {
+            return DateTimeFormatter.ofPattern(DEFAULT_TIMESTAMP_FORMAT);
+        }
     }
 
     private String locale(String key) {

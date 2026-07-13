@@ -69,6 +69,9 @@ friend:
     target:
       success: "&e%sender% &bremoved you from their friends list"
       notFound: "&c%sender% tried to remove you but you are not their friend"
+  favourite:
+    enabled: "&e%target% &ais now a favourite"
+    disabled: "&e%target% &cis no longer a favourite"
 
 # Player settings feedback
 playerSettings:
