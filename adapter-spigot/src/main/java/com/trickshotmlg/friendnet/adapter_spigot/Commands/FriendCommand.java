@@ -22,6 +22,8 @@ public class FriendCommand extends AbstractCommand {
         // Register subcommands
         registerSubCommand(new FriendAddCommand(plugin));
         registerSubCommand(new FriendRemoveCommand(plugin));
+        registerSubCommand(new FriendBlockCommand(plugin));
+        registerSubCommand(new FriendUnblockCommand(plugin));
         registerSubCommand(new FriendAcceptCommand(plugin));
         registerSubCommand(new FriendAcceptAllCommand(plugin));
         registerSubCommand(new FriendDenyCommand(plugin));
@@ -39,6 +41,13 @@ public class FriendCommand extends AbstractCommand {
         if (command != null) {
             command.setExecutor(this);
             command.setTabCompleter(this);
+        }
+
+        PluginCommand friendsCommand = plugin.getCommand("friends");
+        if (friendsCommand != null) {
+            FriendListCommand friendsAliasCommand = new FriendListCommand(plugin);
+            friendsCommand.setExecutor(friendsAliasCommand);
+            friendsCommand.setTabCompleter(friendsAliasCommand);
         }
     }
 

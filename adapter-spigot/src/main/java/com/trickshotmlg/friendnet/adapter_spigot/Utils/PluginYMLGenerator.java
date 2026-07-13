@@ -29,6 +29,7 @@ public class PluginYMLGenerator {
 
         Map<String, Object> commands = new LinkedHashMap<>();
         commands.put("friend", null);
+        commands.put("friends", null);
 
         // permissions
         Map<String, Object> permissions = new LinkedHashMap<>();

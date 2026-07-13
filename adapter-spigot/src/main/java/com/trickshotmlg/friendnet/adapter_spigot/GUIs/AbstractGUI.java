@@ -74,6 +74,11 @@ public abstract class AbstractGUI {
         child.open();
     }
 
+    public void openWithParent(AbstractGUI parent) {
+        this.parentGUI = parent;
+        open();
+    }
+
     protected void openConfirmation(
             String titleKey,
             String promptDisplayNameKey,
