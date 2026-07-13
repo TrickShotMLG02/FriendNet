@@ -2,3 +2,11 @@
 /adapter-spigot/target/
 /core/target/
 /core-api/target/
+
+# IntelliJ workspace/module files generated locally
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/dictionaries/
+.idea/shelf/
+*.iml
