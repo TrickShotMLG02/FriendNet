@@ -2,12 +2,12 @@ package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import org.bukkit.entity.Player;
 
-// TODO: Send player messages about settings change
 public class PlayerSettingsActions {
 
     private final PlayerService playerService;
@@ -24,7 +24,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setAllowFriendRequests(allowFriendRequests);
-            markDirty();
+            completeSettingsChange("playerSettings.allowFriendRequests", allowFriendRequests);
             return true;
         }
 
@@ -35,7 +35,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setShowOnlineStatus(showOnlineStatus);
-            markDirty();
+            completeSettingsChange("playerSettings.showOnlineStatus", showOnlineStatus);
             return true;
         }
 
@@ -46,7 +46,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setAutoAcceptFriends(autoAcceptFriends);
-            markDirty();
+            completeSettingsChange("playerSettings.autoAcceptFriends", autoAcceptFriends);
             return true;
         }
 
@@ -57,7 +57,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setFriendRequestNotifications(friendRequestNotifications);
-            markDirty();
+            completeSettingsChange("playerSettings.friendRequestNotifications", friendRequestNotifications);
             return true;
         }
 
@@ -68,7 +68,7 @@ public class PlayerSettingsActions {
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         if (pd != null) {
             pd.setFriendListPublic(friendListPublic);
-            markDirty();
+            completeSettingsChange("playerSettings.friendListPublic", friendListPublic);
             return true;
         }
 
@@ -80,6 +80,7 @@ public class PlayerSettingsActions {
         if (pd != null) {
             pd.setLocale(locale);
             markDirty();
+            MessageManager.send(player, "playerSettings.locale.changed");
             return true;
         }
 
@@ -90,5 +91,10 @@ public class PlayerSettingsActions {
         if (playerDataSaveQueue != null) {
             playerDataSaveQueue.markDirty(player.getUniqueId());
         }
+    }
+
+    private void completeSettingsChange(String messageKeyPrefix, boolean enabled) {
+        markDirty();
+        MessageManager.send(player, messageKeyPrefix + (enabled ? ".enabled" : ".disabled"));
     }
 }

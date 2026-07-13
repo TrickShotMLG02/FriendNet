@@ -70,6 +70,26 @@ friend:
       success: "&e%sender% &bremoved you from their friends list"
       notFound: "&c%sender% tried to remove you but you are not their friend"
 
+# Player settings feedback
+playerSettings:
+  allowFriendRequests:
+    enabled: "&aFriend requests are now enabled"
+    disabled: "&cFriend requests are now disabled"
+  showOnlineStatus:
+    enabled: "&aYour online status is now visible"
+    disabled: "&cYour online status is now hidden"
+  autoAcceptFriends:
+    enabled: "&aFriend requests will now be accepted automatically"
+    disabled: "&cFriend requests will no longer be accepted automatically"
+  friendRequestNotifications:
+    enabled: "&aFriend request notifications are now enabled"
+    disabled: "&cFriend request notifications are now disabled"
+  friendListPublic:
+    enabled: "&aYour friend list is now public"
+    disabled: "&cYour friend list is now private"
+  locale:
+    changed: "&aYour language has been updated"
+
 # Friend request list display
 requestList:
   header: "&aYou have pending friend requests from the following players:"
