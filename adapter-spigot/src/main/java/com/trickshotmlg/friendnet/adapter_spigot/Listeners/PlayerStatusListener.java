@@ -43,21 +43,26 @@ public class PlayerStatusListener extends AbstractListener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
         UUID playerId = spigotPlayer.getUniqueId();
+        String lastDisplayName = event.getPlayer().getDisplayName();
 
         // TODO: Remove this as it is only for testing purposes
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, spigotPlayer));
-        playerService.initPlayer(playerId);
+        PlayerData initializedPlayerData = playerService.initPlayer(playerId);
+        initializedPlayerData.setLastDisplayName(lastDisplayName);
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             // load player data
             Optional<PlayerData> pld = databaseService.find(playerId, PlayerData.class);
+            PlayerData playerData;
             if (pld.isPresent()) {
-                PlayerData playerData = pld.get();
+                playerData = pld.get();
+                playerData.setLastDisplayName(lastDisplayName);
                 Logger.debug("playerData: " + playerData);
-                playerService.putPlayerData(playerData);
             } else {
-                playerService.initPlayer(playerId);
+                playerData = initializedPlayerData;
             }
+            playerService.putPlayerData(playerData);
+            databaseService.save(playerData);
 
             // load player friendships into memory
             Optional<Set<FriendshipData>> friendships = databaseService.findAll(playerId, FriendshipData.class);

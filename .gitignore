@@ -2,6 +2,7 @@
 /adapter-spigot/target/
 /core/target/
 /core-api/target/
+/dev-server/
 
 # IntelliJ workspace/module files generated locally
 .idea/workspace.xml

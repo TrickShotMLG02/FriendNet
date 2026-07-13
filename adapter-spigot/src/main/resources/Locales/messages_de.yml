@@ -23,7 +23,7 @@ chatButtons:
     hover: '&bKlicke hier, um die Anfrage anzunehmen'
   denyRequest:
     text: '&c[Ablehnen]'
-  hover: '&bKlicke hier, um die Anfrage abzulehnen'
+    hover: '&bKlicke hier, um die Anfrage abzulehnen'
 
 # Friend request events
 

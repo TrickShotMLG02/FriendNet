@@ -293,6 +293,13 @@ public final class SpigotUtils {
 
         // Remove leading and trailing brackets if present
         input = input.trim();
+        if (input.contains("\n")) {
+            return Arrays.stream(input.split("\\R"))
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .toList();
+        }
+
         if (input.startsWith("[") && input.endsWith("]")) {
             input = input.substring(1, input.length() - 1);
         }

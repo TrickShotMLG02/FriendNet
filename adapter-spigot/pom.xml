@@ -20,6 +20,19 @@
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <friendnet.dev.server.dir>${maven.multiModuleProjectDirectory}/dev-server</friendnet.dev.server.dir>
+        <friendnet.dev.server.jar>${friendnet.dev.server.dir}/server.jar</friendnet.dev.server.jar>
+        <friendnet.dev.server.xms>1G</friendnet.dev.server.xms>
+        <friendnet.dev.server.xmx>2G</friendnet.dev.server.xmx>
+        <friendnet.dev.debug.port>5005</friendnet.dev.debug.port>
+        <friendnet.dev.debug.suspend>n</friendnet.dev.debug.suspend>
+        <friendnet.dev.minecraft.version>1.21</friendnet.dev.minecraft.version>
+        <friendnet.dev.java.executable>${java.home}/bin/java</friendnet.dev.java.executable>
+        <friendnet.dev.server.download.force>false</friendnet.dev.server.download.force>
+        <friendnet.dev.server.userAgent>FriendNetDevServer/1.0 (local development)</friendnet.dev.server.userAgent>
+        <friendnet.dev.luckperms.skip>false</friendnet.dev.luckperms.skip>
+        <friendnet.dev.luckperms.loader>bukkit</friendnet.dev.luckperms.loader>
+        <friendnet.dev.luckperms.jar>${friendnet.dev.server.dir}/plugins/LuckPerms.jar</friendnet.dev.luckperms.jar>
     </properties>
 
     <dependencies>
@@ -128,4 +141,117 @@
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
     </repositories>
+
+    <profiles>
+        <profile>
+            <id>dev-server</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>download-paper-server</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <mainClass>com.trickshotmlg.friendnet.adapter_spigot.Utils.PaperServerDownloader</mainClass>
+                                    <classpathScope>compile</classpathScope>
+                                    <arguments>
+                                        <argument>${friendnet.dev.minecraft.version}</argument>
+                                        <argument>${friendnet.dev.server.jar}</argument>
+                                        <argument>${friendnet.dev.server.download.force}</argument>
+                                        <argument>${friendnet.dev.server.userAgent}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>download-luckperms</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${friendnet.dev.luckperms.skip}</skip>
+                                    <mainClass>com.trickshotmlg.friendnet.adapter_spigot.Utils.ModrinthPluginDownloader</mainClass>
+                                    <classpathScope>compile</classpathScope>
+                                    <arguments>
+                                        <argument>luckperms</argument>
+                                        <argument>${friendnet.dev.luckperms.loader}</argument>
+                                        <argument>${friendnet.dev.minecraft.version}</argument>
+                                        <argument>${friendnet.dev.luckperms.jar}</argument>
+                                        <argument>${friendnet.dev.server.download.force}</argument>
+                                        <argument>${friendnet.dev.server.userAgent}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-dev-server</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${friendnet.dev.server.dir}/plugins" />
+                                        <echo file="${friendnet.dev.server.dir}/eula.txt">eula=true</echo>
+                                        <copy file="${project.build.directory}/friendnet-spigot.jar"
+                                              todir="${friendnet.dev.server.dir}/plugins"
+                                              overwrite="true" />
+                                        <echo message="Copied FriendNet to ${friendnet.dev.server.dir}/plugins" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>run-dev-server</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>run-dev-server</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <workingDirectory>${friendnet.dev.server.dir}</workingDirectory>
+                                    <executable>${friendnet.dev.java.executable}</executable>
+                                    <arguments>
+                                        <argument>-Xms${friendnet.dev.server.xms}</argument>
+                                        <argument>-Xmx${friendnet.dev.server.xmx}</argument>
+                                        <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=${friendnet.dev.debug.suspend},address=*:${friendnet.dev.debug.port}</argument>
+                                        <argument>-jar</argument>
+                                        <argument>${friendnet.dev.server.jar}</argument>
+                                        <argument>nogui</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
