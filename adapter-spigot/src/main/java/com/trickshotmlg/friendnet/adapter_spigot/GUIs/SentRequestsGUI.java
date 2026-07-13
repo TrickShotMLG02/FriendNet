@@ -57,6 +57,10 @@ public class SentRequestsGUI extends AbstractGUI {
             ));
         }
 
+        if (requests.isEmpty()) {
+            inventory.setItem(22, GUIUtils.CreateEmptyStateItem(player, "sentRequestsGUI.emptyListMessage"));
+        }
+
         int bottomRowStart = inventory.getSize() - 9;
 
         if (currentPage > 0) {
@@ -95,11 +99,19 @@ public class SentRequestsGUI extends AbstractGUI {
                         "sentRequestsGUI.buttons.cancelAll.lore"
                 ),
                 player,
-                () -> {
-                    new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService()).cancelAllRequests(player);
-                    currentPage = 0;
-                    buildInventory();
-                }
+                () -> openConfirmation(
+                        "titles.confirmationGUI",
+                        "confirmations.cancelAllRequests.displayName",
+                        "confirmations.cancelAllRequests.lore",
+                        Map.of(),
+                        confirmed -> {
+                            if (confirmed) {
+                                new FriendRequestActions((FriendNetPlugin) plugin).cancelAllRequests(player);
+                                currentPage = 0;
+                                buildInventory();
+                            }
+                        }
+                )
         ));
 
         inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(

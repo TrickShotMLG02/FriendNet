@@ -206,14 +206,12 @@ public final class MessageManager {
      */
     @Deprecated
     public static String format(String key, Map<String, Object> placeholders) {
-        /*
-        String message = get(key);
+        String message = get(null, key);
         for (Map.Entry<String, Object> entry : placeholders.entrySet()) {
-            message = message.replace("%" + entry.getKey() + "%", entry.getValue());
+            Object value = entry.getValue();
+            message = message.replace("%" + entry.getKey() + "%", value != null ? value.toString() : "");
         }
         return message;
-         */
-        throw new UnsupportedOperationException("This is going to be removed.");
     }
 
     /**

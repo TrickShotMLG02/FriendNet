@@ -53,6 +53,7 @@ public class GUIListener extends AbstractListener {
 
         AbstractGUI gui = AbstractGUI.getOpenGUI(player);
         if (gui != null && gui.ownsInventory(event.getInventory())) {
+            gui.onClose();
             AbstractGUI.unregisterOpenGUI(player, gui);
         }
     }

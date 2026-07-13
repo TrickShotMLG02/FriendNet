@@ -70,7 +70,17 @@ public class SentRequestDetailGUI extends AbstractGUI {
                         "sentRequestDetailGUI.buttons.cancel.lore"
                 ),
                 player,
-                this::cancelRequest
+                () -> openConfirmation(
+                        "titles.confirmationGUI",
+                        "confirmations.cancelRequest.displayName",
+                        "confirmations.cancelRequest.lore",
+                        Map.of("target", getTargetDisplayName()),
+                        confirmed -> {
+                            if (confirmed) {
+                                cancelRequest();
+                            }
+                        }
+                )
         ));
 
         setInteractableItem(31, new ActionItemStack(
@@ -82,7 +92,17 @@ public class SentRequestDetailGUI extends AbstractGUI {
                         "sentRequestDetailGUI.buttons.block.lore"
                 ),
                 player,
-                this::blockTarget
+                () -> openConfirmation(
+                        "titles.confirmationGUI",
+                        "confirmations.blockPlayer.displayName",
+                        "confirmations.blockPlayer.lore",
+                        Map.of("target", getTargetDisplayName()),
+                        confirmed -> {
+                            if (confirmed) {
+                                blockTarget();
+                            }
+                        }
+                )
         ));
 
         setInteractableItem(33, new ActionItemStack(
@@ -107,7 +127,7 @@ public class SentRequestDetailGUI extends AbstractGUI {
     }
 
     private void cancelRequest() {
-        new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService()).cancelRequest(player, getTarget());
+        new FriendRequestActions((FriendNetPlugin) plugin).cancelRequest(player, getTarget());
         goBack();
     }
 

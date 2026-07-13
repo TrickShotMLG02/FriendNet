@@ -62,6 +62,10 @@ public class RequestsGUI extends AbstractGUI {
             ));
         }
 
+        if (requests.isEmpty()) {
+            inventory.setItem(22, GUIUtils.CreateEmptyStateItem(player, "friendRequestsGUI.emptyListMessage"));
+        }
+
         // Navigation buttons
         int bottomRowStart = inventory.getSize() - 9;
 
@@ -124,12 +128,20 @@ public class RequestsGUI extends AbstractGUI {
                     new ActionItemStack(
                             denyAllItem,
                             player,
-                            () -> {
-                                new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService())
-                                        .denyAllRequests(player);
+                            () -> openConfirmation(
+                                    "titles.confirmationGUI",
+                                    "confirmations.denyAllRequests.displayName",
+                                    "confirmations.denyAllRequests.lore",
+                                    Map.of(),
+                                    confirmed -> {
+                                        if (confirmed) {
+                                            new FriendRequestActions((FriendNetPlugin) plugin)
+                                                    .denyAllRequests(player);
 
-                                buildInventory();
-                            }
+                                            buildInventory();
+                                        }
+                                    }
+                            )
                     )
             );
         }
@@ -182,7 +194,7 @@ public class RequestsGUI extends AbstractGUI {
                             acceptAllItem,
                             player,
                             () -> {
-                                new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService())
+                                new FriendRequestActions((FriendNetPlugin) plugin)
                                         .acceptAllRequests(player);
 
                                 buildInventory();

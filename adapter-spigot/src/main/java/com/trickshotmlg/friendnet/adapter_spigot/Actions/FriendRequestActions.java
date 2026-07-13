@@ -1,6 +1,8 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.Bukkit;
@@ -19,9 +21,16 @@ import java.util.UUID;
 public class FriendRequestActions {
 
     private final FriendService friendService;
+    private final FriendNetPlugin plugin;
 
     public FriendRequestActions(FriendService friendService) {
         this.friendService = friendService;
+        this.plugin = null;
+    }
+
+    public FriendRequestActions(FriendNetPlugin plugin) {
+        this.friendService = plugin.getFriendService();
+        this.plugin = plugin;
     }
 
     /**
@@ -185,12 +194,19 @@ public class FriendRequestActions {
     }
 
     private String getDisplayName(OfflinePlayer player) {
+        UUID playerId = player.getUniqueId();
+        if (plugin != null && playerId != null) {
+            String displayName = SpigotUtils.getPlayerDisplayName(plugin, playerId);
+            if (!displayName.isBlank()) {
+                return displayName;
+            }
+        }
+
         String name = player.getName();
         if (name != null && !name.isBlank()) {
             return name;
         }
 
-        UUID playerId = player.getUniqueId();
         return playerId != null ? playerId.toString() : "Unknown";
     }
 }

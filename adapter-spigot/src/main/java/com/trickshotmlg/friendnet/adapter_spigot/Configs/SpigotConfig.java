@@ -70,8 +70,18 @@ public class SpigotConfig implements AbstractConfig {
 
     @Override
     public boolean reset() {
-        throw new UnsupportedOperationException("Not implemented");
-        //return false;
+        try {
+            file = new File(plugin.getDataFolder(), fileName);
+            if (file.exists() && !file.delete()) {
+                Logger.error("Could not delete config file while resetting: " + fileName, null);
+                return false;
+            }
+
+            return initDefaults();
+        } catch (Exception e) {
+            Logger.error("Error resetting config file: " + fileName, e);
+            return false;
+        }
     }
 
     @Override

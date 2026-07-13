@@ -49,11 +49,23 @@ public class BlocklistGUI extends AbstractGUI {
             setInteractableItem(i, new ActionItemStack(
                     createBlockedPlayerItem(blockedPlayer),
                     player,
-                    () -> {
-                        actions.unblock(player, blockedPlayer.getBlockedId());
-                        buildInventory();
-                    }
+                    () -> openConfirmation(
+                            "titles.confirmationGUI",
+                            "confirmations.unblockPlayer.displayName",
+                            "confirmations.unblockPlayer.lore",
+                            Map.of("target", getDisplayName(blockedPlayer.getBlockedId())),
+                            confirmed -> {
+                                if (confirmed) {
+                                    actions.unblock(player, blockedPlayer.getBlockedId());
+                                    buildInventory();
+                                }
+                            }
+                    )
             ));
+        }
+
+        if (blockedPlayers.isEmpty()) {
+            inventory.setItem(13, GUIUtils.CreateEmptyStateItem(player, "blocklistGUI.emptyListMessage"));
         }
 
         int bottomRowStart = inventory.getSize() - 9;
@@ -113,11 +125,19 @@ public class BlocklistGUI extends AbstractGUI {
                         "blocklistGUI.buttons.clearBlocklist.lore"
                 ),
                 player,
-                () -> {
-                    actions.clear(player);
-                    currentPage = 0;
-                    buildInventory();
-                }
+                () -> openConfirmation(
+                        "titles.confirmationGUI",
+                        "confirmations.clearBlocklist.displayName",
+                        "confirmations.clearBlocklist.lore",
+                        Map.of(),
+                        confirmed -> {
+                            if (confirmed) {
+                                actions.clear(player);
+                                currentPage = 0;
+                                buildInventory();
+                            }
+                        }
+                )
         ));
 
         setInteractableItem(bottomRowStart + 7, new ActionItemStack(
@@ -132,12 +152,12 @@ public class BlocklistGUI extends AbstractGUI {
 
     private ItemStack createBlockedPlayerItem(BlocklistData blockedPlayer) {
         UUID blockedId = blockedPlayer.getBlockedId();
-        String displayName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, blockedId);
-        if (displayName.isBlank()) {
-            displayName = blockedId.toString();
-        }
+        return SpigotUtils.createPlayerHead(blockedId, getDisplayName(blockedId), createBlockedPlayerLore(blockedPlayer));
+    }
 
-        return SpigotUtils.createPlayerHead(blockedId, displayName, createBlockedPlayerLore(blockedPlayer));
+    private String getDisplayName(UUID playerId) {
+        String displayName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, playerId);
+        return displayName.isBlank() ? playerId.toString() : displayName;
     }
 
     private List<String> createBlockedPlayerLore(BlocklistData blockedPlayer) {

@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Utils;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -144,5 +145,10 @@ public final class GUIUtils {
         );
 
         return SpigotUtils.createCustomPlayerHead(RED_X_TEXTURE, displayName, lore);
+    }
+
+    public static ItemStack CreateEmptyStateItem(Player player, String messageKey) {
+        String displayName = FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), "gui", messageKey);
+        return SpigotUtils.createItem(Material.GRAY_DYE, displayName, List.of());
     }
 }
