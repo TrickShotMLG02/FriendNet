@@ -56,6 +56,7 @@ friendRequest:
     sender:
       success: "&aYou cancelled the friend request to &e%target%"
       notFound: "&cThe friend request to &e%target% &ccan no longer be cancelled"
+      nonePending: "&cYou have no sent friend requests"
     target:
       success: "&e%sender% &acancelled the friend request"
       notFound: "&c%sender% tried to cancel a request that doesn't exist"
