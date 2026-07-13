@@ -43,7 +43,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
                     new ActionItemStack(
                             GUIUtils.CreateBackItem(player),
                             player,
-                            () -> goBack()
+                            () -> goBack(),
+                            ActionItemStack.SoundProfile.NAVIGATION
                     )
             );
         }
@@ -183,7 +184,8 @@ public class PersonalSettingsGUI extends AbstractGUI {
             setInteractableItem(slot, new ActionItemStack(
                     openLocaleMenuItem,
                     player,
-                    () -> this.openChild(new LocaleSelectionGUI(plugin, player))
+                    () -> this.openChild(new LocaleSelectionGUI(plugin, player)),
+                    ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
 

@@ -117,6 +117,11 @@ public class ToggleItemStack extends InteractableItemStack {
     @Override
     public void onClick() {
         state = !state;
+        if (state) {
+            playActivateSound(player);
+        } else {
+            playDeactivateSound(player);
+        }
         refresh();
         if (onToggle != null) onToggle.accept(state);
     }
