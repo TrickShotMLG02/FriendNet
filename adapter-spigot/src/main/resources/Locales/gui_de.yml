@@ -127,6 +127,10 @@ personalSettingsGUI:
       displayName: "&eSprache festlegen"
       lore:
         - "&7Wähle deine bevorzugte Sprache."
+    openLanguageMenu:
+      displayName: "&aSprachmenü öffnen"
+      lore:
+        - "&7Klicke hier, um deine bevorzugte Sprache zu wählen."
 
 # Pagination buttons (for all GUIs)
 pagination:

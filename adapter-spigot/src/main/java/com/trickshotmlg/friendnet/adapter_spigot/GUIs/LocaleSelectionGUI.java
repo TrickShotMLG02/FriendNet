@@ -11,7 +11,6 @@ import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -97,8 +96,11 @@ public class LocaleSelectionGUI extends AbstractGUI{
         for (int i = 0; i < visibleLocales.size(); i++) {
             LocaleKey locale = visibleLocales.get(i);
 
-            //ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, locale.getCode());
-            ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, "§e" + LocaleUtils.getLocalizedLanguageName(selectedLocale, locale));
+            ItemStack localeItem = SpigotUtils.createCustomPlayerHead(
+                    GUIUtils.GLOBE_TEXTURE,
+                    "§e" + LocaleUtils.getLocalizedLanguageName(selectedLocale, locale),
+                    null
+            );
             inventory.setItem(i + localesStartIndexOffset, localeItem);
             setInteractableItem(i + localesStartIndexOffset + 9, localeToggles.get(i + localesPerPage * currentPage));
         }

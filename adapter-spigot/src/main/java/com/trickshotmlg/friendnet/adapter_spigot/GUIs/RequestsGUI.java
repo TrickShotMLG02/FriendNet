@@ -6,7 +6,6 @@ import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -104,9 +103,9 @@ public class RequestsGUI extends AbstractGUI {
 
         // Deny All Item
         {
-            ItemStack denyAllItem = SpigotUtils.createItem(
-                    Material.RED_WOOL,
+            ItemStack denyAllItem = GUIUtils.CreateLocalizedHead(
                     player,
+                    GUIUtils.RED_X_TEXTURE,
                     "gui",
                     "friendRequestsGUI.buttons.denyAllRequests.displayName",
                     "friendRequestsGUI.buttons.denyAllRequests.lore"
@@ -141,9 +140,9 @@ public class RequestsGUI extends AbstractGUI {
 
         // Accept All Item
         {
-            ItemStack acceptAllItem = SpigotUtils.createItem(
-                    Material.LIME_WOOL,
+            ItemStack acceptAllItem = GUIUtils.CreateLocalizedHead(
                     player,
+                    GUIUtils.CHECK_TEXTURE,
                     "gui",
                     "friendRequestsGUI.buttons.acceptAllRequests.displayName",
                     "friendRequestsGUI.buttons.acceptAllRequests.lore"
