@@ -6,14 +6,21 @@ import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.sql.Timestamp;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class RequestsGUI extends AbstractGUI {
+    private static final String DEFAULT_TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm";
     private final int friendRows = 4;
 
     private int currentPage = 0;
@@ -35,6 +42,7 @@ public class RequestsGUI extends AbstractGUI {
         inventory.clear();
 
         List<FriendshipData> requests = ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList();
+        clampCurrentPage(requests.size());
 
         int startIndex = currentPage * requestsPerPage;
         int endIndex = Math.min(startIndex + requestsPerPage, requests.size());
@@ -44,14 +52,14 @@ public class RequestsGUI extends AbstractGUI {
 
         // Populate friends for this page
         for (int i = 0; i < visibleRequests.size(); i++) {
-            FriendshipData friend = visibleRequests.get(i);
-            ItemStack friendItem = createFriendItem(friend);
-            List<String> lore = List.of(
-                    "Status: " + friend.getFriendshipStatus(),
-                    "Favourite: " + (friend.isFavourite() ? "Yes" : "No")
-            );
-            friendItem = SpigotUtils.setItemLore(friendItem, lore);
-            inventory.setItem(i, friendItem);
+            FriendshipData request = visibleRequests.get(i);
+            UUID requesterId = request.getRequesterId();
+            setInteractableItem(i, new ActionItemStack(
+                    createFriendItem(request),
+                    player,
+                    () -> openChild(new FriendRequestDetailGUI(plugin, player, requesterId)),
+                    ActionItemStack.SoundProfile.NAVIGATION
+            ));
         }
 
         // Navigation buttons
@@ -129,9 +137,28 @@ public class RequestsGUI extends AbstractGUI {
         // Page Display Item
         //inventory.setItem(bottomRowStart + 4, SpigotUtils.createItem(Material.PAPER, "§7Page " + (currentPage + 1)));
 
+        // Sent Requests Item
+        {
+            ItemStack sentRequestsItem = GUIUtils.CreateLocalizedHead(
+                    player,
+                    GUIUtils.BOOKS_TEXTURE,
+                    "gui",
+                    "friendRequestsGUI.buttons.sentRequests.displayName",
+                    "friendRequestsGUI.buttons.sentRequests.lore"
+            );
+            setInteractableItem(bottomRowStart + 1,
+                    new ActionItemStack(
+                            sentRequestsItem,
+                            player,
+                            () -> openChild(new SentRequestsGUI(plugin, player)),
+                            ActionItemStack.SoundProfile.NAVIGATION
+                    )
+            );
+        }
+
         // Back Item
         {
-            setInteractableItem(bottomRowStart + 4,
+            setInteractableItem(bottomRowStart + 7,
                     new ActionItemStack(
                             GUIUtils.CreateBackItem(player),
                             player,
@@ -181,8 +208,56 @@ public class RequestsGUI extends AbstractGUI {
     private ItemStack createFriendItem(FriendshipData friend) {
 
         UUID friendID = friend.getOtherPlayerId(this.player.getUniqueId());
-        String friendName = SpigotUtils.getPlayerDisplayName(friendID);
+        String friendName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendID);
+        if (friendName.isBlank()) {
+            friendName = friendID.toString();
+        }
 
-        return SpigotUtils.createPlayerHead(friendID, friendName, List.of("N/A"));
+        return SpigotUtils.createPlayerHead(friendID, friendName, createRequestLore(friend));
+    }
+
+    private List<String> createRequestLore(FriendshipData request) {
+        List<String> lore = new ArrayList<>();
+        lore.add(locale("friendRequestsGUI.requestEntry.lore.status", Map.of("status", ChatColor.YELLOW + locale("friendRequestsGUI.requestEntry.status.pending"))));
+        lore.add(locale("friendRequestsGUI.requestEntry.lore.sentAt", Map.of("date", ChatColor.YELLOW + formatTimestamp(request.getRequestSentTime()))));
+        lore.add("");
+        lore.add(locale("friendRequestsGUI.requestEntry.lore.clickToOpen"));
+        return lore;
+    }
+
+    private String formatTimestamp(Timestamp timestamp) {
+        if (timestamp == null) {
+            return locale("friendEntries.lastSeen.unknown");
+        }
+
+        return getTimestampFormatter().format(timestamp.toInstant().atZone(ZoneId.systemDefault()));
+    }
+
+    private DateTimeFormatter getTimestampFormatter() {
+        String pattern = locale("format.timestamp");
+        if (pattern == null || pattern.isBlank() || pattern.equals("format.timestamp")) {
+            pattern = DEFAULT_TIMESTAMP_FORMAT;
+        }
+
+        try {
+            return DateTimeFormatter.ofPattern(pattern);
+        } catch (IllegalArgumentException e) {
+            return DateTimeFormatter.ofPattern(DEFAULT_TIMESTAMP_FORMAT);
+        }
+    }
+
+    private void clampCurrentPage(int itemCount) {
+        int maxPage = GUIUtils.CalculateMaxPage(itemCount, requestsPerPage) - 1;
+        if (currentPage > maxPage) {
+            currentPage = Math.max(0, maxPage);
+        }
+    }
+
+    private String locale(String key) {
+        return FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), "gui", key);
+    }
+
+    private String locale(String key, Map<String, Object> placeholders) {
+        return FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), "gui", key, placeholders);
     }
 }

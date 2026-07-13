@@ -60,6 +60,7 @@ friendRequest:
     sender:
       success: '&aDu hast die Freundschaftsanfrage an &e%target% &aabgebrochen'
       notFound: '&cDie Freundschaftsanfrage an &e%target% &ckann nicht mehr abgebrochen werden'
+      nonePending: '&cDu hast keine gesendeten Freundschaftsanfragen'
     target:
       success: '&e%sender% &ahat die Freundschaftsanfrage abgebrochen'
       notFound: '&c%sender% hat versucht, eine Anfrage abzubrechen, die nicht existiert'

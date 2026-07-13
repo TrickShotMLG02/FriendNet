@@ -16,6 +16,9 @@ titles:
   friendFilterGUI: "Freundesfilter"
   friendNameSearchGUI: "Freunde suchen"
   friendDetailGUI: "%target%"
+  friendRequestDetailGUI: "Anfrage von %target%"
+  sentRequestsGUI: "Gesendete Anfragen"
+  sentRequestDetailGUI: "Anfrage an %target%"
 
 # Buttons / Items
 buttons:
@@ -112,6 +115,13 @@ friendEntries:
 # Friend Requests GUI
 friendRequestsGUI:
   emptyListMessage: "&cKeine ausstehenden Freundschaftsanfragen"
+  requestEntry:
+    status:
+      pending: "Ausstehend"
+    lore:
+      status: "&7Status: %status%"
+      sentAt: "&7Gesendet am: %date%"
+      clickToOpen: "&eKlicke hier, um diese Anfrage zu verwalten."
   buttons:
     acceptAllRequests:
       displayName: "&aAlle annehmen"
@@ -121,6 +131,54 @@ friendRequestsGUI:
       displayName: "&cAlle ablehnen"
       lore:
         - "&7Klicke hier, um alle Freundschaftsanfragen abzulehnen"
+    sentRequests:
+      displayName: "&eGesendete Anfragen"
+      lore:
+        - "&7Zeige Freundschaftsanfragen, die du gesendet hast."
+
+# Friend Request Detail GUI
+friendRequestDetailGUI:
+  buttons:
+    accept:
+      displayName: "&aAnfrage annehmen"
+      lore:
+        - "&7Nimm diese Freundschaftsanfrage an."
+    deny:
+      displayName: "&cAnfrage ablehnen"
+      lore:
+        - "&7Lehne diese Freundschaftsanfrage ab."
+    block:
+      displayName: "&cSpieler blockieren"
+      lore:
+        - "&7Blockiere diesen Spieler und entferne die Anfrage."
+
+# Sent Requests GUI
+sentRequestsGUI:
+  emptyListMessage: "&cKeine gesendeten Freundschaftsanfragen"
+  requestEntry:
+    status:
+      pending: "Ausstehend"
+    lore:
+      status: "&7Status: %status%"
+      sentAt: "&7Gesendet am: %date%"
+      clickToOpen: "&eKlicke hier, um diese gesendete Anfrage zu verwalten."
+  buttons:
+    cancelAll:
+      displayName: "&cAlle abbrechen"
+      lore:
+        - "&7Brich alle gesendeten Freundschaftsanfragen ab."
+
+# Sent Request Detail GUI
+sentRequestDetailGUI:
+  buttons:
+    cancel:
+      displayName: "&cAnfrage abbrechen"
+      lore:
+        - "&7Brich diese gesendete Freundschaftsanfrage ab."
+    block:
+      displayName: "&cSpieler blockieren"
+      lore:
+        - "&7Blockiere diesen Spieler und entferne die Anfrage."
 
 # Blocklist GUI
 blocklistGUI:

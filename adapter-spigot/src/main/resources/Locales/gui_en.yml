@@ -16,6 +16,9 @@ titles:
   friendFilterGUI: "Friend Filters"
   friendNameSearchGUI: "Search Friends"
   friendDetailGUI: "%target%"
+  friendRequestDetailGUI: "%target%'s Request"
+  sentRequestsGUI: "Sent Requests"
+  sentRequestDetailGUI: "Request to %target%"
 
 # Buttons / Items
 buttons:
@@ -112,6 +115,13 @@ friendEntries:
 # Friend Requests GUI
 friendRequestsGUI:
   emptyListMessage: "&cNo pending friend requests"
+  requestEntry:
+    status:
+      pending: "Pending"
+    lore:
+      status: "&7Status: %status%"
+      sentAt: "&7Sent at: %date%"
+      clickToOpen: "&eClick to manage this request."
   buttons:
     acceptAllRequests:
       displayName: "&aAccept all"
@@ -121,6 +131,54 @@ friendRequestsGUI:
       displayName: "&cDeny all"
       lore:
         - "&7Click to deny all friend requests"
+    sentRequests:
+      displayName: "&eSent Requests"
+      lore:
+        - "&7View friend requests you sent."
+
+# Friend Request Detail GUI
+friendRequestDetailGUI:
+  buttons:
+    accept:
+      displayName: "&aAccept Request"
+      lore:
+        - "&7Accept this friend request."
+    deny:
+      displayName: "&cDeny Request"
+      lore:
+        - "&7Deny this friend request."
+    block:
+      displayName: "&cBlock Player"
+      lore:
+        - "&7Block this player and remove the request."
+
+# Sent Requests GUI
+sentRequestsGUI:
+  emptyListMessage: "&cNo sent friend requests"
+  requestEntry:
+    status:
+      pending: "Pending"
+    lore:
+      status: "&7Status: %status%"
+      sentAt: "&7Sent at: %date%"
+      clickToOpen: "&eClick to manage this sent request."
+  buttons:
+    cancelAll:
+      displayName: "&cCancel all"
+      lore:
+        - "&7Cancel all sent friend requests."
+
+# Sent Request Detail GUI
+sentRequestDetailGUI:
+  buttons:
+    cancel:
+      displayName: "&cCancel Request"
+      lore:
+        - "&7Cancel this sent friend request."
+    block:
+      displayName: "&cBlock Player"
+      lore:
+        - "&7Block this player and remove the request."
 
 # Blocklist GUI
 blocklistGUI:
