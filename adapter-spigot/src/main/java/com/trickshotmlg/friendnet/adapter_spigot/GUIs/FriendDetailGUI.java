@@ -29,7 +29,7 @@ import java.util.UUID;
 
 public class FriendDetailGUI extends AbstractGUI {
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final String DEFAULT_TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm";
 
     private final UUID friendId;
 
@@ -202,7 +202,20 @@ public class FriendDetailGUI extends AbstractGUI {
             return locale("friendEntries.lastSeen.unknown");
         }
 
-        return DATE_TIME_FORMATTER.format(timestamp.toInstant().atZone(ZoneId.systemDefault()));
+        return getTimestampFormatter().format(timestamp.toInstant().atZone(ZoneId.systemDefault()));
+    }
+
+    private DateTimeFormatter getTimestampFormatter() {
+        String pattern = locale("format.timestamp");
+        if (pattern == null || pattern.isBlank() || pattern.equals("format.timestamp")) {
+            pattern = DEFAULT_TIMESTAMP_FORMAT;
+        }
+
+        try {
+            return DateTimeFormatter.ofPattern(pattern);
+        } catch (IllegalArgumentException e) {
+            return DateTimeFormatter.ofPattern(DEFAULT_TIMESTAMP_FORMAT);
+        }
     }
 
     private boolean isFriendOnline() {
