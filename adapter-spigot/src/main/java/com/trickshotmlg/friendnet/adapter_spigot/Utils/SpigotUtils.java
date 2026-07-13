@@ -125,13 +125,8 @@ public final class SpigotUtils {
         SkullMeta meta = (SkullMeta) head.getItemMeta();
 
         if (meta != null) {
-            // Set the owning player for the head
-            OfflinePlayer player = Bukkit.getOfflinePlayer(playerId);
-            meta.setOwningPlayer(player);
-
-            // Set display name and lore
-            if (displayName != null) meta.setDisplayName(displayName);
-            if (lore != null && !lore.isEmpty()) meta.setLore(lore);
+            applyPlayerHeadProfile(meta, playerId, displayName);
+            applyItemMeta(meta, displayName, lore);
 
             head.setItemMeta(meta);
         }
@@ -232,6 +227,23 @@ public final class SpigotUtils {
         if (lore != null && !lore.isEmpty()) {
             meta.setLore(lore);
         }
+    }
+
+    private static void applyPlayerHeadProfile(SkullMeta meta, UUID playerId, String displayName) {
+        Player onlinePlayer = Bukkit.getPlayer(playerId);
+        if (onlinePlayer != null) {
+            meta.setOwningPlayer(onlinePlayer);
+            return;
+        }
+
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
+        String profileName = offlinePlayer.getName();
+        if (profileName != null && !profileName.isBlank()) {
+            meta.setOwningPlayer(offlinePlayer);
+            return;
+        }
+
+        // Unknown synthetic/dev UUIDs should remain unresolved so Paper does not query Mojang for them.
     }
 
     private static String normalizeBase64Texture(String texture) {

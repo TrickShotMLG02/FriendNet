@@ -1,18 +1,23 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.AbstractGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendNameSearchGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class GUIListener extends AbstractListener {
 
+    private final JavaPlugin plugin;
+
     public GUIListener(JavaPlugin plugin) {
         super(plugin);
+        this.plugin = plugin;
     }
 
     @EventHandler
@@ -46,8 +51,13 @@ public class GUIListener extends AbstractListener {
         if (!(event.getPlayer() instanceof Player player)) return;
 
         AbstractGUI gui = AbstractGUI.getOpenGUI(player);
-        if (gui != null) {
-            gui.close(); // removes from map
+        if (gui != null && gui.ownsInventory(event.getInventory())) {
+            AbstractGUI.unregisterOpenGUI(player, gui);
         }
+    }
+
+    @EventHandler
+    public void onAsyncPlayerChat(AsyncPlayerChatEvent event) {
+        FriendNameSearchGUI.handleChatInput(event, plugin);
     }
 }

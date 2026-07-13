@@ -73,6 +73,8 @@ public class PlayerStatusListener extends AbstractListener {
             if (friendships.isPresent()) {
                 for (FriendshipData friendshipData : friendships.get()) {
                     friendService.putFriendshipData(friendshipData);
+                    UUID otherPlayerId = friendshipData.getOtherPlayerId(playerId);
+                    databaseService.find(otherPlayerId, PlayerData.class).ifPresent(playerService::putPlayerData);
                 }
             }
         });

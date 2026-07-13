@@ -11,6 +11,7 @@ titles:
   blocklistGUI: "Blockierte Spieler"
   favoriteFriendsGUI: "Favorisierte Freunde"
   friendFilterGUI: "Freundesfilter"
+  friendNameSearchGUI: "Freunde suchen"
 
 # Buttons / Items
 buttons:
@@ -82,6 +83,27 @@ friendsGUI:
         - "&7Klicke hier, um deine Favoriten zu sehen"
 
   emptyListMessage: "&cDu hast noch keine Freunde!"
+  playerSummary:
+    statistics: "&7Statistiken:"
+    totalFriends: "&7Freunde gesamt: &e%count%"
+    totalRequests: "&7Anfragen gesamt: &e%count%"
+
+# Friend Entry Lore
+friendEntries:
+  lore:
+    status: "&7Status: %status%"
+    favourite: "&7Favorit: %value%"
+    friendsSince: "&7Befreundet seit: %date%"
+    lastSeen: "&7Zuletzt gesehen: %date%"
+  status:
+    online: "&aOnline"
+    offline: "&cOffline"
+  boolean:
+    "yes": "&aJa"
+    "no": "&cNein"
+  lastSeen:
+    now: "&aJetzt"
+    unknown: "&8Unbekannt"
 
 # Friend Requests GUI
 friendRequestsGUI:
@@ -134,15 +156,30 @@ friendFilterGUI:
     nameSearch:
       displayName: "&eNamenssuche"
       lore:
-        - "&7Platzhalter, um nach Namen zu filtern."
+        - "&7Filtere Freunde mit einer unscharfen Namenssuche."
+      search:
+        displayName: "&eSuchen"
+      active:
+        displayName: "&a%query%"
+      current: "&7Aktuell: &e%query%"
     recentlySeen:
       displayName: "&eZuletzt gesehen"
       lore:
         - "&7Priorisiere kuerzlich gesehene Freunde."
-    sortMode:
-      displayName: "&eSortierung"
+    sortDirection:
+      displayName: "&eSortierrichtung"
       lore:
-        - "&7Platzhalter fuer die Sortierauswahl."
+        - "&7Waehle, ob aeltere oder neuere Eintraege zuerst erscheinen."
+      ascending:
+        displayName: "&aAufsteigend"
+        lore:
+          - "&7Aelteste Eintraege zuerst."
+          - "&7Klicken, um auf absteigend zu wechseln."
+      descending:
+        displayName: "&aAbsteigend"
+        lore:
+          - "&7Neueste Eintraege zuerst."
+          - "&7Klicken, um auf aufsteigend zu wechseln."
     reset:
       displayName: "&cFilter zuruecksetzen"
       lore:
@@ -151,6 +188,11 @@ friendFilterGUI:
       displayName: "&aFilter anwenden"
       lore:
         - "&7Wende die ausgewaehlten Filter an."
+
+# Friend Name Search GUI
+friendNameSearchGUI:
+  prompt: "&eSchreibe den Suchbegriff in den Chat. Schreibe &cabbrechen&e zum Abbrechen."
+  cancelKeyword: "abbrechen"
 
 # Friend Settings GUI
 friendSettingsGUI:
