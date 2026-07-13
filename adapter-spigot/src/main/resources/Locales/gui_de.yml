@@ -1,63 +1,208 @@
 # GUI Titles
+locale:
+  texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjFjMjMwOTdlZjE3NjJkNTFkZjI5N2Y5YzQ0NTcwOGQ5NDM5ZmY5MTc0NmQyZjY3N2IyOGRkZGZhMjczMTYifX19"
+
 titles:
-  friendsGUI: Deine Freunde
-  friendRequestsGUI: Freundschaftsanfragen
-  friendSettingsGUI: '%target%''s Einstellungen'
+  friendsGUI: "Deine Freunde"
+  friendRequestsGUI: "Freundschaftsanfragen"
+  friendSettingsGUI: "%target%s Einstellungen"
+  personalSettingsGUI: "Deine Einstellungen"
+  localeSelectionGUI: "Sprache ändern"
+  blocklistGUI: "Blockierte Spieler"
+  favoriteFriendsGUI: "Favorisierte Freunde"
+  friendFilterGUI: "Freundesfilter"
 
 # Buttons / Items
 buttons:
+  toggle:
+    active:
+      displayName: "&aAn"
+      lore:
+        - "&7Klicken zum Umschalten"
+    inactive:
+      displayName: "&4Aus"
+      lore:
+        - "&7Klicken zum Umschalten"
+  selector:
+    active:
+      displayName: "&aAusgewählt"
+      lore:
+        - "&7Diese Option ist bereits ausgewählt"
+    inactive:
+      displayName: "&4Nicht ausgewählt"
+      lore:
+        - "&7Klicken zum Auswählen"
   close:
-    displayName: '&cSchließen'
+    displayName: "&cSchließen"
     lore:
-      - '&7Klicke hier, um dieses Menü zu schließen'
+      - "&7Klicke hier, um dieses Menü zu schließen"
   back:
-    displayName: '&eZurück'
+    displayName: "&eZurück"
     lore:
-      - '&7Zurück zum vorherigen Menü'
+      - "&7Zurück zum vorherigen Menü"
   favourite:
-    displayName: '&aFavorit'
+    displayName: "&aFavorit"
     lore:
-      - '&7Markiere diesen Freund als Favorit'
+      - "&7Markiere diesen Freund als Favorit"
   removeFriend:
-    displayName: '&cFreund entfernen'
+    displayName: "&cFreund entfernen"
     lore:
-      - '&7Entferne diesen Spieler von deiner Freundesliste'
+      - "&7Entferne diesen Spieler von deiner Freundesliste"
   acceptRequest:
-    displayName: '&aAnnehmen'
+    displayName: "&aAnnehmen"
     lore:
-      - '&7Klicke hier, um die Freundschaftsanfrage anzunehmen'
+      - "&7Klicke hier, um die Freundschaftsanfrage anzunehmen"
   denyRequest:
-    displayName: '&cAblehnen'
+    displayName: "&cAblehnen"
     lore:
-      - '&7Klicke hier, um die Freundschaftsanfrage abzulehnen'
+      - "&7Klicke hier, um die Freundschaftsanfrage abzulehnen"
 
 # Friend List GUI
 friendsGUI:
-  emptyListMessage: '&cDu hast noch keine Freunde!'
+  buttons:
+    requests:
+      displayName: "&eOffene Anfragen"
+      lore:
+        - "&7Klicke hier, um deine offenen Anfragen zu sehen"
+    personalSettings:
+      displayName: "&eEinstellungen"
+      lore:
+        - "&7Klicke hier, um deine Einstellungen zu ändern"
+    blocklist:
+      displayName: "&eBlockierte Spieler"
+      lore:
+        - "&7Klicke hier, um blockierte Spieler zu sehen"
+    filter:
+      displayName: "&eFilter"
+      lore:
+        - "&7Klicke hier, um deine Freunde zu filtern"
+    favorites:
+      displayName: "&eFavoriten"
+      lore:
+        - "&7Klicke hier, um deine Favoriten zu sehen"
+
+  emptyListMessage: "&cDu hast noch keine Freunde!"
 
 # Friend Requests GUI
 friendRequestsGUI:
-  emptyListMessage: '&cKeine ausstehenden Freundschaftsanfragen'
+  emptyListMessage: "&cKeine ausstehenden Freundschaftsanfragen"
+  buttons:
+    acceptAllRequests:
+      displayName: "&aAlle annehmen"
+      lore:
+        - "&7Klicke hier, um alle Freundschaftsanfragen anzunehmen"
+    denyAllRequests:
+      displayName: "&cAlle ablehnen"
+      lore:
+        - "&7Klicke hier, um alle Freundschaftsanfragen abzulehnen"
+
+# Blocklist GUI
+blocklistGUI:
+  buttons:
+    blockedPlayers:
+      displayName: "&eBlockierte Spieler"
+      lore:
+        - "&7Blockierte Spieler werden hier angezeigt."
+    addBlockedPlayer:
+      displayName: "&aSpieler blockieren"
+      lore:
+        - "&7Platzhalter, um einen Spieler zu blockieren."
+    clearBlocklist:
+      displayName: "&cBlockliste leeren"
+      lore:
+        - "&7Platzhalter, um alle blockierten Spieler zu entfernen."
+
+# Favorite Friends GUI
+favoriteFriendsGUI:
+  buttons:
+    sortFavorites:
+      displayName: "&eFavoriten sortieren"
+      lore:
+        - "&7Platzhalter, um die Sortierung zu ändern."
+
+# Friend Filter GUI
+friendFilterGUI:
+  buttons:
+    favoritesOnly:
+      displayName: "&eNur Favoriten"
+      lore:
+        - "&7Zeige nur favorisierte Freunde."
+    onlineOnly:
+      displayName: "&eNur online"
+      lore:
+        - "&7Zeige nur Freunde, die online sind."
+    nameSearch:
+      displayName: "&eNamenssuche"
+      lore:
+        - "&7Platzhalter, um nach Namen zu filtern."
+    recentlySeen:
+      displayName: "&eZuletzt gesehen"
+      lore:
+        - "&7Priorisiere kuerzlich gesehene Freunde."
+    sortMode:
+      displayName: "&eSortierung"
+      lore:
+        - "&7Platzhalter fuer die Sortierauswahl."
+    reset:
+      displayName: "&cFilter zuruecksetzen"
+      lore:
+        - "&7Entferne alle ausgewaehlten Filter."
+    apply:
+      displayName: "&aFilter anwenden"
+      lore:
+        - "&7Wende die ausgewaehlten Filter an."
 
 # Friend Settings GUI
 friendSettingsGUI:
   toggleFavourite:
-    'true': '&aDieser Freund ist jetzt ein Favorit'
-    'false': '&cDieser Freund ist kein Favorit mehr'
+    on: "&aDieser Freund ist jetzt ein Favorit"
+    off: "&cDieser Freund ist kein Favorit mehr"
   removeFriend:
-    confirm: '&cBist du sicher, dass du &e%target% &centfernen möchtest?'
-    success: '&e%target% &bwurde aus deinen Freunden entfernt'
-    fail: '&cFehler beim Entfernen von &e%target%'
+    confirm: "&cBist du sicher, dass du &e%target% &centfernen möchtest?"
+    success: "&e%target% &bwurde aus deinen Freunden entfernt"
+    fail: "&cFehler beim Entfernen von &e%target%"
+
+# Personal Settings GUI
+personalSettingsGUI:
+  buttons:
+    toggleAllowRequests:
+      displayName: "&eFreundschaftsanfragen erlauben"
+      lore:
+        - "&7Erlaube oder blockiere eingehende Freundschaftsanfragen."
+    toggleShowOnlineStatus:
+      displayName: "&eOnline-Status anzeigen"
+      lore:
+        - "&7Lege fest, ob Freunde deinen Online-Status sehen können."
+    toggleAutoAcceptRequests:
+      displayName: "&eAnfragen automatisch annehmen"
+      lore:
+        - "&7Nimm eingehende Freundschaftsanfragen automatisch an."
+    toggleRequestNotifications:
+      displayName: "&eAnfrage-Benachrichtigungen"
+      lore:
+        - "&7Erhalte Benachrichtigungen für neue Freundschaftsanfragen."
+    togglePublicFriendList:
+      displayName: "&eÖffentliche Freundesliste"
+      lore:
+        - "&7Erlaube anderen, deine Freundesliste zu sehen."
+    setLanguage:
+      displayName: "&eSprache festlegen"
+      lore:
+        - "&7Wähle deine bevorzugte Sprache."
+    openLanguageMenu:
+      displayName: "&aSprachmenü öffnen"
+      lore:
+        - "&7Klicke hier, um deine bevorzugte Sprache zu wählen."
 
 # Pagination buttons (for all GUIs)
 pagination:
   nextPage:
-    displayName: '&aNächste Seite'
+    displayName: "&aNächste Seite"
     lore:
-      - '&7Gehe zur nächsten Seite'
+      - "&7Gehe zur nächsten Seite"
   previousPage:
-    displayName: '&aVorherige Seite'
+    displayName: "&aVorherige Seite"
     lore:
-      - '&7Gehe zur vorherigen Seite'
+      - "&7Gehe zur vorherigen Seite"
   pageIndicator:
-    displayName: '&7Seite %current%/%max%'
+    displayName: "&7Seite %current%/%max%"

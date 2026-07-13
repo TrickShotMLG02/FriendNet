@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Configs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.interfaces.AbstractConfig;
 import com.trickshotmlg.friendnet.core_api.interfaces.LocaleManager;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
@@ -10,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -45,32 +47,44 @@ public class SpigotLocaleManager implements LocaleManager {
         }
     }
 
-    public File[] getLocaleFilesFromJar() {
-        List<File> files = new ArrayList<>();
+    private List<String> getBundledLocaleResourceNames() {
+        List<String> resourceNames = new ArrayList<>();
 
         try {
             URL jarUrl = getClass().getProtectionDomain().getCodeSource().getLocation();
-            File jarFile = new File(jarUrl.toURI());
+            File codeSource = new File(jarUrl.toURI());
 
-            try (JarFile jar = new JarFile(jarFile)) {
-                Enumeration<JarEntry> entries = jar.entries();
+            if (codeSource.isDirectory()) {
+                File localesDir = new File(codeSource, "Locales");
+                if (localesDir.isDirectory()) {
+                    try (var paths = Files.walk(localesDir.toPath())) {
+                        paths
+                                .filter(Files::isRegularFile)
+                                .filter(path -> path.getFileName().toString().endsWith(".yml"))
+                                .forEach(path -> resourceNames.add(
+                                        "Locales/" + localesDir.toPath().relativize(path).toString().replace("\\", "/")
+                                ));
+                    }
+                }
+            } else {
+                try (JarFile jar = new JarFile(codeSource)) {
+                    Enumeration<JarEntry> entries = jar.entries();
 
-                while (entries.hasMoreElements()) {
-                    JarEntry entry = entries.nextElement();
-                    String name = entry.getName();
+                    while (entries.hasMoreElements()) {
+                        JarEntry entry = entries.nextElement();
+                        String name = entry.getName();
 
-                    if (!entry.isDirectory() && name.startsWith("Locales/") && name.endsWith(".yml")) {
-                        // Create a File object pointing to where it would exist in the data folder
-                        File file = new File(plugin.getDataFolder(), name);
-                        files.add(file);
+                        if (!entry.isDirectory() && name.startsWith("Locales/") && name.endsWith(".yml")) {
+                            resourceNames.add(name);
+                        }
                     }
                 }
             }
         } catch (IOException | URISyntaxException e) {
-            e.printStackTrace();
+            Logger.warn("Could not discover bundled locale files: " + e.getMessage());
         }
 
-        return files.toArray(new File[0]);
+        return resourceNames;
     }
 
     @Override
@@ -97,12 +111,16 @@ public class SpigotLocaleManager implements LocaleManager {
         File localesDir = new File(plugin.getDataFolder(), "Locales");
         if (!localesDir.exists() || !localesDir.isDirectory()) {
             localesDir.mkdirs();
-            return;
+        }
+
+        for (String resourceName : getBundledLocaleResourceNames()) {
+            File localeFile = new File(plugin.getDataFolder(), resourceName);
+            if (!localeFile.exists()) {
+                plugin.saveResource(resourceName, false);
+            }
         }
 
         File[] files = localesDir.listFiles((dir, name) -> name.endsWith(".yml"));
-        //File[] jarFiles = getLocaleFilesFromJar();
-        //File[] files = Arrays.stream(jarFiles).filter(f -> f.getName().endsWith(".yml")).toArray(File[]::new);
         if (files == null) return;
 
         // Regex to detect locale at the end of filename: "_xx" or "_xx_XX"
@@ -128,12 +146,8 @@ public class SpigotLocaleManager implements LocaleManager {
                 baseName = nameWithoutExtension;
             }
 
-            // Get locale key
-            LocaleKey locale;
-            if (LocaleKey.exists(new LocaleKey(localeCode))) {
-                locale = LocaleKey.fetch(localeCode).get();
-            }
-            else {
+            LocaleKey locale = new LocaleKey(localeCode);
+            if (!isSupportedLocaleFileLocale(locale)) {
                 // skip this file, since its locale code is not in the supported locales config value
                 continue;
             }
@@ -172,6 +186,29 @@ public class SpigotLocaleManager implements LocaleManager {
         return message;
     }
 
+    public Optional<String> getLocaleString(LocaleKey locale, String type, String path) {
+        Map<LocaleKey, AbstractConfig> localeConfigs = configs.get(type);
+        if (localeConfigs == null || localeConfigs.isEmpty()) {
+            return Optional.empty();
+        }
+
+        AbstractConfig configExact = locale != null ? localeConfigs.get(locale) : null;
+        AbstractConfig configRoot = null;
+
+        if (locale != null && locale.getLanguage() != null && !locale.getLanguage().equalsIgnoreCase(locale.toString())) {
+            configRoot = localeConfigs.get(new LocaleKey(locale.getLanguage()));
+        }
+
+        String value = tryGetString(configExact, path);
+        if (value == null) value = tryGetString(configRoot, path);
+
+        if (value == null || value.isBlank()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(value);
+    }
+
     /**
      * Returns the Color Code Formatted message in a specific locale from a key in a message file
      * @param locale
@@ -186,13 +223,13 @@ public class SpigotLocaleManager implements LocaleManager {
         }
 
         LocaleKey defaultLocale = LocaleKey.getDefaultLocale();
-        AbstractConfig configExact = localeConfigs.get(locale);
+        AbstractConfig configExact = locale != null ? localeConfigs.get(locale) : null;
         AbstractConfig configRoot = null;
         AbstractConfig configDefault = defaultLocale != null ? localeConfigs.get(defaultLocale) : null;
 
         // Try to get root-language config (e.g., "de" from "de_CH")
-        if (locale.getLanguage() != null && !locale.getLanguage().equalsIgnoreCase(locale.toString())) {
-            configRoot = localeConfigs.get(LocaleKey.getOrFallback(locale.getLanguage()));
+        if (locale != null && locale.getLanguage() != null && !locale.getLanguage().equalsIgnoreCase(locale.toString())) {
+            configRoot = localeConfigs.get(new LocaleKey(locale.getLanguage()));
         }
 
         // Try reading from most specific to most general
@@ -205,16 +242,44 @@ public class SpigotLocaleManager implements LocaleManager {
             return path;
         }
 
-        return message.replace('&', '§');
+        return org.bukkit.ChatColor.translateAlternateColorCodes('&', message);
     }
 
     /**
-     * Safely tries to get a string from a config.
+     * Safely tries to get a string or string-list from a config.
      */
     private String tryGetString(AbstractConfig config, String path) {
         if (config == null) return null;
         Optional<String> msgOpt = config.getString(path);
-        if (!msgOpt.isPresent() || msgOpt.get().isEmpty()) return null;
-        return msgOpt.get();
+        if (msgOpt.isPresent() && !msgOpt.get().isEmpty()) {
+            return msgOpt.get();
+        }
+
+        Object value = config.get(path);
+        if (value instanceof List<?> list && !list.isEmpty()) {
+            List<String> lines = new ArrayList<>();
+            for (Object item : list) {
+                if (item != null) {
+                    lines.add(item.toString());
+                }
+            }
+            return String.join("\n", lines);
+        }
+
+        return null;
+    }
+
+    private boolean isSupportedLocaleFileLocale(LocaleKey fileLocale) {
+        if (LocaleKey.exists(fileLocale)) {
+            return true;
+        }
+
+        for (LocaleKey supportedLocale : LocaleKey.values()) {
+            if (supportedLocale.getLanguage().equals(fileLocale.getLanguage())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

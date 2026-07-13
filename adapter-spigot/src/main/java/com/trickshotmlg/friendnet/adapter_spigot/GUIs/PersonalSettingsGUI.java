@@ -163,9 +163,9 @@ public class PersonalSettingsGUI extends AbstractGUI {
             int row = 1;
             int col = 7;
             int slot = 9 * row + col;
-            ItemStack localeItem = SpigotUtils.createItem(
-                    Material.BARRIER,
+            ItemStack localeItem = GUIUtils.CreateLocalizedHead(
                     player,
+                    GUIUtils.GLOBE_TEXTURE,
                     "gui",
                     "personalSettingsGUI.buttons.setLanguage.displayName",
                     "personalSettingsGUI.buttons.setLanguage.lore"
@@ -173,8 +173,15 @@ public class PersonalSettingsGUI extends AbstractGUI {
             inventory.setItem(9 * row + col, localeItem);
 
             slot += 9;
+            ItemStack openLocaleMenuItem = GUIUtils.CreateLocalizedHead(
+                    player,
+                    GUIUtils.NEXT_PAGE_TEXTURE,
+                    "gui",
+                    "personalSettingsGUI.buttons.openLanguageMenu.displayName",
+                    "personalSettingsGUI.buttons.openLanguageMenu.lore"
+            );
             setInteractableItem(slot, new ActionItemStack(
-                    localeItem,
+                    openLocaleMenuItem,
                     player,
                     () -> this.openChild(new LocaleSelectionGUI(plugin, player))
             ));

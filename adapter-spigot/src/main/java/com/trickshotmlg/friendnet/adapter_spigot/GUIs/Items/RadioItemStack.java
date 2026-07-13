@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.RadioGroup;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -19,11 +20,26 @@ public class RadioItemStack extends ToggleItemStack {
     }
 
     public RadioItemStack(RadioGroup group, boolean initialState, Player player, Consumer<Boolean> onToggle) {
-        this(group, initialState, Material.LIME_STAINED_GLASS_PANE, Material.RED_STAINED_GLASS_PANE, player, onToggle);
+        super(
+                initialState,
+                Material.PLAYER_HEAD,
+                Material.PLAYER_HEAD,
+                GUIUtils.CHECK_TEXTURE,
+                GUIUtils.RED_X_TEXTURE,
+                player,
+                "gui",
+                "buttons.selector.active.displayName",
+                "buttons.selector.inactive.displayName",
+                "buttons.selector.active.lore",
+                "buttons.selector.inactive.lore",
+                onToggle
+        );
+        this.group = group;
+        group.add(this);
     }
 
     public RadioItemStack(RadioGroup group, Player player, Consumer<Boolean> onToggle) {
-        this(group, Material.LIME_STAINED_GLASS_PANE, Material.RED_STAINED_GLASS_PANE, player, onToggle);
+        this(group, false, player, onToggle);
     }
 
     public RadioItemStack(RadioGroup group, Material onMaterial, Material offMaterial, Player player, Consumer<Boolean> onSelect) {
@@ -35,6 +51,8 @@ public class RadioItemStack extends ToggleItemStack {
                 initialState,
                 onMaterial,
                 offMaterial,
+                null,
+                null,
                 player,
                 "gui",
                 "buttons.selector.active.displayName",
@@ -58,8 +76,7 @@ public class RadioItemStack extends ToggleItemStack {
 
     public void setSelected(boolean selected) {
         this.state = selected;
-        itemStack.setType(selected ? onMaterial : offMaterial);
-        updateMeta();
+        refresh();
     }
 
     public boolean isSelected() {

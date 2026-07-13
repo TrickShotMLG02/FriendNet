@@ -23,7 +23,7 @@ chatButtons:
     hover: '&bKlicke hier, um die Anfrage anzunehmen'
   denyRequest:
     text: '&c[Ablehnen]'
-  hover: '&bKlicke hier, um die Anfrage abzulehnen'
+    hover: '&bKlicke hier, um die Anfrage abzulehnen'
 
 # Friend request events
 
@@ -42,6 +42,7 @@ friendRequest:
     sender:
       success: '&aDu hast die Freundschaftsanfrage von &e%target% &aangenommen'
       notFound: '&cKeine ausstehende Freundschaftsanfrage von &e%target%'
+      nonePending: '&cDu hast keine ausstehenden Freundschaftsanfragen'
     target:
       success: '&e%sender% &ahat deine Freundschaftsanfrage angenommen'
       notFound: '&c%sender% hat versucht, eine Anfrage anzunehmen, die nicht existiert'
@@ -50,6 +51,7 @@ friendRequest:
     sender:
       success: '&aDu hast die Freundschaftsanfrage von &e%target% &aabgelehnt'
       notFound: '&cKeine ausstehende Freundschaftsanfrage von &e%target%'
+      nonePending: '&cDu hast keine ausstehenden Freundschaftsanfragen'
     target:
       success: '&e%sender% &ahat deine Freundschaftsanfrage abgelehnt'
       notFound: '&c%sender% hat versucht, eine Anfrage abzulehnen, die nicht existiert'

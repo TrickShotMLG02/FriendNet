@@ -10,10 +10,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class SpigotUtils {
+    private static final Pattern SKIN_URL_PATTERN = Pattern.compile("\"url\"\\s*:\\s*\"([^\"]+)\"");
+
     private SpigotUtils() {
         // prevent instantiation
     }
@@ -135,6 +144,35 @@ public final class SpigotUtils {
         return createPlayerHead(playerId, displayName, lore, 1);
     }
 
+    /**
+     * Creates a player head with a custom texture.
+     *
+     * @param base64Texture Base64 encoded Minecraft texture JSON, a textures.minecraft.net URL, or a texture hash.
+     * @param displayName Display name of the item
+     * @param lore Lore lines
+     * @param amount Item stack amount
+     * @return ItemStack of a custom textured player head
+     */
+    public static ItemStack createCustomPlayerHead(String base64Texture, String displayName, List<String> lore, int amount) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD, amount);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+
+        if (meta != null) {
+            if (base64Texture != null && !base64Texture.isBlank()) {
+                applyCustomHeadTexture(meta, base64Texture);
+            }
+
+            applyItemMeta(meta, displayName, lore);
+            head.setItemMeta(meta);
+        }
+
+        return head;
+    }
+
+    public static ItemStack createCustomPlayerHead(String base64Texture, String displayName, List<String> lore) {
+        return createCustomPlayerHead(base64Texture, displayName, lore, 1);
+    }
+
     public static ItemStack setItemLore(ItemStack item, List<String> lore) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -180,6 +218,13 @@ public final class SpigotUtils {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
+        applyItemMeta(meta, displayName, lore);
+
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private static void applyItemMeta(ItemMeta meta, String displayName, List<String> lore) {
         if (displayName != null && !displayName.isEmpty()) {
             meta.setDisplayName(displayName);
         }
@@ -187,9 +232,57 @@ public final class SpigotUtils {
         if (lore != null && !lore.isEmpty()) {
             meta.setLore(lore);
         }
+    }
 
-        item.setItemMeta(meta);
-        return item;
+    private static String normalizeBase64Texture(String texture) {
+        String normalizedTexture = texture.trim();
+
+        if (normalizedTexture.startsWith("http://") || normalizedTexture.startsWith("https://")) {
+            return encodeSkinUrl(normalizedTexture);
+        }
+
+        if (normalizedTexture.matches("[a-fA-F0-9]{32,}")) {
+            return encodeSkinUrl("http://textures.minecraft.net/texture/" + normalizedTexture);
+        }
+
+        String decoded = new String(Base64.getDecoder().decode(normalizedTexture), StandardCharsets.UTF_8);
+        Matcher matcher = SKIN_URL_PATTERN.matcher(decoded);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("Texture payload does not contain a skin URL");
+        }
+
+        return normalizedTexture;
+    }
+
+    private static String encodeSkinUrl(String skinUrl) {
+        String payload = "{\"textures\":{\"SKIN\":{\"url\":\"" + skinUrl + "\"}}}";
+        return Base64.getEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static void applyCustomHeadTexture(SkullMeta meta, String texture) {
+        String normalizedTexture = normalizeBase64Texture(texture);
+        String skinUrl = extractSkinUrl(normalizedTexture);
+
+        try {
+            UUID profileId = UUID.nameUUIDFromBytes(normalizedTexture.getBytes(StandardCharsets.UTF_8));
+            PlayerProfile profile = Bukkit.createPlayerProfile(profileId, "FriendNetHead");
+            PlayerTextures textures = profile.getTextures();
+            textures.setSkin(new URL(skinUrl));
+            profile.setTextures(textures);
+            meta.setOwnerProfile(profile);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Texture payload contains an invalid skin URL: " + skinUrl, e);
+        }
+    }
+
+    private static String extractSkinUrl(String base64Texture) {
+        String decoded = new String(Base64.getDecoder().decode(base64Texture), StandardCharsets.UTF_8);
+        Matcher matcher = SKIN_URL_PATTERN.matcher(decoded);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("Texture payload does not contain a skin URL");
+        }
+
+        return matcher.group(1);
     }
 
     public static <T> List<T> safeSubList(List<T> list, int start, int end) {
@@ -221,6 +314,13 @@ public final class SpigotUtils {
 
         // Remove leading and trailing brackets if present
         input = input.trim();
+        if (input.contains("\n")) {
+            return Arrays.stream(input.split("\\R"))
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .toList();
+        }
+
         if (input.startsWith("[") && input.endsWith("]")) {
             input = input.substring(1, input.length() - 1);
         }

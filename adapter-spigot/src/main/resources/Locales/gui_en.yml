@@ -1,10 +1,16 @@
 # GUI Titles
+locale:
+  texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmNiYzMyY2IyNGQ1N2ZjZGMwMzFlODUxMjM1ZGEyZGFhZDNlMTkxNGI4NzA0M2JkMDEyNjMzZTZmMzJjNyJ9fX0="
+
 titles:
   friendsGUI: "Your Friends"
   friendRequestsGUI: "Friend Requests"
   friendSettingsGUI: "%target%'s Settings"
   personalSettingsGUI: "Your Settings"
   localeSelectionGUI: "Change your Language"
+  blocklistGUI: "Blocked Players"
+  favoriteFriendsGUI: "Favorite Friends"
+  friendFilterGUI: "Friend Filters"
 
 # Buttons / Items
 buttons:
@@ -90,6 +96,62 @@ friendRequestsGUI:
       lore:
         - "&7Click to deny all friend requests"
 
+# Blocklist GUI
+blocklistGUI:
+  buttons:
+    blockedPlayers:
+      displayName: "&eBlocked Players"
+      lore:
+        - "&7Players you have blocked will appear here."
+    addBlockedPlayer:
+      displayName: "&aAdd Blocked Player"
+      lore:
+        - "&7Placeholder for selecting a player to block."
+    clearBlocklist:
+      displayName: "&cClear Blocklist"
+      lore:
+        - "&7Placeholder for removing all blocked players."
+
+# Favorite Friends GUI
+favoriteFriendsGUI:
+  buttons:
+    sortFavorites:
+      displayName: "&eSort Favorites"
+      lore:
+        - "&7Placeholder for changing the favorite sort order."
+
+# Friend Filter GUI
+friendFilterGUI:
+  buttons:
+    favoritesOnly:
+      displayName: "&eFavorites Only"
+      lore:
+        - "&7Show only favorite friends."
+    onlineOnly:
+      displayName: "&eOnline Only"
+      lore:
+        - "&7Show only friends who are online."
+    nameSearch:
+      displayName: "&eName Search"
+      lore:
+        - "&7Placeholder for filtering by name."
+    recentlySeen:
+      displayName: "&eRecently Seen"
+      lore:
+        - "&7Prioritize friends seen recently."
+    sortMode:
+      displayName: "&eSort Mode"
+      lore:
+        - "&7Placeholder for sort selection."
+    reset:
+      displayName: "&cReset Filters"
+      lore:
+        - "&7Clear all selected filters."
+    apply:
+      displayName: "&aApply Filters"
+      lore:
+        - "&7Apply the selected filters."
+
 # Friend Settings GUI
 friendSettingsGUI:
   toggleFavourite:
@@ -127,6 +189,10 @@ personalSettingsGUI:
       displayName: "&eSet Language"
       lore:
         - "&7Choose your preferred language."
+    openLanguageMenu:
+      displayName: "&aOpen Language Menu"
+      lore:
+        - "&7Click to choose your preferred language."
 
 
 # Pagination buttons (for all GUIs)

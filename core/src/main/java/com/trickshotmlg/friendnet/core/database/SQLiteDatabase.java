@@ -29,7 +29,7 @@ public class SQLiteDatabase implements Database {
      */
     @Override
     public DatabaseType getDatabaseType() {
-        return null;
+        return DatabaseType.SQLite;
     }
 
     /**
@@ -62,6 +62,10 @@ public class SQLiteDatabase implements Database {
      */
     @Override
     public DatabaseConnection getConnection() throws SQLException {
+        if (!this.dataFolder.exists()) {
+            this.dataFolder.mkdirs();
+        }
+
         if (!this.sqlFile.exists()) {
             try {
                 this.sqlFile.createNewFile();

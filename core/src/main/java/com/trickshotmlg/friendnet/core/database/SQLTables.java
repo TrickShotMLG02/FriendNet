@@ -4,7 +4,7 @@ public class SQLTables {
 
     public static final String TABLE_CREATE_PLAYERDATA =
             "CREATE TABLE IF NOT EXISTS players (" +
-            "player_id UUID PRIMARY KEY, " +
+            "player_id VARCHAR(36) PRIMARY KEY, " +
             "last_display_name VARCHAR(64), " +
             "allow_friend_requests BOOLEAN DEFAULT TRUE, " +
             "show_online_status BOOLEAN DEFAULT TRUE, " +
@@ -18,9 +18,9 @@ public class SQLTables {
 
     public static final String TABLE_CREATE_FRIENDSHIPS =
             "CREATE TABLE IF NOT EXISTS friendships (" +
-            "player1_id UUID NOT NULL, " +
-            "player2_id UUID NOT NULL, " +
-            "requester_id UUID NOT NULL, " +
+            "player1_id VARCHAR(36) NOT NULL, " +
+            "player2_id VARCHAR(36) NOT NULL, " +
+            "requester_id VARCHAR(36) NOT NULL, " +
             "status VARCHAR(10) NOT NULL DEFAULT 'Pending' CHECK (status IN ('Pending', 'Accepted')), " +
             "request_sent_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
             "friend_since TIMESTAMP DEFAULT NULL, " +
@@ -33,8 +33,8 @@ public class SQLTables {
 
     public static final String TABLE_CREATE_BLOCKLIST =
             "CREATE TABLE IF NOT EXISTS blocklist (" +
-                    "blocker_id UUID NOT NULL, " +
-                    "blocked_id UUID NOT NULL, " +
+                    "blocker_id VARCHAR(36) NOT NULL, " +
+                    "blocked_id VARCHAR(36) NOT NULL, " +
                     "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                     "PRIMARY KEY (blocker_id, blocked_id), " +
                     "FOREIGN KEY (blocker_id) REFERENCES players(player_id), " +

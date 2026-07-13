@@ -10,10 +10,14 @@ import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core.database.DatabaseServiceImpl;
+import com.trickshotmlg.friendnet.core.database.MySQLDatabase;
+import com.trickshotmlg.friendnet.core.database.SQLiteDatabase;
 import com.trickshotmlg.friendnet.core.events.PlayerJoinEvent;
 import com.trickshotmlg.friendnet.core.events.EventBus;
+import com.trickshotmlg.friendnet.core_api.enums.DatabaseType;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
+import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -56,6 +60,9 @@ public final class FriendNetPlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         EventBus.clear();
+        if (databaseService != null) {
+            databaseService.stop();
+        }
 
         Logger.info("FriendNet disabled!");
     }
@@ -70,12 +77,37 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private void initializeServices() {
-        this.databaseService = new DatabaseServiceImpl(this.getDataFolder(), "friendnet");
+        this.databaseService = new DatabaseServiceImpl(createDatabaseFromConfig());
         this.playerService = new PlayerServiceImpl();
         this.friendService = new FriendServiceImpl(this.databaseService, this.playerService);
 
         this.databaseService.init();
         this.databaseService.postInit();
+        this.databaseService.start();
+    }
+
+    private Database createDatabaseFromConfig() {
+        DatabaseType databaseType = parseDatabaseType(config.getString("DatabaseType", "SQLite"));
+
+        if (databaseType == DatabaseType.SQLite) {
+            String dbName = config.getString("SQLite.dbName", "friendnet");
+            return new SQLiteDatabase(this.getDataFolder(), dbName);
+        }
+
+        String host = config.getString("MySQL.host", "localhost:3306");
+        String dbName = config.getString("MySQL.dbName", "friendnet");
+        String username = config.getString("MySQL.username", "friendnet");
+        String password = config.getString("MySQL.password", "friendnet");
+        return new MySQLDatabase(host, dbName, username, password, databaseType);
+    }
+
+    private DatabaseType parseDatabaseType(String value) {
+        try {
+            return DatabaseType.valueOf(value);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            Logger.warn("Unknown DatabaseType '" + value + "', falling back to SQLite");
+            return DatabaseType.SQLite;
+        }
     }
 
     private void registerListeners() {

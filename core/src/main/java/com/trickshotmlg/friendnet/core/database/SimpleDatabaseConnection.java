@@ -42,7 +42,9 @@ public class SimpleDatabaseConnection implements DatabaseConnection {
      */
     @Override
     public void close() throws SQLException {
-
+        if (connection != null && !connection.isClosed()) {
+            connection.close();
+        }
     }
 
     /**

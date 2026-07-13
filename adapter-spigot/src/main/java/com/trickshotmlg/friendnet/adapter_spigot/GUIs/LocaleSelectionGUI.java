@@ -11,7 +11,6 @@ import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -50,6 +49,11 @@ public class LocaleSelectionGUI extends AbstractGUI{
 
     }
 
+    private LocaleSelectionGUI(JavaPlugin plugin, Player player, int currentPage) {
+        this(plugin, player);
+        this.currentPage = currentPage;
+    }
+
     @Override
     protected void buildInventory() {
         // Clear previous contents
@@ -62,11 +66,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
         List<LocaleKey> visibleLocales = SpigotUtils.safeSubList(availableLocales, startIndex, endIndex);
 
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
-        // TODO: set to default locale
-        LocaleKey selectedLocale = LocaleKey.getDefaultLocale();
-        if (pd != null) {
-            selectedLocale = pd.getLocale();
-        }
+        LocaleKey selectedLocale = getSelectedLocale(pd);
 
         RadioGroup localeSelectionGroup = new RadioGroup(inventory);
         List<InteractableItemStack> localeToggles = new ArrayList<>();
@@ -78,16 +78,14 @@ public class LocaleSelectionGUI extends AbstractGUI{
                             locale.equals(selectedLocale),
                             player,
                             newState -> {
-                                pd.setLocale(locale);
+                                if (pd != null) {
+                                    pd.setLocale(locale);
+                                }
 
                                 // manually set all
                                 updateRadioSelection(visibleLocales.size(), localeToggles);
 
-                                // rebuild build inventory to update items with new locale
-                                buildInventory();
-
-                                // TODO: find way to update inventory title
-                                //updateInventoryTitle();
+                                reopenWithUpdatedTitle();
                             }
                     )
             );
@@ -97,8 +95,11 @@ public class LocaleSelectionGUI extends AbstractGUI{
         for (int i = 0; i < visibleLocales.size(); i++) {
             LocaleKey locale = visibleLocales.get(i);
 
-            //ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, locale.getCode());
-            ItemStack localeItem = SpigotUtils.createItem(Material.BLUE_BANNER, "§e" + LocaleUtils.getLocalizedLanguageName(selectedLocale, locale));
+            ItemStack localeItem = SpigotUtils.createCustomPlayerHead(
+                    getLocaleTexture(locale),
+                    "§e" + LocaleUtils.getLocalizedLanguageName(selectedLocale, locale),
+                    null
+            );
             inventory.setItem(i + localesStartIndexOffset, localeItem);
             setInteractableItem(i + localesStartIndexOffset + 9, localeToggles.get(i + localesPerPage * currentPage));
         }
@@ -145,7 +146,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
 
         // Page Display Item
         {
-            int maxPage = (int) Math.ceil((float) availableLocales.size() / (float) localesPerPage);
+            int maxPage = GUIUtils.CalculateMaxPage(availableLocales.size(), localesPerPage);
             inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(player, currentPage, maxPage));
         }
 
@@ -177,5 +178,25 @@ public class LocaleSelectionGUI extends AbstractGUI{
         for (int i = 0; i < count; i++) {
             setInteractableItem(i + localesStartIndexOffset + 9, localeToggles.get(i + localesPerPage * currentPage));
         }
+    }
+
+    private LocaleKey getSelectedLocale(PlayerData playerData) {
+        LocaleKey defaultLocale = LocaleKey.getDefaultLocale();
+        if (playerData == null || playerData.getLocale() == null) {
+            return defaultLocale;
+        }
+
+        return playerData.getLocale();
+    }
+
+    private String getLocaleTexture(LocaleKey locale) {
+        return FriendNetPlugin.LocaleManager.getLocaleString(locale, "gui", "locale.texture")
+                .orElseGet(() -> GUIUtils.GetLocaleFlagTexture(locale));
+    }
+
+    private void reopenWithUpdatedTitle() {
+        LocaleSelectionGUI refreshedGUI = new LocaleSelectionGUI(plugin, player, currentPage);
+        refreshedGUI.parentGUI = parentGUI;
+        refreshedGUI.open();
     }
 }

@@ -2,7 +2,7 @@
 Mode: Standalone
 
 # The backend to use: MySQL, SQLite, MariaDB
-DatabaseType: MySQL
+DatabaseType: SQLite
 
 SupportedLocales:
   - en_US

@@ -103,7 +103,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.blocklist.lore"
                     ),
                     player,
-                    () -> {}
+                    () -> this.openChild(new BlocklistGUI(plugin, player))
             );
 
             setInteractableItem(bottomRowStart + 3 - 9, actionItemStack);
@@ -169,7 +169,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.favorites.lore"
                     ),
                     player,
-                    () -> {}
+                    () -> this.openChild(new FavoriteFriendsGUI(plugin, player))
             );
 
             setInteractableItem(bottomRowStart + 6, actionItemStack);
@@ -177,7 +177,7 @@ public class FriendsGUI extends AbstractGUI {
 
         // Page Display Item
         {
-            int maxPage = (int) Math.ceil((float) friends.size() / (float) friendsPerPage);
+            int maxPage = GUIUtils.CalculateMaxPage(friends.size(), friendsPerPage);
             inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(player, currentPage, maxPage));
         }
 
@@ -192,7 +192,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.filter.lore"
                     ),
                     player,
-                    () -> {}
+                    () -> this.openChild(new FriendFilterGUI(plugin, player))
             );
 
             setInteractableItem(bottomRowStart + 5, actionItemStack);

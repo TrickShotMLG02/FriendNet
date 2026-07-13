@@ -54,15 +54,6 @@ public abstract class AbstractGUI {
         return pl.LocaleManager.getMessage(player.getUniqueId(), "gui", titleKey);
     }
 
-    //TODO: Fix this method, interactable Item Stacks do not work afterwards
-    @Deprecated
-    public void updateInventoryTitle() {
-        Inventory oldInv = player.getOpenInventory().getTopInventory();
-        Inventory newInv = Bukkit.createInventory(player, oldInv.getSize(), getInventoryTitle());
-        newInv.setContents(oldInv.getContents());
-        player.openInventory(newInv);
-    }
-
     /**
      * Function to open a GUI as a child of the current one
      * @param child
