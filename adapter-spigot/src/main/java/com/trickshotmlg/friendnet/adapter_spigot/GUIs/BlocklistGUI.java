@@ -56,7 +56,8 @@ public class BlocklistGUI extends AbstractGUI {
         setInteractableItem(bottomRowStart + 4, new ActionItemStack(
                 GUIUtils.CreateBackItem(player),
                 player,
-                () -> goBack()
+                () -> goBack(),
+                ActionItemStack.SoundProfile.NAVIGATION
         ));
 
         fillEmptySlots();

@@ -53,7 +53,8 @@ public class FavoriteFriendsGUI extends AbstractGUI {
                     () -> {
                         currentPage--;
                         buildInventory();
-                    }
+                    },
+                    ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
 
@@ -67,7 +68,8 @@ public class FavoriteFriendsGUI extends AbstractGUI {
                             currentPage++;
                             buildInventory();
                         }
-                    }
+                    },
+                    ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
 
@@ -89,7 +91,8 @@ public class FavoriteFriendsGUI extends AbstractGUI {
         setInteractableItem(bottomRowStart + 5, new ActionItemStack(
                 GUIUtils.CreateBackItem(player),
                 player,
-                () -> goBack()
+                () -> goBack(),
+                ActionItemStack.SoundProfile.NAVIGATION
         ));
 
         fillEmptySlots();

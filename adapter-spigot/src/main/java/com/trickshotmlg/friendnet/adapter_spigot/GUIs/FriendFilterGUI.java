@@ -42,7 +42,8 @@ public class FriendFilterGUI extends AbstractGUI {
         setInteractableItem(bottomRowStart + 4, new ActionItemStack(
                 GUIUtils.CreateBackItem(player),
                 player,
-                () -> goBack()
+                () -> goBack(),
+                ActionItemStack.SoundProfile.NAVIGATION
         ));
 
         setInteractableItem(bottomRowStart + 5, new ActionItemStack(

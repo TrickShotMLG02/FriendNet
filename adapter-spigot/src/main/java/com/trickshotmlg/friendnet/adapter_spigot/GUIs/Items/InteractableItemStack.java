@@ -1,5 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items;
 
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 public abstract class InteractableItemStack {
@@ -30,5 +32,17 @@ public abstract class InteractableItemStack {
      */
     public void refresh() {
         // Default: do nothing. Subclasses override if needed.
+    }
+
+    protected void playActivateSound(Player player) {
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HARP, 0.8f, 1.7f);
+    }
+
+    protected void playDeactivateSound(Player player) {
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 0.8f, 0.8f);
+    }
+
+    protected void playNavigationSound(Player player) {
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 0.7f, 1.3f);
     }
 }

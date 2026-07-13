@@ -117,7 +117,8 @@ public class LocaleSelectionGUI extends AbstractGUI{
                                     currentPage--;
                                     buildInventory();
                                 }
-                            }
+                            },
+                            ActionItemStack.SoundProfile.NAVIGATION
                     )
             );
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmVkOWQ1YzJiNDgwNzA1OGQ5ODdjNmUxZDYzMDBhMWNjNGI5ZWVlN2IxNmYxZjBhY2FjMTRmZmNkMWE5Njk5ZiJ9fX0=";
@@ -136,7 +137,8 @@ public class LocaleSelectionGUI extends AbstractGUI{
                                     currentPage++;
                                     buildInventory();
                                 }
-                            }
+                            },
+                            ActionItemStack.SoundProfile.NAVIGATION
                     )
             );
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==";
@@ -155,7 +157,8 @@ public class LocaleSelectionGUI extends AbstractGUI{
                     new ActionItemStack(
                             GUIUtils.CreateBackItem(player),
                             player,
-                            () -> goBack()
+                            () -> goBack(),
+                            ActionItemStack.SoundProfile.NAVIGATION
                     )
             );
         }

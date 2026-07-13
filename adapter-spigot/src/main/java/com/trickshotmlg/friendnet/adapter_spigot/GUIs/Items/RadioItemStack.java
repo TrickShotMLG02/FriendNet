@@ -69,6 +69,7 @@ public class RadioItemStack extends ToggleItemStack {
     public void onClick() {
         // Only update if not already selected
         if (!state) {
+            playActivateSound(player);
             group.select(this);
             onToggle.accept(true);
         }

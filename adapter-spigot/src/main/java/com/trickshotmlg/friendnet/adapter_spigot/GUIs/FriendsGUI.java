@@ -66,7 +66,8 @@ public class FriendsGUI extends AbstractGUI {
                                     currentPage--;
                                     buildInventory();
                                 }
-                            }
+                            },
+                            ActionItemStack.SoundProfile.NAVIGATION
                     )
             );
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNmVkOWQ1YzJiNDgwNzA1OGQ5ODdjNmUxZDYzMDBhMWNjNGI5ZWVlN2IxNmYxZjBhY2FjMTRmZmNkMWE5Njk5ZiJ9fX0=";
@@ -85,7 +86,8 @@ public class FriendsGUI extends AbstractGUI {
                                     currentPage++;
                                     buildInventory();
                                 }
-                            }
+                            },
+                            ActionItemStack.SoundProfile.NAVIGATION
                     )
             );
             //String texture = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTg3YmFhNDc2NzIzNGMwMWMwNGI4YmJlYjUxOGEwNTNkY2U3MzlmNGEwNDM1OGE0MjQzMDJmYjRhMDE3MmY4In19fQ==";
@@ -103,7 +105,8 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.blocklist.lore"
                     ),
                     player,
-                    () -> this.openChild(new BlocklistGUI(plugin, player))
+                    () -> this.openChild(new BlocklistGUI(plugin, player)),
+                    ActionItemStack.SoundProfile.NAVIGATION
             );
 
             setInteractableItem(bottomRowStart + 3 - 9, actionItemStack);
@@ -135,7 +138,8 @@ public class FriendsGUI extends AbstractGUI {
                     player,
                     () -> {
                         this.openChild(new RequestsGUI(plugin, player));
-                    }
+                    },
+                    ActionItemStack.SoundProfile.NAVIGATION
             );
 
             setInteractableItem(bottomRowStart + 5 - 9, actionItemStack);
@@ -152,7 +156,8 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.personalSettings.lore"
                     ),
                     player,
-                    () -> this.openChild(new PersonalSettingsGUI(plugin, player))
+                    () -> this.openChild(new PersonalSettingsGUI(plugin, player)),
+                    ActionItemStack.SoundProfile.NAVIGATION
             );
 
             setInteractableItem(bottomRowStart + 3, actionItemStack);
@@ -169,7 +174,8 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.favorites.lore"
                     ),
                     player,
-                    () -> this.openChild(new FavoriteFriendsGUI(plugin, player))
+                    () -> this.openChild(new FavoriteFriendsGUI(plugin, player)),
+                    ActionItemStack.SoundProfile.NAVIGATION
             );
 
             setInteractableItem(bottomRowStart + 6, actionItemStack);
@@ -192,7 +198,8 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.filter.lore"
                     ),
                     player,
-                    () -> this.openChild(new FriendFilterGUI(plugin, player))
+                    () -> this.openChild(new FriendFilterGUI(plugin, player)),
+                    ActionItemStack.SoundProfile.NAVIGATION
             );
 
             setInteractableItem(bottomRowStart + 5, actionItemStack);
