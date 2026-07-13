@@ -38,6 +38,7 @@ friendRequest:
     sender:
       success: "&aYou accepted the friend request from &e%target%"
       notFound: "&cNo pending friend request from &e%target%"
+      nonePending: "&cYou have no pending friend requests"
     target:
       success: "&e%sender% &aaccepted your friend request"
       notFound: "&c%sender% tried to accept a request that doesn't exist"
@@ -46,6 +47,7 @@ friendRequest:
     sender:
       success: "&aYou denied the friend request from &e%target%"
       notFound: "&cNo pending friend request from &e%target%"
+      nonePending: "&cYou have no pending friend requests"
     target:
       success: "&e%sender% &adenied your friend request"
       notFound: "&c%sender% tried to deny a request that doesn't exist"
