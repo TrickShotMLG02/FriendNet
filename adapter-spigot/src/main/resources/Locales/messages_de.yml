@@ -75,6 +75,27 @@ friend:
       success: '&e%sender% &bhat dich aus seiner Freundesliste entfernt'
       notFound: '&c%sender% hat versucht, dich zu entfernen, aber du bist nicht in seiner Freundesliste'
 
+# Player settings feedback
+
+playerSettings:
+  allowFriendRequests:
+    enabled: '&aFreundschaftsanfragen sind jetzt aktiviert'
+    disabled: '&cFreundschaftsanfragen sind jetzt deaktiviert'
+  showOnlineStatus:
+    enabled: '&aDein Online-Status ist jetzt sichtbar'
+    disabled: '&cDein Online-Status ist jetzt verborgen'
+  autoAcceptFriends:
+    enabled: '&aFreundschaftsanfragen werden jetzt automatisch angenommen'
+    disabled: '&cFreundschaftsanfragen werden nicht mehr automatisch angenommen'
+  friendRequestNotifications:
+    enabled: '&aBenachrichtigungen fuer Freundschaftsanfragen sind jetzt aktiviert'
+    disabled: '&cBenachrichtigungen fuer Freundschaftsanfragen sind jetzt deaktiviert'
+  friendListPublic:
+    enabled: '&aDeine Freundesliste ist jetzt oeffentlich'
+    disabled: '&cDeine Freundesliste ist jetzt privat'
+  locale:
+    changed: '&aDeine Sprache wurde aktualisiert'
+
 # Friend request list display
 
 requestList:
