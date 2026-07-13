@@ -5,11 +5,15 @@ import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.sql.Timestamp;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,10 +35,16 @@ public class FriendsGUI extends AbstractGUI {
         interactableSlots.clear();
         inventory.clear();
 
-        List<FriendshipData> friends = ((FriendNetPlugin) plugin).getFriendService().getFriendships(player.getUniqueId()).stream().toList();
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        FriendFilterState filterState = FriendFilterGUI.getFilterState(player);
+        List<FriendshipData> friends = applyFilters(
+                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
+                filterState
+        );
         List<FriendshipData> requests = ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList();
 
 
+        clampCurrentPage(friends.size());
         int startIndex = currentPage * friendsPerPage;
         int endIndex = Math.min(startIndex + friendsPerPage, friends.size());
 
@@ -236,5 +246,52 @@ public class FriendsGUI extends AbstractGUI {
         String friendName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendID);
 
         return SpigotUtils.createPlayerHead(friendID, friendName, List.of("N/A"));
+    }
+
+    private List<FriendshipData> applyFilters(List<FriendshipData> friends, FriendFilterState filterState) {
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        Comparator<FriendshipData> comparator = Comparator.comparing(FriendshipData::getFriendSince, Comparator.nullsLast(Comparator.reverseOrder()));
+
+        if (filterState.isSortByName()) {
+            comparator = Comparator.comparing(friend -> getFriendDisplayName(friend).toLowerCase());
+        } else if (filterState.isSortByRecentlySeen()) {
+            comparator = Comparator.comparing(friend -> getLastSeen(friend), Comparator.nullsLast(Comparator.reverseOrder()));
+        }
+
+        if (filterState.isReverseSort()) {
+            comparator = comparator.reversed();
+        }
+
+        Comparator<FriendshipData> finalComparator = comparator;
+        return friends.stream()
+                .filter(friend -> !filterState.isFavoritesOnly() || friend.isFavourite())
+                .filter(friend -> !filterState.isOnlineOnly() || isFriendOnline(friend))
+                .sorted(finalComparator)
+                .toList();
+    }
+
+    private String getFriendDisplayName(FriendshipData friend) {
+        return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friend.getOtherPlayerId(player.getUniqueId()));
+    }
+
+    private Timestamp getLastSeen(FriendshipData friend) {
+        PlayerData playerData = ((FriendNetPlugin) plugin).getPlayerService().getPlayerData(friend.getOtherPlayerId(player.getUniqueId()));
+        return playerData != null ? playerData.getLastSeen() : null;
+    }
+
+    private boolean isFriendOnline(FriendshipData friend) {
+        UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+        return Bukkit.getPlayer(friendId) != null && ((FriendNetPlugin) plugin).getPlayerService().isOnline(friendId);
+    }
+
+    private void clampCurrentPage(int itemCount) {
+        int maxPage = GUIUtils.CalculateMaxPage(itemCount, friendsPerPage) - 1;
+        if (currentPage > maxPage) {
+            currentPage = maxPage;
+        }
+
+        if (currentPage < 0) {
+            currentPage = 0;
+        }
     }
 }
