@@ -12,6 +12,7 @@ titles:
   favoriteFriendsGUI: "Favorite Friends"
   friendFilterGUI: "Friend Filters"
   friendNameSearchGUI: "Search Friends"
+  friendDetailGUI: "%target%"
 
 # Buttons / Items
 buttons:
@@ -203,6 +204,30 @@ friendSettingsGUI:
     confirm: "&cAre you sure you want to remove &e%target%&c?"
     success: "&e%target% &bwas removed from your friends"
     fail: "&cFailed to remove &e%target%"
+
+# Friend Detail GUI
+friendDetailGUI:
+  buttons:
+    favourite:
+      add:
+        displayName: "&aAdd Favourite"
+        lore:
+          - "&7Mark this friend as a favourite."
+      remove:
+        displayName: "&cRemove Favourite"
+        lore:
+          - "&7Remove this friend from your favourites."
+    message:
+      displayName: "&eSend Message"
+      lore:
+        - "&7Prepare a private message command."
+    removeFriend:
+      displayName: "&cRemove Friend"
+      lore:
+        - "&7Remove this player from your friends list."
+  message:
+    prompt: "&eClick here to message &a%target%"
+    hover: "&7Suggest command: &e%command%"
 
 # Personal Settings GUI
 personalSettingsGUI:

@@ -74,6 +74,9 @@ friend:
     target:
       success: '&e%sender% &bhat dich aus seiner Freundesliste entfernt'
       notFound: '&c%sender% hat versucht, dich zu entfernen, aber du bist nicht in seiner Freundesliste'
+  favourite:
+    enabled: '&e%target% &aist jetzt ein Favorit'
+    disabled: '&e%target% &cist kein Favorit mehr'
 
 # Player settings feedback
 

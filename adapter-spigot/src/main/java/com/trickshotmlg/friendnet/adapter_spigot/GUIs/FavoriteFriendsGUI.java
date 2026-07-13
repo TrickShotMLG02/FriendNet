@@ -55,7 +55,13 @@ public class FavoriteFriendsGUI extends AbstractGUI {
 
         for (int i = 0; i < visibleFriends.size(); i++) {
             FriendshipData friend = visibleFriends.get(i);
-            inventory.setItem(i, createFriendItem(friend));
+            UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+            setInteractableItem(i, new ActionItemStack(
+                    createFriendItem(friend),
+                    player,
+                    () -> openChild(new FriendDetailGUI(plugin, player, friendId)),
+                    ActionItemStack.SoundProfile.NAVIGATION
+            ));
         }
 
         int bottomRowStart = inventory.getSize() - 9;

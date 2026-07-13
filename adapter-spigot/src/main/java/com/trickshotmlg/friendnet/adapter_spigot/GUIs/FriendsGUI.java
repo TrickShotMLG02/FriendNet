@@ -61,7 +61,13 @@ public class FriendsGUI extends AbstractGUI {
         for (int i = 0; i < visibleFriends.size(); i++) {
             FriendshipData friend = visibleFriends.get(i);
             ItemStack friendItem = createFriendItem(friend);
-            inventory.setItem(i, friendItem);
+            UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+            setInteractableItem(i, new ActionItemStack(
+                    friendItem,
+                    player,
+                    () -> openChild(new FriendDetailGUI(plugin, player, friendId)),
+                    ActionItemStack.SoundProfile.NAVIGATION
+            ));
         }
 
         // Navigation buttons
