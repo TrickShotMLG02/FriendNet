@@ -11,4 +11,6 @@
 .idea/modules.xml
 .idea/dictionaries/
 .idea/shelf/
+.idea/dataSources.xml
+.idea/db-forest-config.xml
 *.iml

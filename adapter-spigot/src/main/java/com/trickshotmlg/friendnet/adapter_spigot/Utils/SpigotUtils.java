@@ -10,7 +10,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -154,17 +158,12 @@ public final class SpigotUtils {
         SkullMeta meta = (SkullMeta) head.getItemMeta();
 
         if (meta != null) {
+            if (base64Texture != null && !base64Texture.isBlank()) {
+                applyCustomHeadTexture(meta, base64Texture);
+            }
+
             applyItemMeta(meta, displayName, lore);
             head.setItemMeta(meta);
-        }
-
-        if (base64Texture != null && !base64Texture.isBlank()) {
-            String normalizedTexture = normalizeBase64Texture(base64Texture);
-            String profileId = UUID.nameUUIDFromBytes(normalizedTexture.getBytes(StandardCharsets.UTF_8)).toString();
-            String skullOwnerNbt = "{SkullOwner:{Id:\"" + profileId + "\",Properties:{textures:[{Value:\""
-                    + escapeNbtString(normalizedTexture)
-                    + "\"}]}}}";
-            head = Bukkit.getUnsafe().modifyItemStack(head, skullOwnerNbt);
         }
 
         return head;
@@ -260,8 +259,30 @@ public final class SpigotUtils {
         return Base64.getEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static String escapeNbtString(String value) {
-        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    private static void applyCustomHeadTexture(SkullMeta meta, String texture) {
+        String normalizedTexture = normalizeBase64Texture(texture);
+        String skinUrl = extractSkinUrl(normalizedTexture);
+
+        try {
+            UUID profileId = UUID.nameUUIDFromBytes(normalizedTexture.getBytes(StandardCharsets.UTF_8));
+            PlayerProfile profile = Bukkit.createPlayerProfile(profileId, "FriendNetHead");
+            PlayerTextures textures = profile.getTextures();
+            textures.setSkin(new URL(skinUrl));
+            profile.setTextures(textures);
+            meta.setOwnerProfile(profile);
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("Texture payload contains an invalid skin URL: " + skinUrl, e);
+        }
+    }
+
+    private static String extractSkinUrl(String base64Texture) {
+        String decoded = new String(Base64.getDecoder().decode(base64Texture), StandardCharsets.UTF_8);
+        Matcher matcher = SKIN_URL_PATTERN.matcher(decoded);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("Texture payload does not contain a skin URL");
+        }
+
+        return matcher.group(1);
     }
 
     public static <T> List<T> safeSubList(List<T> list, int start, int end) {

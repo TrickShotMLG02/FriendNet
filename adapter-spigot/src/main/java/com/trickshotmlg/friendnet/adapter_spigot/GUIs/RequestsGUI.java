@@ -98,7 +98,7 @@ public class RequestsGUI extends AbstractGUI {
 
         // Page Display Item
         {
-            int maxPage = (int) Math.ceil((float) requests.size() / (float) requestsPerPage);
+            int maxPage = GUIUtils.CalculateMaxPage(requests.size(), requestsPerPage);
             inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(player, currentPage, maxPage));
         }
 

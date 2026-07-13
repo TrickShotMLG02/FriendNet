@@ -145,7 +145,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
 
         // Page Display Item
         {
-            int maxPage = (int) Math.ceil((float) availableLocales.size() / (float) localesPerPage);
+            int maxPage = GUIUtils.CalculateMaxPage(availableLocales.size(), localesPerPage);
             inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(player, currentPage, maxPage));
         }
 

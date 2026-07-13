@@ -177,7 +177,7 @@ public class FriendsGUI extends AbstractGUI {
 
         // Page Display Item
         {
-            int maxPage = (int) Math.ceil((float) friends.size() / (float) friendsPerPage);
+            int maxPage = GUIUtils.CalculateMaxPage(friends.size(), friendsPerPage);
             inventory.setItem(bottomRowStart + 4, GUIUtils.CreatePageIndicatorItem(player, currentPage, maxPage));
         }
 
