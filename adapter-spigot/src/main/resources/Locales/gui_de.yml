@@ -5,6 +5,9 @@ titles:
   friendSettingsGUI: "%target%s Einstellungen"
   personalSettingsGUI: "Deine Einstellungen"
   localeSelectionGUI: "Sprache ändern"
+  blocklistGUI: "Blockierte Spieler"
+  favoriteFriendsGUI: "Favorisierte Freunde"
+  friendFilterGUI: "Freundesfilter"
 
 # Buttons / Items
 buttons:
@@ -89,6 +92,62 @@ friendRequestsGUI:
       displayName: "&cAlle ablehnen"
       lore:
         - "&7Klicke hier, um alle Freundschaftsanfragen abzulehnen"
+
+# Blocklist GUI
+blocklistGUI:
+  buttons:
+    blockedPlayers:
+      displayName: "&eBlockierte Spieler"
+      lore:
+        - "&7Blockierte Spieler werden hier angezeigt."
+    addBlockedPlayer:
+      displayName: "&aSpieler blockieren"
+      lore:
+        - "&7Platzhalter, um einen Spieler zu blockieren."
+    clearBlocklist:
+      displayName: "&cBlockliste leeren"
+      lore:
+        - "&7Platzhalter, um alle blockierten Spieler zu entfernen."
+
+# Favorite Friends GUI
+favoriteFriendsGUI:
+  buttons:
+    sortFavorites:
+      displayName: "&eFavoriten sortieren"
+      lore:
+        - "&7Platzhalter, um die Sortierung zu ändern."
+
+# Friend Filter GUI
+friendFilterGUI:
+  buttons:
+    favoritesOnly:
+      displayName: "&eNur Favoriten"
+      lore:
+        - "&7Zeige nur favorisierte Freunde."
+    onlineOnly:
+      displayName: "&eNur online"
+      lore:
+        - "&7Zeige nur Freunde, die online sind."
+    nameSearch:
+      displayName: "&eNamenssuche"
+      lore:
+        - "&7Platzhalter, um nach Namen zu filtern."
+    recentlySeen:
+      displayName: "&eZuletzt gesehen"
+      lore:
+        - "&7Priorisiere kuerzlich gesehene Freunde."
+    sortMode:
+      displayName: "&eSortierung"
+      lore:
+        - "&7Platzhalter fuer die Sortierauswahl."
+    reset:
+      displayName: "&cFilter zuruecksetzen"
+      lore:
+        - "&7Entferne alle ausgewaehlten Filter."
+    apply:
+      displayName: "&aFilter anwenden"
+      lore:
+        - "&7Wende die ausgewaehlten Filter an."
 
 # Friend Settings GUI
 friendSettingsGUI:
