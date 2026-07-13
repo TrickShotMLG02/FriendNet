@@ -73,6 +73,20 @@ friend:
     enabled: "&e%target% &ais now a favourite"
     disabled: "&e%target% &cis no longer a favourite"
 
+# Blocklist events
+blocklist:
+  block:
+    success: "&e%target% &chas been blocked"
+    already: "&e%target% &cis already blocked"
+    self: "&cYou cannot block yourself"
+  unblock:
+    success: "&e%target% &ais no longer blocked"
+  clear:
+    success: "&aRemoved &e%count% &aplayers from your blocklist"
+  friendRequest:
+    senderBlocked: "&cYou blocked &e%target%&c. Unblock them before sending a friend request."
+    targetBlocked: "&e%target% &cis not accepting friend requests from you."
+
 # Player settings feedback
 playerSettings:
   allowFriendRequests:

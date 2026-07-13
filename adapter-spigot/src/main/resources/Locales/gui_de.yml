@@ -124,6 +124,14 @@ friendRequestsGUI:
 
 # Blocklist GUI
 blocklistGUI:
+  blockedPlayer:
+    lore:
+      blockedAt: "&7Blockiert am: %date%"
+      status: "&7Status: %status%"
+      clickToUnblock: "&eKlicke hier, um diesen Spieler zu entblocken."
+  chatInput:
+    prompt: "&eSchreibe den Spielernamen zum Blockieren in den Chat. Schreibe &cabbrechen&e zum Abbrechen."
+    cancelKeyword: "abbrechen"
   buttons:
     blockedPlayers:
       displayName: "&eBlockierte Spieler"
@@ -132,11 +140,11 @@ blocklistGUI:
     addBlockedPlayer:
       displayName: "&aSpieler blockieren"
       lore:
-        - "&7Platzhalter, um einen Spieler zu blockieren."
+        - "&7Schreibe einen Spielernamen in den Chat, um ihn zu blockieren."
     clearBlocklist:
       displayName: "&cBlockliste leeren"
       lore:
-        - "&7Platzhalter, um alle blockierten Spieler zu entfernen."
+        - "&7Entferne alle Spieler aus deiner Blockliste."
 
 # Favorite Friends GUI
 favoriteFriendsGUI:
@@ -224,6 +232,10 @@ friendDetailGUI:
       displayName: "&eNachricht senden"
       lore:
         - "&7Bereite eine private Nachricht vor."
+    blockPlayer:
+      displayName: "&cSpieler blockieren"
+      lore:
+        - "&7Blockiere diesen Spieler und entferne jede Freundschaft."
     removeFriend:
       displayName: "&cFreund entfernen"
       lore:

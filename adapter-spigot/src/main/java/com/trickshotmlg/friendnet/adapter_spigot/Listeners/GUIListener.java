@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Listeners;
 
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.AbstractGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.BlockPlayerInputGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendNameSearchGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import org.bukkit.entity.Player;
@@ -58,6 +59,10 @@ public class GUIListener extends AbstractListener {
 
     @EventHandler
     public void onAsyncPlayerChat(AsyncPlayerChatEvent event) {
-        FriendNameSearchGUI.handleChatInput(event, plugin);
+        if (FriendNameSearchGUI.handleChatInput(event, plugin)) {
+            return;
+        }
+
+        BlockPlayerInputGUI.handleChatInput(event, plugin);
     }
 }

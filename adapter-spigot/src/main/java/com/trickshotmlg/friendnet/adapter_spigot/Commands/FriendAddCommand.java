@@ -1,5 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
@@ -58,6 +59,17 @@ public class FriendAddCommand extends AbstractCommand {
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
         PlayerService ps = pl.getPlayerService();
+        BlocklistActions blocklistActions = new BlocklistActions(pl);
+
+        if (blocklistActions.isBlocked(player.getUniqueId(), target.getUniqueId())) {
+            MessageManager.send(sender, "blocklist.friendRequest.senderBlocked", Map.of("target", target.getName()));
+            return true;
+        }
+
+        if (blocklistActions.isBlocked(target.getUniqueId(), player.getUniqueId())) {
+            MessageManager.send(sender, "blocklist.friendRequest.targetBlocked", Map.of("target", target.getName()));
+            return true;
+        }
 
         if (!ps.getPlayerData(target.getUniqueId()).isAllowFriendRequests()) {
             MessageManager.send(sender, "friendRequest.send.sender.disabled", Map.of("target", target.getName()));

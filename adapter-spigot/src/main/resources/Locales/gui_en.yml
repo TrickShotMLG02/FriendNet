@@ -124,6 +124,14 @@ friendRequestsGUI:
 
 # Blocklist GUI
 blocklistGUI:
+  blockedPlayer:
+    lore:
+      blockedAt: "&7Blocked at: %date%"
+      status: "&7Status: %status%"
+      clickToUnblock: "&eClick to unblock this player."
+  chatInput:
+    prompt: "&eType the player name to block in chat. Type &ccancel&e to cancel."
+    cancelKeyword: "cancel"
   buttons:
     blockedPlayers:
       displayName: "&eBlocked Players"
@@ -132,11 +140,11 @@ blocklistGUI:
     addBlockedPlayer:
       displayName: "&aAdd Blocked Player"
       lore:
-        - "&7Placeholder for selecting a player to block."
+        - "&7Type a player name in chat to block them."
     clearBlocklist:
       displayName: "&cClear Blocklist"
       lore:
-        - "&7Placeholder for removing all blocked players."
+        - "&7Remove every player from your blocklist."
 
 # Favorite Friends GUI
 favoriteFriendsGUI:
@@ -224,6 +232,10 @@ friendDetailGUI:
       displayName: "&eSend Message"
       lore:
         - "&7Prepare a private message command."
+    blockPlayer:
+      displayName: "&cBlock Player"
+      lore:
+        - "&7Block this player and remove any friendship."
     removeFriend:
       displayName: "&cRemove Friend"
       lore:

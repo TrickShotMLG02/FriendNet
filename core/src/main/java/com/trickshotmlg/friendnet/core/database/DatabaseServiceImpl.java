@@ -6,6 +6,7 @@ import com.trickshotmlg.friendnet.core_api.enums.ServiceState;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
+import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
@@ -135,6 +136,11 @@ public class DatabaseServiceImpl implements DatabaseService {
             return Optional.empty();
         }
 
+        if (clazz.equals(BlocklistData.class)) {
+            return findAll(playerId, clazz)
+                    .flatMap(blockedPlayers -> blockedPlayers.stream().findFirst());
+        }
+
         return Optional.empty();
     }
 
@@ -186,6 +192,34 @@ public class DatabaseServiceImpl implements DatabaseService {
                     }
                 } catch (SQLException e) {
                     Logger.error("Failed to fetch friendship data for player: " + playerId, e);
+                }
+            } catch (SQLException e) {
+                Logger.error("Could not establish database connection", e);
+            }
+        }
+
+        if (clazz.equals(BlocklistData.class)) {
+            Set<BlocklistData> blockedPlayers = new HashSet<>();
+
+            try {
+                DatabaseConnection conn = getDatabase().getConnection();
+
+                try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_BLOCKLIST_SELECT)) {
+                    ps.setString(1, playerId.toString());
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            blockedPlayers.add(new BlocklistData(
+                                    UUID.fromString(rs.getString("blocker_id")),
+                                    UUID.fromString(rs.getString("blocked_id")),
+                                    rs.getTimestamp("created_at")
+                            ));
+                        }
+
+                        return Optional.of((Set<T>) blockedPlayers);
+                    }
+                } catch (SQLException e) {
+                    Logger.error("Failed to fetch blocklist data for player: " + playerId, e);
                 }
             } catch (SQLException e) {
                 Logger.error("Could not establish database connection", e);
@@ -249,6 +283,24 @@ public class DatabaseServiceImpl implements DatabaseService {
         }
     }
 
+    @Override
+    public void save(BlocklistData entity) {
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
+
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.blocklistUpsert(getDatabase().getDatabaseType()))){
+                ps.setString(1, entity.getBlockerId().toString());
+                ps.setString(2, entity.getBlockedId().toString());
+                ps.setTimestamp(3, entity.getBlockedAt());
+
+                ps.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            Logger.error("Could not save BlocklistData: " + entity, e);
+        }
+    }
+
     /**
      * @param entity
      */
@@ -285,6 +337,22 @@ public class DatabaseServiceImpl implements DatabaseService {
 
         } catch (SQLException e) {
             Logger.error("Could not delete PlayerData: " + entity, e);
+        }
+    }
+
+    @Override
+    public void delete(BlocklistData entity) {
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
+
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_BLOCKLIST_DELETE)){
+                ps.setString(1, entity.getBlockerId().toString());
+                ps.setString(2, entity.getBlockedId().toString());
+                ps.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            Logger.error("Could not delete BlocklistData: " + entity, e);
         }
     }
 
