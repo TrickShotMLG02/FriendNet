@@ -10,14 +10,20 @@ import java.sql.SQLException;
 public class MySQLDatabase implements Database {
 
     private final String host, database, username, password;
+    private final DatabaseType databaseType;
     private DatabaseConnection connection;
 
 
     public MySQLDatabase(String host, String database, String username, String password) {
+        this(host, database, username, password, DatabaseType.MySQL);
+    }
+
+    public MySQLDatabase(String host, String database, String username, String password, DatabaseType databaseType) {
         this.host = host;
         this.database = database;
         this.username = username;
         this.password = password;
+        this.databaseType = databaseType;
     }
 
     /**
@@ -25,7 +31,7 @@ public class MySQLDatabase implements Database {
      */
     @Override
     public DatabaseType getDatabaseType() {
-        return DatabaseType.MySQL;
+        return databaseType;
     }
 
     /**
@@ -33,7 +39,8 @@ public class MySQLDatabase implements Database {
      */
     @Override
     public void connect() throws SQLException {
-        String url = "jdbc:mysql://" + host + "/" + database + "?useSSL=false";
+        String protocol = databaseType == DatabaseType.MariaDB ? "mariadb" : "mysql";
+        String url = "jdbc:" + protocol + "://" + host + "/" + database + "?useSSL=false";
         connection = new SimpleDatabaseConnection(DriverManager.getConnection(url, username, password));
     }
 

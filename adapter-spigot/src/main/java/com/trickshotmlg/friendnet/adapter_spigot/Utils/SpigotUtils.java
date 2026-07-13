@@ -11,9 +11,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class SpigotUtils {
+    private static final Pattern SKIN_URL_PATTERN = Pattern.compile("\"url\"\\s*:\\s*\"([^\"]+)\"");
+
     private SpigotUtils() {
         // prevent instantiation
     }
@@ -135,6 +140,40 @@ public final class SpigotUtils {
         return createPlayerHead(playerId, displayName, lore, 1);
     }
 
+    /**
+     * Creates a player head with a custom texture.
+     *
+     * @param base64Texture Base64 encoded Minecraft texture JSON, a textures.minecraft.net URL, or a texture hash.
+     * @param displayName Display name of the item
+     * @param lore Lore lines
+     * @param amount Item stack amount
+     * @return ItemStack of a custom textured player head
+     */
+    public static ItemStack createCustomPlayerHead(String base64Texture, String displayName, List<String> lore, int amount) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD, amount);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+
+        if (meta != null) {
+            applyItemMeta(meta, displayName, lore);
+            head.setItemMeta(meta);
+        }
+
+        if (base64Texture != null && !base64Texture.isBlank()) {
+            String normalizedTexture = normalizeBase64Texture(base64Texture);
+            String profileId = UUID.nameUUIDFromBytes(normalizedTexture.getBytes(StandardCharsets.UTF_8)).toString();
+            String skullOwnerNbt = "{SkullOwner:{Id:\"" + profileId + "\",Properties:{textures:[{Value:\""
+                    + escapeNbtString(normalizedTexture)
+                    + "\"}]}}}";
+            head = Bukkit.getUnsafe().modifyItemStack(head, skullOwnerNbt);
+        }
+
+        return head;
+    }
+
+    public static ItemStack createCustomPlayerHead(String base64Texture, String displayName, List<String> lore) {
+        return createCustomPlayerHead(base64Texture, displayName, lore, 1);
+    }
+
     public static ItemStack setItemLore(ItemStack item, List<String> lore) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -180,6 +219,13 @@ public final class SpigotUtils {
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return item;
 
+        applyItemMeta(meta, displayName, lore);
+
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private static void applyItemMeta(ItemMeta meta, String displayName, List<String> lore) {
         if (displayName != null && !displayName.isEmpty()) {
             meta.setDisplayName(displayName);
         }
@@ -187,9 +233,35 @@ public final class SpigotUtils {
         if (lore != null && !lore.isEmpty()) {
             meta.setLore(lore);
         }
+    }
 
-        item.setItemMeta(meta);
-        return item;
+    private static String normalizeBase64Texture(String texture) {
+        String normalizedTexture = texture.trim();
+
+        if (normalizedTexture.startsWith("http://") || normalizedTexture.startsWith("https://")) {
+            return encodeSkinUrl(normalizedTexture);
+        }
+
+        if (normalizedTexture.matches("[a-fA-F0-9]{32,}")) {
+            return encodeSkinUrl("http://textures.minecraft.net/texture/" + normalizedTexture);
+        }
+
+        String decoded = new String(Base64.getDecoder().decode(normalizedTexture), StandardCharsets.UTF_8);
+        Matcher matcher = SKIN_URL_PATTERN.matcher(decoded);
+        if (!matcher.find()) {
+            throw new IllegalArgumentException("Texture payload does not contain a skin URL");
+        }
+
+        return normalizedTexture;
+    }
+
+    private static String encodeSkinUrl(String skinUrl) {
+        String payload = "{\"textures\":{\"SKIN\":{\"url\":\"" + skinUrl + "\"}}}";
+        return Base64.getEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static String escapeNbtString(String value) {
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
     public static <T> List<T> safeSubList(List<T> list, int start, int end) {

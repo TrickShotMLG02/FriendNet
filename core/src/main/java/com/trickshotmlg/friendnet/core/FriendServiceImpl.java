@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class FriendServiceImpl implements FriendService {
 
@@ -22,7 +23,7 @@ public class FriendServiceImpl implements FriendService {
         this.playerService = playerService;
     }
 
-    private final HashSet<FriendshipData> friends = new HashSet<>();
+    private final Set<FriendshipData> friends = ConcurrentHashMap.newKeySet();
 
     @Override
     public boolean acceptFriendRequest(UUID player, UUID requester) {

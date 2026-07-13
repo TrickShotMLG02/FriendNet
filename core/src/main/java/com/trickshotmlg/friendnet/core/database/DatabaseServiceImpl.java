@@ -26,10 +26,15 @@ public class DatabaseServiceImpl implements DatabaseService {
     private String dbName;
 
     private Database database;
+    private ServiceState state = ServiceState.NEW;
 
     public DatabaseServiceImpl(File dataFolder, String dbName) {
         this.dataFolder = dataFolder;
         this.dbName = dbName;
+    }
+
+    public DatabaseServiceImpl(Database database) {
+        this.database = database;
     }
 
     /**
@@ -55,8 +60,8 @@ public class DatabaseServiceImpl implements DatabaseService {
                 DatabaseConnection conn = getDatabase().getConnection();
 
                 try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FRIENDSHIPS_SELECT)) {
-                    ps.setObject(1, playerId);
-                    ps.setObject(2, playerId);
+                    ps.setString(1, playerId.toString());
+                    ps.setString(2, playerId.toString());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
@@ -72,10 +77,10 @@ public class DatabaseServiceImpl implements DatabaseService {
                             // Create FriendshipData instance
                             FriendshipData friendshipData = new FriendshipData(
                                     requesterId,
-                                    requesterId == player1Id ? player2Id : player1Id,
+                                    requesterId.equals(player1Id) ? player2Id : player1Id,
                                     friendshipType,
-                                    friendSince,
                                     requestSentTime,
+                                    friendSince,
                                     favourite
                             );
 
@@ -96,7 +101,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                 DatabaseConnection conn = getDatabase().getConnection();
 
                 try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_SELECT)) {
-                    ps.setObject(1, playerId);
+                    ps.setString(1, playerId.toString());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
@@ -149,8 +154,8 @@ public class DatabaseServiceImpl implements DatabaseService {
                 DatabaseConnection conn = getDatabase().getConnection();
 
                 try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FRIENDSHIPS_SELECT)) {
-                    ps.setObject(1, playerId);
-                    ps.setObject(2, playerId);
+                    ps.setString(1, playerId.toString());
+                    ps.setString(2, playerId.toString());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
@@ -199,11 +204,11 @@ public class DatabaseServiceImpl implements DatabaseService {
         try {
             DatabaseConnection conn = getDatabase().getConnection();
 
-            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FRIENDSHIPS_UPSERT)){
-                ps.setObject(1, entity.getPlayer1Id());
-                ps.setObject(2, entity.getPlayer2Id());
-                ps.setObject(3, entity.getRequesterId());
-                ps.setObject(4, entity.getFriendshipStatus());
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.friendshipsUpsert(getDatabase().getDatabaseType()))){
+                ps.setString(1, entity.getPlayer1Id().toString());
+                ps.setString(2, entity.getPlayer2Id().toString());
+                ps.setString(3, entity.getRequesterId().toString());
+                ps.setString(4, entity.getFriendshipStatus().name());
                 ps.setTimestamp(5, entity.getRequestSentTime());
                 ps.setTimestamp(6, entity.getFriendSince());
                 ps.setBoolean(7, entity.isFavourite());
@@ -224,8 +229,8 @@ public class DatabaseServiceImpl implements DatabaseService {
         try {
             DatabaseConnection conn = getDatabase().getConnection();
 
-            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_UPSERT)){
-                ps.setObject(1, entity.getPlayerId());
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.playersUpsert(getDatabase().getDatabaseType()))){
+                ps.setString(1, entity.getPlayerId().toString());
                 ps.setString(2, entity.getLastDisplayName());
                 ps.setBoolean(3, entity.isAllowFriendRequests());
                 ps.setBoolean(4, entity.isShowOnlineStatus());
@@ -253,8 +258,10 @@ public class DatabaseServiceImpl implements DatabaseService {
             DatabaseConnection conn = getDatabase().getConnection();
 
             try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FRIENDSHIPS_DELETE)){
-                ps.setObject(1, entity.getPlayer1Id());
-                ps.setObject(2, entity.getPlayer2Id());
+                ps.setString(1, entity.getPlayer1Id().toString());
+                ps.setString(2, entity.getPlayer2Id().toString());
+                ps.setString(3, entity.getPlayer1Id().toString());
+                ps.setString(4, entity.getPlayer2Id().toString());
                 ps.executeUpdate();
             }
 
@@ -272,7 +279,7 @@ public class DatabaseServiceImpl implements DatabaseService {
             DatabaseConnection conn = getDatabase().getConnection();
 
             try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_DELETE)){
-                ps.setObject(1, entity.getPlayerId());
+                ps.setString(1, entity.getPlayerId().toString());
                 ps.executeUpdate();
             }
 
@@ -286,7 +293,10 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void init() {
-        database = new SQLiteDatabase(dataFolder, dbName);
+        if (database == null) {
+            database = new SQLiteDatabase(dataFolder, dbName);
+        }
+        state = ServiceState.INITIALIZED;
     }
 
     /**
@@ -311,6 +321,7 @@ public class DatabaseServiceImpl implements DatabaseService {
             ps.close();
 
         } catch (SQLException e) {
+            state = ServiceState.FAILED;
             Logger.error("Error while creating initial database tables!", e);
         }
     }
@@ -320,7 +331,7 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void start() {
-
+        state = ServiceState.STARTED;
     }
 
     /**
@@ -328,7 +339,16 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void stop() {
-
+        if (database != null) {
+            try {
+                database.disconnect();
+            } catch (SQLException e) {
+                state = ServiceState.FAILED;
+                Logger.error("Error while disconnecting database", e);
+                return;
+            }
+        }
+        state = ServiceState.STOPPED;
     }
 
     /**
@@ -336,7 +356,8 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void destroy() {
-
+        stop();
+        state = ServiceState.DESTROYED;
     }
 
     /**
@@ -344,7 +365,7 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public ServiceState getState() {
-        return null;
+        return state;
     }
 
     /**
@@ -352,6 +373,6 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public boolean isRunning() {
-        return false;
+        return state == ServiceState.STARTED;
     }
 }

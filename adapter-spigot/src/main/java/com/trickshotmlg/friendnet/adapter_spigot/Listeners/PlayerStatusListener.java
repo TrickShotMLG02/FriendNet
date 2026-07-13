@@ -9,6 +9,7 @@ import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -16,6 +17,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 
 /**
@@ -23,6 +25,7 @@ import java.util.Set;
  */
 public class PlayerStatusListener extends AbstractListener {
 
+    private final JavaPlugin plugin;
     private final FriendService friendService;
     private final PlayerService playerService;
     private final DatabaseService databaseService;
@@ -30,6 +33,7 @@ public class PlayerStatusListener extends AbstractListener {
     public PlayerStatusListener(JavaPlugin plugin, FriendService friendService, PlayerService playerService, DatabaseService databaseService) {
         super(plugin);
 
+        this.plugin = plugin;
         this.friendService = friendService;
         this.playerService = playerService;
         this.databaseService = databaseService;
@@ -38,27 +42,31 @@ public class PlayerStatusListener extends AbstractListener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
+        UUID playerId = spigotPlayer.getUniqueId();
 
         // TODO: Remove this as it is only for testing purposes
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, spigotPlayer));
+        playerService.initPlayer(playerId);
 
-        // load player data
-        Optional<PlayerData> pld = databaseService.find(spigotPlayer.getUniqueId(), PlayerData.class);
-        if (pld.isPresent()) {
-            PlayerData playerData = pld.get();
-            Logger.debug("playerData: " + playerData);
-            playerService.putPlayerData(playerData);
-        } else {
-            playerService.initPlayer(spigotPlayer.getUniqueId());
-        }
-
-        // load player friendships into memory
-        Optional<Set<FriendshipData>> friendships = databaseService.findAll(spigotPlayer.getUniqueId(), FriendshipData.class);
-        if (friendships.isPresent()) {
-            for (FriendshipData friendshipData : friendships.get()) {
-                friendService.putFriendshipData(friendshipData);
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            // load player data
+            Optional<PlayerData> pld = databaseService.find(playerId, PlayerData.class);
+            if (pld.isPresent()) {
+                PlayerData playerData = pld.get();
+                Logger.debug("playerData: " + playerData);
+                playerService.putPlayerData(playerData);
+            } else {
+                playerService.initPlayer(playerId);
             }
-        }
+
+            // load player friendships into memory
+            Optional<Set<FriendshipData>> friendships = databaseService.findAll(playerId, FriendshipData.class);
+            if (friendships.isPresent()) {
+                for (FriendshipData friendshipData : friendships.get()) {
+                    friendService.putFriendshipData(friendshipData);
+                }
+            }
+        });
 
 
         //TODO: Check if player has their status set to offline
@@ -83,13 +91,18 @@ public class PlayerStatusListener extends AbstractListener {
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
+        UUID playerId = spigotPlayer.getUniqueId();
 
         // TODO: only update last seen if player status was online before
-        PlayerData playerData = playerService.getPlayerData(spigotPlayer.getUniqueId());
+        PlayerData playerData = playerService.getPlayerData(playerId);
+        if (playerData == null) {
+            playerData = playerService.initPlayer(playerId);
+        }
         // TODO: set player status to offline
         playerData.setLastSeen();
         playerData.setLastDisplayName(event.getPlayer().getDisplayName());
-        databaseService.save(playerData);
+        PlayerData playerDataToSave = playerData;
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> databaseService.save(playerDataToSave));
 
         // TODO: Remove this junk
         //friendService.acceptFriendRequest(UUID.fromString("0f8fbcdd-dd36-4409-a689-dc9fb761b55d"), spigotPlayer.getUniqueId());
@@ -108,7 +121,7 @@ public class PlayerStatusListener extends AbstractListener {
         //friendService.setOnline(spigotPlayer.getUniqueId(), false);
 
         // remove playerData as it is no longer needed
-        playerService.removePlayerData(spigotPlayer.getUniqueId());
+        playerService.removePlayerData(playerId);
 
 
         Logger.debug(spigotPlayer.getName() + " quit!");

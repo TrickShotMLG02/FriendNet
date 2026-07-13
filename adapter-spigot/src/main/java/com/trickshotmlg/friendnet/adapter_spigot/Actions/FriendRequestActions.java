@@ -152,7 +152,7 @@ public class FriendRequestActions {
         int cancelled = 0;
 
         for (FriendshipData r : requests) {
-            OfflinePlayer target = Bukkit.getOfflinePlayer(r.getRequesterId());
+            OfflinePlayer target = Bukkit.getOfflinePlayer(r.getOtherPlayerId(sender.getUniqueId()));
 
             boolean success = friendService.cancelRequest(sender.getUniqueId(), target.getUniqueId());
             if (success) {
