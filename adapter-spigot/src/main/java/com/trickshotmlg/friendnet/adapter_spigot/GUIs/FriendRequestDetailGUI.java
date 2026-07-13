@@ -82,7 +82,17 @@ public class FriendRequestDetailGUI extends AbstractGUI {
                         "friendRequestDetailGUI.buttons.deny.lore"
                 ),
                 player,
-                this::denyRequest
+                () -> openConfirmation(
+                        "titles.confirmationGUI",
+                        "confirmations.denyRequest.displayName",
+                        "confirmations.denyRequest.lore",
+                        Map.of("target", getRequesterDisplayName()),
+                        confirmed -> {
+                            if (confirmed) {
+                                denyRequest();
+                            }
+                        }
+                )
         ));
 
         setInteractableItem(32, new ActionItemStack(
@@ -94,7 +104,17 @@ public class FriendRequestDetailGUI extends AbstractGUI {
                         "friendRequestDetailGUI.buttons.block.lore"
                 ),
                 player,
-                this::blockRequester
+                () -> openConfirmation(
+                        "titles.confirmationGUI",
+                        "confirmations.blockPlayer.displayName",
+                        "confirmations.blockPlayer.lore",
+                        Map.of("target", getRequesterDisplayName()),
+                        confirmed -> {
+                            if (confirmed) {
+                                blockRequester();
+                            }
+                        }
+                )
         ));
 
         setInteractableItem(34, new ActionItemStack(
@@ -119,12 +139,12 @@ public class FriendRequestDetailGUI extends AbstractGUI {
     }
 
     private void acceptRequest() {
-        new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService()).acceptRequest(player, getRequester());
+        new FriendRequestActions((FriendNetPlugin) plugin).acceptRequest(player, getRequester());
         goBack();
     }
 
     private void denyRequest() {
-        new FriendRequestActions(((FriendNetPlugin) plugin).getFriendService()).denyRequest(player, getRequester());
+        new FriendRequestActions((FriendNetPlugin) plugin).denyRequest(player, getRequester());
         goBack();
     }
 

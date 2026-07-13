@@ -19,6 +19,7 @@ titles:
   friendRequestDetailGUI: "Anfrage von %target%"
   sentRequestsGUI: "Gesendete Anfragen"
   sentRequestDetailGUI: "Anfrage an %target%"
+  confirmationGUI: "Aktion bestaetigen"
 
 # Buttons / Items
 buttons:
@@ -64,6 +65,59 @@ buttons:
     displayName: "&cAblehnen"
     lore:
       - "&7Klicke hier, um die Freundschaftsanfrage abzulehnen"
+
+confirmationGUI:
+  buttons:
+    "yes":
+      displayName: "&aJa"
+      lore:
+        - "&7Bestaetige diese Aktion."
+    "no":
+      displayName: "&cNein"
+      lore:
+        - "&7Abbrechen und zurueck."
+
+confirmations:
+  removeFriend:
+    displayName: "&c%target% entfernen?"
+    lore:
+      - "&7Dieser Spieler wird aus deiner Freundesliste entfernt."
+      - "&7Klicke Ja, um fortzufahren."
+  blockPlayer:
+    displayName: "&c%target% blockieren?"
+    lore:
+      - "&7Dieser Spieler wird blockiert und zugehoerige Anfragen oder Freundschaften werden entfernt."
+      - "&7Klicke Ja, um fortzufahren."
+  denyRequest:
+    displayName: "&cAnfrage von %target% ablehnen?"
+    lore:
+      - "&7Diese ausstehende Freundschaftsanfrage wird entfernt."
+      - "&7Klicke Ja, um fortzufahren."
+  denyAllRequests:
+    displayName: "&cAlle Anfragen ablehnen?"
+    lore:
+      - "&7Alle eingehenden Freundschaftsanfragen werden entfernt."
+      - "&7Klicke Ja, um fortzufahren."
+  cancelRequest:
+    displayName: "&cAnfrage an %target% abbrechen?"
+    lore:
+      - "&7Diese gesendete Freundschaftsanfrage wird entfernt."
+      - "&7Klicke Ja, um fortzufahren."
+  cancelAllRequests:
+    displayName: "&cAlle gesendeten Anfragen abbrechen?"
+    lore:
+      - "&7Alle von dir gesendeten Freundschaftsanfragen werden entfernt."
+      - "&7Klicke Ja, um fortzufahren."
+  clearBlocklist:
+    displayName: "&cBlockliste leeren?"
+    lore:
+      - "&7Alle Spieler auf deiner Blockliste werden entblockt."
+      - "&7Klicke Ja, um fortzufahren."
+  unblockPlayer:
+    displayName: "&c%target% entblocken?"
+    lore:
+      - "&7Dieser Spieler kann wieder mit dir interagieren."
+      - "&7Klicke Ja, um fortzufahren."
 
 # Friend List GUI
 friendsGUI:
@@ -182,6 +236,7 @@ sentRequestDetailGUI:
 
 # Blocklist GUI
 blocklistGUI:
+  emptyListMessage: "&cDu hast keine Spieler blockiert."
   blockedPlayer:
     lore:
       blockedAt: "&7Blockiert am: %date%"
@@ -206,6 +261,7 @@ blocklistGUI:
 
 # Favorite Friends GUI
 favoriteFriendsGUI:
+  emptyListMessage: "&cDu hast keine favorisierten Freunde."
   buttons:
     sortFavorites:
       displayName: "&eFavoriten sortieren"

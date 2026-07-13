@@ -70,6 +70,10 @@ public class FriendsGUI extends AbstractGUI {
             ));
         }
 
+        if (friends.isEmpty()) {
+            inventory.setItem(22, GUIUtils.CreateEmptyStateItem(player, "friendsGUI.emptyListMessage"));
+        }
+
         // Navigation buttons
         int bottomRowStart = inventory.getSize() - 9;
 

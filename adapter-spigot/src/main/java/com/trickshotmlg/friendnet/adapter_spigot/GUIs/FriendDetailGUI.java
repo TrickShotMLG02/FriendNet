@@ -94,7 +94,17 @@ public class FriendDetailGUI extends AbstractGUI {
                         "friendDetailGUI.buttons.blockPlayer.lore"
                 ),
                 player,
-                this::blockPlayer
+                () -> openConfirmation(
+                        "titles.confirmationGUI",
+                        "confirmations.blockPlayer.displayName",
+                        "confirmations.blockPlayer.lore",
+                        Map.of("target", getFriendDisplayName()),
+                        confirmed -> {
+                            if (confirmed) {
+                                blockPlayer();
+                            }
+                        }
+                )
         ));
 
         setInteractableItem(34, new ActionItemStack(
@@ -106,7 +116,17 @@ public class FriendDetailGUI extends AbstractGUI {
                         "friendDetailGUI.buttons.removeFriend.lore"
                 ),
                 player,
-                this::removeFriend
+                () -> openConfirmation(
+                        "titles.confirmationGUI",
+                        "confirmations.removeFriend.displayName",
+                        "confirmations.removeFriend.lore",
+                        Map.of("target", getFriendDisplayName()),
+                        confirmed -> {
+                            if (confirmed) {
+                                removeFriend();
+                            }
+                        }
+                )
         ));
 
         setInteractableItem(40, new ActionItemStack(

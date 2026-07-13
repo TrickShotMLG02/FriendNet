@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.Consumer;
 
 public abstract class AbstractGUI {
     protected final JavaPlugin plugin;
@@ -73,6 +74,16 @@ public abstract class AbstractGUI {
         child.open();
     }
 
+    protected void openConfirmation(
+            String titleKey,
+            String promptDisplayNameKey,
+            String promptLoreKey,
+            Map<String, Object> placeholders,
+            Consumer<Boolean> onResult
+    ) {
+        openChild(new ConfirmationGUI(plugin, player, titleKey, promptDisplayNameKey, promptLoreKey, placeholders, onResult));
+    }
+
     public void goBack() {
         if (parentGUI != null) {
             parentGUI.open();
@@ -84,6 +95,10 @@ public abstract class AbstractGUI {
     public void close() {
         openGUIs.remove(player);
         player.closeInventory();
+    }
+
+    public void onClose() {
+
     }
 
     public boolean ownsInventory(Inventory inventory) {

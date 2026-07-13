@@ -64,6 +64,10 @@ public class FavoriteFriendsGUI extends AbstractGUI {
             ));
         }
 
+        if (favoriteFriends.isEmpty()) {
+            inventory.setItem(13, GUIUtils.CreateEmptyStateItem(player, "favoriteFriendsGUI.emptyListMessage"));
+        }
+
         int bottomRowStart = inventory.getSize() - 9;
 
         if (currentPage > 0) {

@@ -19,6 +19,7 @@ titles:
   friendRequestDetailGUI: "%target%'s Request"
   sentRequestsGUI: "Sent Requests"
   sentRequestDetailGUI: "Request to %target%"
+  confirmationGUI: "Confirm Action"
 
 # Buttons / Items
 buttons:
@@ -64,6 +65,59 @@ buttons:
     displayName: "&cDeny"
     lore:
       - "&7Click to deny the friend request"
+
+confirmationGUI:
+  buttons:
+    "yes":
+      displayName: "&aYes"
+      lore:
+        - "&7Confirm this action."
+    "no":
+      displayName: "&cNo"
+      lore:
+        - "&7Cancel and go back."
+
+confirmations:
+  removeFriend:
+    displayName: "&cRemove %target%?"
+    lore:
+      - "&7This removes the player from your friends list."
+      - "&7Click yes to continue."
+  blockPlayer:
+    displayName: "&cBlock %target%?"
+    lore:
+      - "&7This blocks the player and removes related requests or friendships."
+      - "&7Click yes to continue."
+  denyRequest:
+    displayName: "&cDeny request from %target%?"
+    lore:
+      - "&7This removes the pending friend request."
+      - "&7Click yes to continue."
+  denyAllRequests:
+    displayName: "&cDeny all requests?"
+    lore:
+      - "&7This removes every incoming friend request."
+      - "&7Click yes to continue."
+  cancelRequest:
+    displayName: "&cCancel request to %target%?"
+    lore:
+      - "&7This removes your sent friend request."
+      - "&7Click yes to continue."
+  cancelAllRequests:
+    displayName: "&cCancel all sent requests?"
+    lore:
+      - "&7This removes every friend request you sent."
+      - "&7Click yes to continue."
+  clearBlocklist:
+    displayName: "&cClear blocklist?"
+    lore:
+      - "&7This unblocks every player on your blocklist."
+      - "&7Click yes to continue."
+  unblockPlayer:
+    displayName: "&cUnblock %target%?"
+    lore:
+      - "&7This allows the player to interact with you again."
+      - "&7Click yes to continue."
 
 # Friend List GUI
 friendsGUI:
@@ -182,6 +236,7 @@ sentRequestDetailGUI:
 
 # Blocklist GUI
 blocklistGUI:
+  emptyListMessage: "&cYou have not blocked any players."
   blockedPlayer:
     lore:
       blockedAt: "&7Blocked at: %date%"
@@ -206,6 +261,7 @@ blocklistGUI:
 
 # Favorite Friends GUI
 favoriteFriendsGUI:
+  emptyListMessage: "&cYou have no favorite friends."
   buttons:
     sortFavorites:
       displayName: "&eSort Favorites"
