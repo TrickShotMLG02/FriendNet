@@ -96,7 +96,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
             LocaleKey locale = visibleLocales.get(i);
 
             ItemStack localeItem = SpigotUtils.createCustomPlayerHead(
-                    GUIUtils.GLOBE_TEXTURE,
+                    getLocaleTexture(locale),
                     "§e" + LocaleUtils.getLocalizedLanguageName(selectedLocale, locale),
                     null
             );
@@ -187,6 +187,11 @@ public class LocaleSelectionGUI extends AbstractGUI{
         }
 
         return playerData.getLocale();
+    }
+
+    private String getLocaleTexture(LocaleKey locale) {
+        return FriendNetPlugin.LocaleManager.getLocaleString(locale, "gui", "locale.texture")
+                .orElseGet(() -> GUIUtils.GetLocaleFlagTexture(locale));
     }
 
     private void reopenWithUpdatedTitle() {

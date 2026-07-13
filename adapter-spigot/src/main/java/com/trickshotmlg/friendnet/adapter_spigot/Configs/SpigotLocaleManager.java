@@ -186,6 +186,29 @@ public class SpigotLocaleManager implements LocaleManager {
         return message;
     }
 
+    public Optional<String> getLocaleString(LocaleKey locale, String type, String path) {
+        Map<LocaleKey, AbstractConfig> localeConfigs = configs.get(type);
+        if (localeConfigs == null || localeConfigs.isEmpty()) {
+            return Optional.empty();
+        }
+
+        AbstractConfig configExact = locale != null ? localeConfigs.get(locale) : null;
+        AbstractConfig configRoot = null;
+
+        if (locale != null && locale.getLanguage() != null && !locale.getLanguage().equalsIgnoreCase(locale.toString())) {
+            configRoot = localeConfigs.get(new LocaleKey(locale.getLanguage()));
+        }
+
+        String value = tryGetString(configExact, path);
+        if (value == null) value = tryGetString(configRoot, path);
+
+        if (value == null || value.isBlank()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(value);
+    }
+
     /**
      * Returns the Color Code Formatted message in a specific locale from a key in a message file
      * @param locale

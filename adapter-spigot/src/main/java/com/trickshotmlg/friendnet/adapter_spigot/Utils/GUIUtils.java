@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Utils;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -23,6 +24,18 @@ public final class GUIUtils {
     public static final String STAR_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZjJiYTllYWQ5N2M4ZmI0NGIxNTZhZGU5Y2IyMTRlYTkxMjQzNGEyY2M0N2M0ZGVjNTBmMjEwMjFjNzVkZDJkNyJ9fX0=";
     public static final String FILTER_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZDNjZjVjZDkyYzFiYTBhN2Q3YmIxZjg3MmNjZGI5NTFjYTg5N2QzNDAwNDA0NTdhMzI0MjcxNjA2YzViYmM1NiJ9fX0=";
     public static final String SETTINGS_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjJmNzkwMTZjYWQ4NGQxYWUyMTYwOWM0ODEzNzgyNTk4ZTM4Nzk2MWJlMTNjMTU2ODI3NTJmMTI2ZGNlN2EifX19";
+    public static final String UNITED_STATES_FLAG_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmNiYzMyY2IyNGQ1N2ZjZGMwMzFlODUxMjM1ZGEyZGFhZDNlMTkxNGI4NzA0M2JkMDEyNjMzZTZmMzJjNyJ9fX0=";
+    public static final String GERMANY_FLAG_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjFjMjMwOTdlZjE3NjJkNTFkZjI5N2Y5YzQ0NTcwOGQ5NDM5ZmY5MTc0NmQyZjY3N2IyOGRkZGZhMjczMTYifX19";
+
+    private static final Map<String, String> LANGUAGE_FLAG_COUNTRIES = Map.of(
+            "en", "US",
+            "de", "DE"
+    );
+
+    private static final Map<String, String> COUNTRY_FLAG_TEXTURES = Map.of(
+            "US", UNITED_STATES_FLAG_TEXTURE,
+            "DE", GERMANY_FLAG_TEXTURE
+    );
 
     public static int CalculateMaxPage(int itemCount, int itemsPerPage) {
         if (itemsPerPage <= 0) {
@@ -39,6 +52,19 @@ public final class GUIUtils {
         );
 
         return SpigotUtils.createCustomPlayerHead(texture, displayName, lore);
+    }
+
+    public static String GetLocaleFlagTexture(LocaleKey locale) {
+        if (locale == null) {
+            return GLOBE_TEXTURE;
+        }
+
+        String country = locale.getCountry();
+        if (country == null || country.isBlank()) {
+            country = LANGUAGE_FLAG_COUNTRIES.get(locale.getLanguage());
+        }
+
+        return COUNTRY_FLAG_TEXTURES.getOrDefault(country, GLOBE_TEXTURE);
     }
 
     public static ItemStack CreatePreviousPageItem(Player player) {
