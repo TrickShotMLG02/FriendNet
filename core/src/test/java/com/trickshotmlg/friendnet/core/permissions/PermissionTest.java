@@ -57,6 +57,14 @@ public class PermissionTest extends TestCase {
         assertEquals(List.of(tmp), p3_1.getChildren());
     }
 
+    public void testToStringContainsPermissionDetails() {
+        String value = p1_1.toString();
+
+        assertTrue(value.contains("permission='p.p1_1'"));
+        assertTrue(value.contains("prefixed='" + prefix + ".p.p1_1'"));
+        assertTrue(value.contains("children=1"));
+    }
+
     public void testHas() {
         //assertEquals("", PermissionHolder.FRIEND_REQUESTS_DENY.getPermissionPrefixed());
     }

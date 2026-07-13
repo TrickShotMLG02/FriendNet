@@ -65,4 +65,13 @@ public class Permission implements PermissionNode {
         if (holder.hasPermission(getPermissionPrefixed())) return true;
         return false;
     }
+
+    @Override
+    public String toString() {
+        return "Permission{" +
+                "permission='" + permission + '\'' +
+                ", prefixed='" + getPermissionPrefixed() + '\'' +
+                ", children=" + children.size() +
+                '}';
+    }
 }
