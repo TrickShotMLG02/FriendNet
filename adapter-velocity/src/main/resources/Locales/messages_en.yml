@@ -1,0 +1,9 @@
+# Global settings
+prefix: "&7[&aFriends&7]"
+
+noPermission: "&4&lYou don't have enough Permissions to execute this command"
+configReloadSuccess: "&bSuccessfully reloaded Plugin Configs"
+configReloadError: "&4Error while reloading Plugin Configs"
+
+commandFeedback:
+  usage: "&eUsage: %usage%"

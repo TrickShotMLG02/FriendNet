@@ -1,0 +1,23 @@
+# The proxy adapter is the authoritative FriendNet data owner for a network.
+DatabaseType: SQLite
+
+PlayerDataFlushIntervalSeconds: 30
+
+Debug: true
+
+SupportedLocales:
+  - en_US
+  - de
+
+DefaultLocale: "en_US"
+
+# The settings for MySQL/MariaDB Connection
+MySQL:
+  host: localhost:3306
+  dbName: friendnet
+  username: friendnet
+  password: friendnet
+
+# The settings for SQLite Connection
+SQLite:
+  dbName: friendnet

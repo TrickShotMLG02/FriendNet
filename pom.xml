@@ -15,6 +15,7 @@
         <module>core-api</module>
         <module>core</module>
         <module>adapter-spigot</module>
+        <module>adapter-velocity</module>
     <!--
         <module>adapter-bungee</module>
         <module>plugin-spigot</module>

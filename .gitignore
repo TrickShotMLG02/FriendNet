@@ -1,5 +1,6 @@
 # Project exclude paths
 /adapter-spigot/target/
+/adapter-velocity/target/
 /core/target/
 /core-api/target/
 /dev-server/
