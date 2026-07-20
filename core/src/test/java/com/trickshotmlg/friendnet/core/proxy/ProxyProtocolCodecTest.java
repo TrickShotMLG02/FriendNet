@@ -71,7 +71,13 @@ public class ProxyProtocolCodecTest extends TestCase {
                 List.of(new ProxyFriendEntry(friendId, "Alex", true, "survival", true, requestSentTimeMillis, friendSinceMillis, -1L, lastSeenMillis)),
                 List.of(new ProxyFriendEntry(requesterId, "Steve", false, "", false, requestSentTimeMillis, -1L, -1L, -1L)),
                 List.of(),
-                List.of()
+                List.of(),
+                false,
+                false,
+                true,
+                false,
+                false,
+                "de"
         );
 
         ProxyFriendListViewPayload decoded = ProxyFriendListViewPayloadCodec.decode(
@@ -84,6 +90,10 @@ public class ProxyProtocolCodecTest extends TestCase {
         assertEquals(lastSeenMillis, decoded.friends().get(0).lastSeenMillis());
         assertEquals(requesterId, decoded.pendingRequests().get(0).playerId());
         assertEquals(requestSentTimeMillis, decoded.pendingRequests().get(0).requestSentTimeMillis());
+        assertFalse(decoded.allowFriendRequests());
+        assertFalse(decoded.showOnlineStatus());
+        assertTrue(decoded.autoAcceptFriends());
+        assertEquals("de", decoded.localeCode());
     }
 
     public void testActionPayloadRoundTrip() {

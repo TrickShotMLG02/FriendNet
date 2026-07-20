@@ -97,6 +97,7 @@ public class VelocityApplicationServices {
     protected ProxyActionDispatcher createProxyActionDispatcher(FriendNetVelocityPlugin plugin) {
         return new ProxyActionDispatcher(
                 friendCommandUseCases,
+                playerSettingsService,
                 knownPlayerLookup,
                 this::friendListViewPayload
         );
@@ -104,6 +105,7 @@ public class VelocityApplicationServices {
 
     public ProxyFriendListViewPayload friendListViewPayload(UUID viewerId) {
         FriendListViewData viewData = friendCommandUseCases.listViewData(viewerId);
+        PlayerData viewerData = plugin.getPlayerService().getPlayerData(viewerId);
         return new ProxyFriendListViewPayload(
                 toFriendEntries(viewerId, viewData.friends()),
                 toFriendEntries(viewerId, viewData.pendingRequests()),
@@ -116,7 +118,13 @@ public class VelocityApplicationServices {
                                 -1L,
                                 toMillis(blockedPlayer.getBlockedAt())
                         ))
-                        .toList()
+                        .toList(),
+                viewerData == null || viewerData.isAllowFriendRequests(),
+                viewerData == null || viewerData.isShowOnlineStatus(),
+                viewerData != null && viewerData.isAutoAcceptFriends(),
+                viewerData == null || viewerData.isFriendRequestNotifications(),
+                viewerData == null || viewerData.isFriendListPublic(),
+                viewerData != null && viewerData.getLocale() != null ? viewerData.getLocale().getCode() : "en_US"
         );
     }
 

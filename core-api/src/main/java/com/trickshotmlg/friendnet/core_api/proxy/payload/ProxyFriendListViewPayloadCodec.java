@@ -25,6 +25,12 @@ public final class ProxyFriendListViewPayloadCodec {
                 writeEntries(output, payload.pendingRequests());
                 writeEntries(output, payload.sentRequests());
                 writeEntries(output, payload.blockedPlayers());
+                output.writeBoolean(payload.allowFriendRequests());
+                output.writeBoolean(payload.showOnlineStatus());
+                output.writeBoolean(payload.autoAcceptFriends());
+                output.writeBoolean(payload.friendRequestNotifications());
+                output.writeBoolean(payload.friendListPublic());
+                output.writeUTF(payload.localeCode());
             }
             return bytes.toByteArray();
         } catch (IOException e) {
@@ -34,7 +40,18 @@ public final class ProxyFriendListViewPayloadCodec {
 
     public static ProxyFriendListViewPayload decode(byte[] data) {
         try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(data))) {
-            return new ProxyFriendListViewPayload(readEntries(input), readEntries(input), readEntries(input), readEntries(input));
+            return new ProxyFriendListViewPayload(
+                    readEntries(input),
+                    readEntries(input),
+                    readEntries(input),
+                    readEntries(input),
+                    input.readBoolean(),
+                    input.readBoolean(),
+                    input.readBoolean(),
+                    input.readBoolean(),
+                    input.readBoolean(),
+                    input.readUTF()
+            );
         } catch (IOException | RuntimeException e) {
             throw new ProxyProtocolException(ProxyErrorCode.BAD_REQUEST, "Could not decode friend list payload.", e);
         }

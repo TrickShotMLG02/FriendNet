@@ -39,9 +39,11 @@ public class VelocityPlayerDataSaveQueue {
                 .buildTask(plugin, this::flushDirtyPlayers)
                 .repeat(intervalSeconds, TimeUnit.SECONDS)
                 .schedule();
+        Logger.debug("Started Velocity player data save queue with interval " + intervalSeconds + "s");
     }
 
     public void stopAndFlush() {
+        Logger.debug("Stopping Velocity player data save queue");
         stopped = true;
         if (flushTask != null) {
             flushTask.cancel();
@@ -57,6 +59,7 @@ public class VelocityPlayerDataSaveQueue {
         }
 
         dirtyPlayers.add(playerId);
+        Logger.debug("Marked Velocity player data dirty: " + playerId);
     }
 
     public void markDirty(PlayerData playerData) {
@@ -66,6 +69,7 @@ public class VelocityPlayerDataSaveQueue {
 
         dirtySnapshots.put(playerData.getPlayerId(), playerData);
         dirtyPlayers.add(playerData.getPlayerId());
+        Logger.debug("Marked Velocity player data dirty snapshot: " + playerData.getPlayerId());
     }
 
     public void clearDirty(UUID playerId) {
@@ -82,13 +86,16 @@ public class VelocityPlayerDataSaveQueue {
 
         databaseService.save(playerData);
         clearDirty(playerData.getPlayerId());
+        Logger.debug("Saved Velocity player data immediately: " + playerData.getPlayerId());
     }
 
     public synchronized void flushDirtyPlayers() {
         if (dirtyPlayers.isEmpty()) {
+            Logger.debug("Skipped Velocity player data flush; queue is empty");
             return;
         }
 
+        int saved = 0;
         for (UUID playerId : Set.copyOf(dirtyPlayers)) {
             PlayerData playerData = dirtySnapshots.getOrDefault(playerId, playerService.getPlayerData(playerId));
             if (playerData == null) {
@@ -98,8 +105,9 @@ public class VelocityPlayerDataSaveQueue {
 
             databaseService.save(playerData);
             clearDirty(playerId);
+            saved++;
         }
 
-        Logger.debug("Flushed dirty player data queue");
+        Logger.debug("Flushed Velocity player data queue: " + saved + " player(s)");
     }
 }

@@ -196,7 +196,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.personalSettings.lore"
                     ),
                     player,
-                    () -> this.openChild(new PersonalSettingsGUI(plugin, player)),
+                    () -> this.openChild(new PersonalSettingsGUI(plugin, player, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             );
 

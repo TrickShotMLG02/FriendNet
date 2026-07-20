@@ -86,3 +86,22 @@ friendList:
 requestList:
   header: "&aDu hast ausstehende Freundschaftsanfragen von folgenden Spielern:"
   entry: "&e%target%"
+
+playerSettings:
+  allowFriendRequests:
+    enabled: "&aDu erlaubst jetzt Freundschaftsanfragen"
+    disabled: "&cDu erlaubst keine Freundschaftsanfragen mehr"
+  showOnlineStatus:
+    enabled: "&aDein Online-Status ist jetzt sichtbar"
+    disabled: "&cDein Online-Status ist jetzt verborgen"
+  autoAcceptFriends:
+    enabled: "&aFreundschaftsanfragen werden jetzt automatisch angenommen"
+    disabled: "&cFreundschaftsanfragen werden nicht mehr automatisch angenommen"
+  friendRequestNotifications:
+    enabled: "&aBenachrichtigungen fuer Freundschaftsanfragen sind jetzt aktiviert"
+    disabled: "&cBenachrichtigungen fuer Freundschaftsanfragen sind jetzt deaktiviert"
+  friendListPublic:
+    enabled: "&aDeine Freundesliste ist jetzt oeffentlich"
+    disabled: "&cDeine Freundesliste ist jetzt privat"
+  locale:
+    changed: "&aDeine Sprache wurde aktualisiert"

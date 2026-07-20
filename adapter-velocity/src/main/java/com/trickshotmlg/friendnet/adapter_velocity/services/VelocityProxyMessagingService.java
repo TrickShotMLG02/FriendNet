@@ -147,7 +147,13 @@ public class VelocityProxyMessagingService {
             case BLOCK_PLAYER -> FriendCommandDefinitions.BLOCK;
             case UNBLOCK_PLAYER -> FriendCommandDefinitions.UNBLOCK;
             case CLEAR_BLOCKLIST -> FriendCommandDefinitions.BLOCK;
-            case SET_FAVOURITE -> FriendCommandDefinitions.LIST;
+            case SET_FAVOURITE,
+                 SET_ALLOW_FRIEND_REQUESTS,
+                 SET_SHOW_ONLINE_STATUS,
+                 SET_AUTO_ACCEPT_FRIENDS,
+                 SET_FRIEND_REQUEST_NOTIFICATIONS,
+                 SET_FRIEND_LIST_PUBLIC,
+                 SET_LOCALE -> FriendCommandDefinitions.ROOT;
         };
     }
 

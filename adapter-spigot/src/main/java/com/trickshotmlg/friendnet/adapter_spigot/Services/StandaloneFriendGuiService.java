@@ -26,6 +26,7 @@ public class StandaloneFriendGuiService implements FriendGuiService {
         this.plugin = plugin;
         this.actionDispatcher = new ProxyActionDispatcher(
                 plugin.getApplicationServices().friendCommandUseCases(),
+                plugin.getApplicationServices().playerSettingsService(),
                 plugin.getApplicationServices().knownPlayerLookup(),
                 this::friendListPayload
         );
@@ -53,13 +54,20 @@ public class StandaloneFriendGuiService implements FriendGuiService {
         FriendListViewData viewData = plugin.getApplicationServices()
                 .friendCommandUseCases()
                 .listViewData(playerId);
+        PlayerData viewerData = plugin.getPlayerService().getPlayerData(playerId);
         return new ProxyFriendListViewPayload(
                 toFriendEntries(playerId, viewData.friends()),
                 toFriendEntries(playerId, viewData.pendingRequests()),
                 toFriendEntries(playerId, plugin.getFriendService().getSentRequests(playerId).stream().toList()),
                 plugin.getApplicationServices().blocklistService().getBlockedPlayers(playerId).stream()
                         .map(this::toBlockedEntry)
-                        .toList()
+                        .toList(),
+                viewerData == null || viewerData.isAllowFriendRequests(),
+                viewerData == null || viewerData.isShowOnlineStatus(),
+                viewerData != null && viewerData.isAutoAcceptFriends(),
+                viewerData == null || viewerData.isFriendRequestNotifications(),
+                viewerData == null || viewerData.isFriendListPublic(),
+                viewerData != null && viewerData.getLocale() != null ? viewerData.getLocale().getCode() : "en_US"
         );
     }
 

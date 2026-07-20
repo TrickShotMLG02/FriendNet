@@ -18,7 +18,13 @@ public record FriendGuiViewData(
         List<FriendshipData> pendingRequests,
         List<FriendshipData> sentRequests,
         List<BlocklistData> blockedPlayers,
-        Map<UUID, ProxyFriendEntry> proxyEntries
+        Map<UUID, ProxyFriendEntry> proxyEntries,
+        boolean allowFriendRequests,
+        boolean showOnlineStatus,
+        boolean autoAcceptFriends,
+        boolean friendRequestNotifications,
+        boolean friendListPublic,
+        String localeCode
 ) {
     public FriendGuiViewData {
         friends = friends == null ? List.of() : List.copyOf(friends);
@@ -26,6 +32,7 @@ public record FriendGuiViewData(
         sentRequests = sentRequests == null ? List.of() : List.copyOf(sentRequests);
         blockedPlayers = blockedPlayers == null ? List.of() : List.copyOf(blockedPlayers);
         proxyEntries = proxyEntries == null ? Map.of() : Map.copyOf(proxyEntries);
+        localeCode = localeCode == null || localeCode.isBlank() ? "en_US" : localeCode;
     }
 
     public static FriendGuiViewData local(List<FriendshipData> friends, List<FriendshipData> pendingRequests) {
@@ -38,7 +45,7 @@ public record FriendGuiViewData(
             List<FriendshipData> sentRequests,
             List<BlocklistData> blockedPlayers
     ) {
-        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, Map.of());
+        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, Map.of(), true, true, false, true, true, "en_US");
     }
 
     public static FriendGuiViewData fromProxyPayload(UUID viewerId, ProxyFriendListViewPayload payload) {
@@ -83,7 +90,19 @@ public record FriendGuiViewData(
                 )
                 .flatMap(stream -> stream)
                 .collect(Collectors.toMap(ProxyFriendEntry::playerId, entry -> entry, (left, right) -> left));
-        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, entries);
+        return new FriendGuiViewData(
+                friends,
+                pendingRequests,
+                sentRequests,
+                blockedPlayers,
+                entries,
+                payload.allowFriendRequests(),
+                payload.showOnlineStatus(),
+                payload.autoAcceptFriends(),
+                payload.friendRequestNotifications(),
+                payload.friendListPublic(),
+                payload.localeCode()
+        );
     }
 
     private static Timestamp timestamp(long millis) {

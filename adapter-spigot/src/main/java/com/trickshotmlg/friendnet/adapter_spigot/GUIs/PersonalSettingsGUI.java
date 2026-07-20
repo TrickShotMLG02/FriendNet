@@ -4,9 +4,16 @@ import com.trickshotmlg.friendnet.adapter_spigot.Actions.PlayerSettingsActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ToggleItemStack;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -16,8 +23,13 @@ public class PersonalSettingsGUI extends AbstractGUI {
 
     private int currentPage = 0;
     private final PlayerService playerService;
+    private FriendGuiViewData viewData;
 
     public PersonalSettingsGUI(JavaPlugin plugin, Player player) {
+        this(plugin, player, null);
+    }
+
+    public PersonalSettingsGUI(JavaPlugin plugin, Player player, FriendGuiViewData viewData) {
         super(
             plugin,
             player,
@@ -26,11 +38,13 @@ public class PersonalSettingsGUI extends AbstractGUI {
         );
 
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
+        this.viewData = viewData;
     }
 
 
     @Override
     protected void buildInventory() {
+        interactableSlots.clear();
         inventory.clear();
 
         // Back Item
@@ -61,9 +75,10 @@ public class PersonalSettingsGUI extends AbstractGUI {
 
             slot += 9;
             setInteractableItem(slot, new ToggleItemStack(
-                    playerService.getPlayerData(player.getUniqueId()).isAllowFriendRequests(),
+                    allowFriendRequests(),
                     player,
-                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setAllowFriendRequests(newState)
+                    newState -> setBooleanSetting(ProxyActionType.SET_ALLOW_FRIEND_REQUESTS, newState, () ->
+                            new PlayerSettingsActions((FriendNetPlugin) plugin, player).setAllowFriendRequests(newState))
             ));
         }
 
@@ -83,9 +98,10 @@ public class PersonalSettingsGUI extends AbstractGUI {
 
             slot += 9;
             setInteractableItem(slot, new ToggleItemStack(
-                    playerService.getPlayerData(player.getUniqueId()).isShowOnlineStatus(),
+                    showOnlineStatus(),
                     player,
-                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setShowOnlineStatus(newState)
+                    newState -> setBooleanSetting(ProxyActionType.SET_SHOW_ONLINE_STATUS, newState, () ->
+                            new PlayerSettingsActions((FriendNetPlugin) plugin, player).setShowOnlineStatus(newState))
             ));
         }
 
@@ -105,9 +121,10 @@ public class PersonalSettingsGUI extends AbstractGUI {
 
             slot += 9;
             setInteractableItem(slot, new ToggleItemStack(
-                    playerService.getPlayerData(player.getUniqueId()).isAutoAcceptFriends(),
+                    autoAcceptFriends(),
                     player,
-                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setAutoAcceptFriends(newState)
+                    newState -> setBooleanSetting(ProxyActionType.SET_AUTO_ACCEPT_FRIENDS, newState, () ->
+                            new PlayerSettingsActions((FriendNetPlugin) plugin, player).setAutoAcceptFriends(newState))
             ));
         }
 
@@ -127,9 +144,10 @@ public class PersonalSettingsGUI extends AbstractGUI {
 
             slot += 9;
             setInteractableItem(slot, new ToggleItemStack(
-                    playerService.getPlayerData(player.getUniqueId()).isFriendRequestNotifications(),
+                    friendRequestNotifications(),
                     player,
-                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setFriendRequestNotifications(newState)
+                    newState -> setBooleanSetting(ProxyActionType.SET_FRIEND_REQUEST_NOTIFICATIONS, newState, () ->
+                            new PlayerSettingsActions((FriendNetPlugin) plugin, player).setFriendRequestNotifications(newState))
             ));
         }
 
@@ -149,9 +167,10 @@ public class PersonalSettingsGUI extends AbstractGUI {
 
             slot += 9;
             setInteractableItem(slot, new ToggleItemStack(
-                    playerService.getPlayerData(player.getUniqueId()).isFriendListPublic(),
+                    friendListPublic(),
                     player,
-                    newState -> new PlayerSettingsActions((FriendNetPlugin) plugin, player).setFriendListPublic(newState)
+                    newState -> setBooleanSetting(ProxyActionType.SET_FRIEND_LIST_PUBLIC, newState, () ->
+                            new PlayerSettingsActions((FriendNetPlugin) plugin, player).setFriendListPublic(newState))
             ));
         }
 
@@ -180,7 +199,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             setInteractableItem(slot, new ActionItemStack(
                     openLocaleMenuItem,
                     player,
-                    () -> this.openChild(new LocaleSelectionGUI(plugin, player)),
+                    () -> this.openChild(new LocaleSelectionGUI(plugin, player, viewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
@@ -196,5 +215,60 @@ public class PersonalSettingsGUI extends AbstractGUI {
     @Override
     public void handleClick(Player player, int slot, ItemStack clicked) {
 
+    }
+
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
+    private void setBooleanSetting(ProxyActionType actionType, boolean enabled, Runnable standaloneAction) {
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (!friendNetPlugin.isProxyBackendMode()) {
+            standaloneAction.run();
+            return;
+        }
+
+        ProxyActionRequestPayload request = new ProxyActionRequestPayload(actionType, null, "", true, enabled);
+        friendNetPlugin.getFriendGuiService().executeAction(player, request).whenComplete((response, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        MessageManager.send(player, "commandFeedback.proxyBackendGuiUnavailable");
+                        return;
+                    }
+
+                    ProxyActionResponseRenderer.render(player, response);
+                    if (response.friendListView() != null) {
+                        viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        updateViewDataChain(viewData);
+                    }
+                    buildInventory();
+                })
+        );
+    }
+
+    private boolean allowFriendRequests() {
+        return viewData != null ? viewData.allowFriendRequests() : playerData().isAllowFriendRequests();
+    }
+
+    private boolean showOnlineStatus() {
+        return viewData != null ? viewData.showOnlineStatus() : playerData().isShowOnlineStatus();
+    }
+
+    private boolean autoAcceptFriends() {
+        return viewData != null ? viewData.autoAcceptFriends() : playerData().isAutoAcceptFriends();
+    }
+
+    private boolean friendRequestNotifications() {
+        return viewData != null ? viewData.friendRequestNotifications() : playerData().isFriendRequestNotifications();
+    }
+
+    private boolean friendListPublic() {
+        return viewData != null ? viewData.friendListPublic() : playerData().isFriendListPublic();
+    }
+
+    private PlayerData playerData() {
+        PlayerData playerData = playerService.getPlayerData(player.getUniqueId());
+        return playerData != null ? playerData : new PlayerData(player.getUniqueId());
     }
 }
