@@ -7,6 +7,7 @@ import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.DumperOptions;
@@ -37,6 +38,7 @@ public class VelocityMessageManager {
 
     private static final String MESSAGE_FILE_TYPE = "messages";
     private static final Pattern LOCALE_PATTERN = Pattern.compile("_(\\w{2}(?:_\\w{2})?)$");
+    private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("%([^%]+)%");
 
     private final FriendNetVelocityPlugin plugin;
     private final Map<String, Map<LocaleKey, Map<String, Object>>> messages = new HashMap<>();
@@ -62,14 +64,15 @@ public class VelocityMessageManager {
             return;
         }
 
-        source.sendMessage(format(sourceLocale(source), key, placeholders, true));
+        source.sendMessage(component(source, key, placeholders, true));
+    }
+
+    public Component component(CommandSource source, String key, Map<String, Object> placeholders, boolean prependPrefix) {
+        return format(sourceLocale(source), key, placeholders, prependPrefix);
     }
 
     private Component format(LocaleKey locale, String key, Map<String, Object> placeholders, boolean prependPrefix) {
         String message = getMessage(locale, MESSAGE_FILE_TYPE, key);
-        for (Map.Entry<String, Object> entry : placeholders.entrySet()) {
-            message = message.replace("%" + entry.getKey() + "%", entry.getValue() != null ? entry.getValue().toString() : "");
-        }
 
         if (prependPrefix) {
             String prefix = getMessage(locale, MESSAGE_FILE_TYPE, "prefix");
@@ -78,6 +81,37 @@ public class VelocityMessageManager {
             }
         }
 
+        return deserializeWithPlaceholders(message, placeholders);
+    }
+
+    private Component deserializeWithPlaceholders(String message, Map<String, Object> placeholders) {
+        TextComponent.Builder builder = Component.text();
+        Matcher matcher = PLACEHOLDER_PATTERN.matcher(message);
+        int lastEnd = 0;
+
+        while (matcher.find()) {
+            if (matcher.start() > lastEnd) {
+                builder.append(deserialize(message.substring(lastEnd, matcher.start())));
+            }
+
+            String placeholderKey = matcher.group(1);
+            Object replacement = placeholders.get(placeholderKey);
+            if (replacement instanceof Component component) {
+                builder.append(component);
+            } else {
+                builder.append(deserialize(replacement != null ? replacement.toString() : matcher.group(0)));
+            }
+            lastEnd = matcher.end();
+        }
+
+        if (lastEnd < message.length()) {
+            builder.append(deserialize(message.substring(lastEnd)));
+        }
+
+        return builder.build();
+    }
+
+    private Component deserialize(String message) {
         return LegacyComponentSerializer.legacyAmpersand().deserialize(message);
     }
 

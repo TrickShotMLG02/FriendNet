@@ -8,6 +8,9 @@ import com.trickshotmlg.friendnet.core.application.command.CommandMessage;
 import com.trickshotmlg.friendnet.core.application.command.CommandUseCaseResult;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -56,8 +59,35 @@ public final class VelocityCommandResultRenderer {
         }
 
         Map<String, Object> placeholders = new HashMap<>(event.placeholders());
-        placeholders.put("acceptRequest", "/friend accept " + event.placeholders().getOrDefault("sender", ""));
-        placeholders.put("denyRequest", "/friend deny " + event.placeholders().getOrDefault("sender", ""));
+        String senderName = event.placeholders().getOrDefault("sender", "").toString();
+        placeholders.put("acceptRequest", actionButton(
+                plugin,
+                target,
+                "chatButtons.acceptRequest.text",
+                "chatButtons.acceptRequest.hover",
+                "/friend accept " + senderName
+        ));
+        placeholders.put("denyRequest", actionButton(
+                plugin,
+                target,
+                "chatButtons.denyRequest.text",
+                "chatButtons.denyRequest.hover",
+                "/friend deny " + senderName
+        ));
         plugin.getMessageManager().send(target, "friendRequest.send.target.success", placeholders);
+    }
+
+    private static Component actionButton(
+            FriendNetVelocityPlugin plugin,
+            Player target,
+            String textKey,
+            String hoverKey,
+            String command
+    ) {
+        Component hover = plugin.getMessageManager().component(target, hoverKey, Map.of(), false);
+        return plugin.getMessageManager()
+                .component(target, textKey, Map.of(), false)
+                .clickEvent(ClickEvent.runCommand(command))
+                .hoverEvent(HoverEvent.showText(hover));
     }
 }
