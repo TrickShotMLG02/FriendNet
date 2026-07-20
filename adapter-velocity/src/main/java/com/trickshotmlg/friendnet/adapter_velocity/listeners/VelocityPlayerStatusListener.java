@@ -132,7 +132,7 @@ public class VelocityPlayerStatusListener {
             VelocityFriendStatusNotifier.notifyOffline(plugin, playerId);
         }
 
-        playerDataSaveQueue.markDirty(playerData);
+        playerDataSaveQueue.saveNow(playerData);
         networkAuthorityService.removePresence(playerId);
         playerService.removePlayerData(playerId);
 

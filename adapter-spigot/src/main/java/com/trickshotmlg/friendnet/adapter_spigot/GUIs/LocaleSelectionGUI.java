@@ -46,6 +46,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
 
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
         this.viewData = viewData;
+        applyViewDataToLocalPlayer();
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         LocaleKey selectedLocale;
         if (viewData != null) {
@@ -255,13 +256,26 @@ public class LocaleSelectionGUI extends AbstractGUI{
                         return;
                     }
 
-                    ProxyActionResponseRenderer.render(player, response);
                     if (response.friendListView() != null) {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        applyViewDataToLocalPlayer();
                         updateViewDataChain(viewData);
                     }
+                    ProxyActionResponseRenderer.render(player, response);
                     reopenWithUpdatedTitle();
                 })
         );
+    }
+
+    private void applyViewDataToLocalPlayer() {
+        if (viewData == null) {
+            return;
+        }
+
+        PlayerData playerData = playerService.getPlayerData(player.getUniqueId());
+        if (playerData == null) {
+            playerData = playerService.initPlayer(player.getUniqueId());
+        }
+        viewData.applySettingsTo(playerData);
     }
 }

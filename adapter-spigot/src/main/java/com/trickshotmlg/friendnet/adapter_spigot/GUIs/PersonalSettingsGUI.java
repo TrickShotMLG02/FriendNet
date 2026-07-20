@@ -39,6 +39,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
 
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
         this.viewData = viewData;
+        applyViewDataToLocalPlayer();
     }
 
 
@@ -237,11 +238,12 @@ public class PersonalSettingsGUI extends AbstractGUI {
                         return;
                     }
 
-                    ProxyActionResponseRenderer.render(player, response);
                     if (response.friendListView() != null) {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        applyViewDataToLocalPlayer();
                         updateViewDataChain(viewData);
                     }
+                    ProxyActionResponseRenderer.render(player, response);
                     buildInventory();
                 })
         );
@@ -270,5 +272,17 @@ public class PersonalSettingsGUI extends AbstractGUI {
     private PlayerData playerData() {
         PlayerData playerData = playerService.getPlayerData(player.getUniqueId());
         return playerData != null ? playerData : new PlayerData(player.getUniqueId());
+    }
+
+    private void applyViewDataToLocalPlayer() {
+        if (viewData == null) {
+            return;
+        }
+
+        PlayerData playerData = playerService.getPlayerData(player.getUniqueId());
+        if (playerData == null) {
+            playerData = playerService.initPlayer(player.getUniqueId());
+        }
+        viewData.applySettingsTo(playerData);
     }
 }

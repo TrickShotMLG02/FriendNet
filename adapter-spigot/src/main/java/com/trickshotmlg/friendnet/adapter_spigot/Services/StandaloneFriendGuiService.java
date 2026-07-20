@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core.application.proxy.ProxyActionDispatcher;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
@@ -67,8 +68,15 @@ public class StandaloneFriendGuiService implements FriendGuiService {
                 viewerData != null && viewerData.isAutoAcceptFriends(),
                 viewerData == null || viewerData.isFriendRequestNotifications(),
                 viewerData == null || viewerData.isFriendListPublic(),
-                viewerData != null && viewerData.getLocale() != null ? viewerData.getLocale().getCode() : "en_US"
+                viewerData != null && viewerData.getLocale() != null
+                        ? viewerData.getLocale().getCode()
+                        : defaultLocaleCode()
         );
+    }
+
+    private String defaultLocaleCode() {
+        LocaleKey defaultLocale = LocaleKey.getDefaultLocale();
+        return defaultLocale != null ? defaultLocale.getCode() : "en_US";
     }
 
     private List<ProxyFriendEntry> toFriendEntries(UUID viewerId, List<FriendshipData> friendships) {

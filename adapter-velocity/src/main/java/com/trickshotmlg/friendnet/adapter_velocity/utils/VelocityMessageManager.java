@@ -137,7 +137,7 @@ public class VelocityMessageManager {
         if (source instanceof Player player && plugin.getPlayerService() != null) {
             PlayerData playerData = plugin.getPlayerService().getPlayerData(player.getUniqueId());
             if (playerData != null && playerData.getLocale() != null) {
-                return playerData.getLocale();
+                return LocaleKey.getOrFallback(playerData.getLocale().getCode());
             }
         }
 

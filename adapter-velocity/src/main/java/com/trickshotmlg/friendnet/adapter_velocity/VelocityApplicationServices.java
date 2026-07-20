@@ -11,6 +11,7 @@ import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases
 import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core.application.proxy.ProxyActionDispatcher;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.NetworkPlayerPresence;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
@@ -77,7 +78,12 @@ public class VelocityApplicationServices {
                 plugin.getPlayerService(),
                 playerId -> {
                     if (playerDataSaveQueue != null) {
-                        playerDataSaveQueue.markDirty(playerId);
+                        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+                        if (playerData != null) {
+                            playerDataSaveQueue.markDirty(playerData);
+                        } else {
+                            playerDataSaveQueue.markDirty(playerId);
+                        }
                     }
                 },
                 statusNotifier
@@ -124,8 +130,15 @@ public class VelocityApplicationServices {
                 viewerData != null && viewerData.isAutoAcceptFriends(),
                 viewerData == null || viewerData.isFriendRequestNotifications(),
                 viewerData == null || viewerData.isFriendListPublic(),
-                viewerData != null && viewerData.getLocale() != null ? viewerData.getLocale().getCode() : "en_US"
+                viewerData != null && viewerData.getLocale() != null
+                        ? viewerData.getLocale().getCode()
+                        : defaultLocaleCode()
         );
+    }
+
+    private String defaultLocaleCode() {
+        LocaleKey defaultLocale = LocaleKey.getDefaultLocale();
+        return defaultLocale != null ? defaultLocale.getCode() : "en_US";
     }
 
     private List<ProxyFriendEntry> toFriendEntries(UUID viewerId, List<FriendshipData> friendships) {
