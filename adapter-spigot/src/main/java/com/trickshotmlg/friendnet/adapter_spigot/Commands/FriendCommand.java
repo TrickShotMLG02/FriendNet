@@ -160,6 +160,7 @@ public class FriendCommand extends AbstractCommand {
     private static void registerProxyBackendHandlers(FriendNetPlugin plugin, CommandRegistry registry) {
         FriendCommandDefinitions.all().stream()
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.RELOAD.path()))
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.ROOT.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.LIST.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.FRIENDS_ALIAS.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.REQUESTS.path()))
@@ -168,6 +169,7 @@ public class FriendCommand extends AbstractCommand {
                                 ? CommandFeedbackUseCases.proxyBackendGuiUnavailable()
                                 : CommandFeedbackUseCases.proxyBackendCommandDisabled()
                 ));
+        registry.override(FriendCommandDefinitions.ROOT.path(), (context, next) -> openFriendsGui(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.LIST.path(), (context, next) -> openFriendsGui(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.FRIENDS_ALIAS.path(), (context, next) -> openFriendsGui(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.REQUESTS.path(), (context, next) -> openRequestsGui(plugin, context.senderId(), context.args()));
