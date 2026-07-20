@@ -119,5 +119,6 @@ playerSettings:
 
 # Friend request list display
 requestList:
+  pendingSummary: "&aYou have &e%count% &apending friend requests"
   header: "&aYou have pending friend requests from the following players:"
   entry: "&e%target%"

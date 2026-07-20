@@ -20,6 +20,7 @@ import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 
 import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -85,6 +86,7 @@ public class VelocityPlayerStatusListener {
             if (playerData.isShowOnlineStatus()) {
                 VelocityFriendStatusNotifier.notifyOnline(plugin, playerId);
             }
+            notifyPendingRequests(playerId, playerData);
         });
 
         Logger.debug(velocityPlayer.getName() + " joined the proxy!");
@@ -148,6 +150,21 @@ public class VelocityPlayerStatusListener {
                 online,
                 playerData.isShowOnlineStatus(),
                 playerData.getLastSeen()
+        );
+    }
+
+    private void notifyPendingRequests(UUID playerId, PlayerData playerData) {
+        if (playerData == null || !playerData.isFriendRequestNotifications()) {
+            return;
+        }
+
+        int pendingRequestCount = friendService.getPendingRequests(playerId).size();
+        if (pendingRequestCount <= 0) {
+            return;
+        }
+
+        plugin.getServer().getPlayer(playerId).ifPresent(player ->
+                plugin.getMessageManager().send(player, "requestList.pendingSummary", Map.of("count", pendingRequestCount))
         );
     }
 }

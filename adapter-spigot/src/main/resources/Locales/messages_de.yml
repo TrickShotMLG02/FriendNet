@@ -126,5 +126,6 @@ playerSettings:
 # Friend request list display
 
 requestList:
+  pendingSummary: '&aDu hast &e%count% &aausstehende Freundschaftsanfragen'
   header: '&aDu hast ausstehende Freundschaftsanfragen von folgenden Spielern:'
   entry: '&e%target%'
