@@ -87,7 +87,8 @@ public class VelocityApplicationServices {
                 plugin.getFriendService(),
                 friendRequestService,
                 blocklistService,
-                knownPlayerLookup
+                knownPlayerLookup,
+                plugin.getDatabaseService()
         );
     }
 
@@ -102,18 +103,22 @@ public class VelocityApplicationServices {
     public ProxyFriendListViewPayload friendListViewPayload(UUID viewerId) {
         FriendListViewData viewData = friendCommandUseCases.listViewData(viewerId);
         return new ProxyFriendListViewPayload(
-                toEntries(viewerId, viewData.friends()),
-                toEntries(viewerId, viewData.pendingRequests())
+                toFriendEntries(viewerId, viewData.friends()),
+                toFriendEntries(viewerId, viewData.pendingRequests()),
+                toFriendEntries(viewerId, plugin.getFriendService().getSentRequests(viewerId).stream().toList()),
+                blocklistService.getBlockedPlayers(viewerId).stream()
+                        .map(blockedPlayer -> toEntry(blockedPlayer.getBlockedId(), false))
+                        .toList()
         );
     }
 
-    private List<ProxyFriendEntry> toEntries(UUID viewerId, List<FriendshipData> friendships) {
+    private List<ProxyFriendEntry> toFriendEntries(UUID viewerId, List<FriendshipData> friendships) {
         return friendships.stream()
-                .map(friendship -> toEntry(friendship.getOtherPlayerId(viewerId)))
+                .map(friendship -> toEntry(friendship.getOtherPlayerId(viewerId), friendship.isFavourite()))
                 .toList();
     }
 
-    private ProxyFriendEntry toEntry(UUID playerId) {
+    private ProxyFriendEntry toEntry(UUID playerId, boolean favourite) {
         Optional<NetworkPlayerPresence> presence = plugin.getNetworkAuthorityService().getPresence(playerId);
         String displayName = presence
                 .map(NetworkPlayerPresence::displayName)
@@ -126,7 +131,7 @@ public class VelocityApplicationServices {
                 .map(NetworkPlayerPresence::serverName)
                 .orElse("");
 
-        return new ProxyFriendEntry(playerId, displayName, online, serverName);
+        return new ProxyFriendEntry(playerId, displayName, online, serverName, favourite);
     }
 
     public KnownPlayerLookup knownPlayerLookup() {

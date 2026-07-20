@@ -178,8 +178,13 @@ public class FriendDetailGUI extends AbstractGUI {
 
     private void toggleFavourite(FriendshipData friendshipData) {
         boolean newState = !friendshipData.isFavourite();
-        friendshipData.setFavourite(newState);
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (friendNetPlugin.isProxyBackendMode()) {
+            executeProxyAction(ProxyActionType.SET_FAVOURITE, true, false, newState);
+            return;
+        }
+
+        friendshipData.setFavourite(newState);
         friendNetPlugin.getFriendService().putFriendshipData(friendshipData);
         friendNetPlugin.getDatabaseService().save(friendshipData);
         MessageManager.send(player, newState ? "friend.favourite.enabled" : "friend.favourite.disabled", Map.of("target", getFriendDisplayName()));
@@ -305,11 +310,16 @@ public class FriendDetailGUI extends AbstractGUI {
     }
 
     private void executeProxyAction(ProxyActionType actionType, boolean refreshFriendList, boolean closeToParent) {
+        executeProxyAction(actionType, refreshFriendList, closeToParent, false);
+    }
+
+    private void executeProxyAction(ProxyActionType actionType, boolean refreshFriendList, boolean closeToParent, boolean enabled) {
         ProxyActionRequestPayload request = new ProxyActionRequestPayload(
                 actionType,
                 friendId,
                 getFriendDisplayName(),
-                refreshFriendList
+                refreshFriendList,
+                enabled
         );
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
         friendNetPlugin.getFriendGuiService().executeAction(player, request).whenComplete((response, throwable) ->

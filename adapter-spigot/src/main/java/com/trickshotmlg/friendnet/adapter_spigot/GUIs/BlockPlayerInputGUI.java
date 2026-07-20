@@ -2,7 +2,11 @@ package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
@@ -66,6 +70,27 @@ public class BlockPlayerInputGUI extends AbstractGUI {
             if (offlineTarget.getName() != null && !offlineTarget.getName().isBlank()) {
                 targetDisplayName = offlineTarget.getName();
             }
+        }
+
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (friendNetPlugin.isProxyBackendMode()) {
+            ProxyActionRequestPayload request = new ProxyActionRequestPayload(
+                    ProxyActionType.BLOCK_PLAYER,
+                    targetId,
+                    targetDisplayName,
+                    true
+            );
+            friendNetPlugin.getFriendGuiService().executeAction(player, request).whenComplete((response, throwable) ->
+                    Bukkit.getScheduler().runTask(plugin, () -> {
+                        if (throwable != null) {
+                            MessageManager.send(player, "commandFeedback.proxyBackendGuiUnavailable");
+                            return;
+                        }
+
+                        ProxyActionResponseRenderer.render(player, response);
+                    })
+            );
+            return;
         }
 
         ensurePlayerData(targetId, targetDisplayName);

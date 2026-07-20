@@ -36,8 +36,8 @@ public class LocaleSelectionGUI extends AbstractGUI{
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         LocaleKey selectedLocale;
-        if (pd != null) {
-            selectedLocale = pd.getLocale();
+        if (pd != null && pd.getLocale() != null) {
+            selectedLocale = LocaleKey.getOrFallback(pd.getLocale().getCode());
         } else {
             selectedLocale = LocaleKey.getDefaultLocale();
         }
@@ -188,7 +188,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
             return defaultLocale;
         }
 
-        return playerData.getLocale();
+        return LocaleKey.getOrFallback(playerData.getLocale().getCode());
     }
 
     private String getLocaleTexture(LocaleKey locale) {

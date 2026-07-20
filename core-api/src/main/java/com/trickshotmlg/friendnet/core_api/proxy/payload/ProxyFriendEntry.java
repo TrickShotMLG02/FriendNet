@@ -6,7 +6,8 @@ public record ProxyFriendEntry(
         UUID playerId,
         String displayName,
         boolean online,
-        String currentServerName
+        String currentServerName,
+        boolean favourite
 ) {
     public ProxyFriendEntry {
         if (playerId == null) {

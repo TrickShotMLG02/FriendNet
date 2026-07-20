@@ -33,7 +33,12 @@ public class StandaloneFriendGuiService implements FriendGuiService {
         FriendListViewData viewData = plugin.getApplicationServices()
                 .friendCommandUseCases()
                 .listViewData(player.getUniqueId());
-        return CompletableFuture.completedFuture(FriendGuiViewData.local(viewData.friends(), viewData.pendingRequests()));
+        return CompletableFuture.completedFuture(FriendGuiViewData.local(
+                viewData.friends(),
+                viewData.pendingRequests(),
+                plugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                plugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
+        ));
     }
 
     @Override
@@ -46,23 +51,28 @@ public class StandaloneFriendGuiService implements FriendGuiService {
                 .friendCommandUseCases()
                 .listViewData(playerId);
         return new ProxyFriendListViewPayload(
-                toEntries(playerId, viewData.friends()),
-                toEntries(playerId, viewData.pendingRequests())
+                toFriendEntries(playerId, viewData.friends()),
+                toFriendEntries(playerId, viewData.pendingRequests()),
+                toFriendEntries(playerId, plugin.getFriendService().getSentRequests(playerId).stream().toList()),
+                plugin.getApplicationServices().blocklistService().getBlockedPlayers(playerId).stream()
+                        .map(blockedPlayer -> toEntry(blockedPlayer.getBlockedId(), false))
+                        .toList()
         );
     }
 
-    private List<ProxyFriendEntry> toEntries(UUID viewerId, List<FriendshipData> friendships) {
+    private List<ProxyFriendEntry> toFriendEntries(UUID viewerId, List<FriendshipData> friendships) {
         return friendships.stream()
-                .map(friendship -> toEntry(friendship.getOtherPlayerId(viewerId)))
+                .map(friendship -> toEntry(friendship.getOtherPlayerId(viewerId), friendship.isFavourite()))
                 .toList();
     }
 
-    private ProxyFriendEntry toEntry(UUID playerId) {
+    private ProxyFriendEntry toEntry(UUID playerId, boolean favourite) {
         return new ProxyFriendEntry(
                 playerId,
                 plugin.getApplicationServices().knownPlayerLookup().displayName(playerId),
                 plugin.getPlayerService().isOnline(playerId),
-                ""
+                "",
+                favourite
         );
     }
 }

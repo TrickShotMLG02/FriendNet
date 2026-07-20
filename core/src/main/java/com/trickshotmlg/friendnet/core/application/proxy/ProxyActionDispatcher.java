@@ -51,6 +51,7 @@ public class ProxyActionDispatcher {
             case BLOCK_PLAYER -> friendCommandUseCases.blockPlayer(actorId, requiredTargetId(request), targetName(request));
             case UNBLOCK_PLAYER -> friendCommandUseCases.unblockPlayer(actorId, requiredTargetId(request), targetName(request));
             case CLEAR_BLOCKLIST -> friendCommandUseCases.clearBlocklist(actorId);
+            case SET_FAVOURITE -> friendCommandUseCases.setFavourite(actorId, requiredTargetId(request), targetName(request), request.enabled());
         };
 
         ProxyFriendListViewPayload refreshedView = request.refreshFriendList()

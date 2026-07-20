@@ -4,10 +4,13 @@ import com.trickshotmlg.friendnet.core.application.BlocklistApplicationService;
 import com.trickshotmlg.friendnet.core.application.FriendRequestApplicationService;
 import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
+import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,6 +20,7 @@ public class FriendCommandUseCases {
     private final FriendRequestApplicationService requestService;
     private final BlocklistApplicationService blocklistService;
     private final KnownPlayerLookup knownPlayerLookup;
+    private final DatabaseService databaseService;
 
     public FriendCommandUseCases(
             FriendService friendService,
@@ -24,10 +28,21 @@ public class FriendCommandUseCases {
             BlocklistApplicationService blocklistService,
             KnownPlayerLookup knownPlayerLookup
     ) {
+        this(friendService, requestService, blocklistService, knownPlayerLookup, null);
+    }
+
+    public FriendCommandUseCases(
+            FriendService friendService,
+            FriendRequestApplicationService requestService,
+            BlocklistApplicationService blocklistService,
+            KnownPlayerLookup knownPlayerLookup,
+            DatabaseService databaseService
+    ) {
         this.friendService = friendService;
         this.requestService = requestService;
         this.blocklistService = blocklistService;
         this.knownPlayerLookup = knownPlayerLookup;
+        this.databaseService = databaseService;
     }
 
     public CommandUseCaseResult sendFriendRequest(UUID senderId, String senderName, KnownPlayerLookup.KnownPlayer target) {
@@ -263,6 +278,30 @@ public class FriendCommandUseCases {
                 friendService.getFriendships(playerId).stream().toList(),
                 friendService.getPendingRequests(playerId).stream().toList()
         );
+    }
+
+    public CommandUseCaseResult setFavourite(UUID senderId, UUID targetId, String targetName, boolean favourite) {
+        Optional<FriendshipData> friendship = friendService.getFriendshipData(senderId, targetId)
+                .filter(data -> data.getFriendshipStatus() == FriendshipStatus.Accepted);
+        if (friendship.isEmpty()) {
+            return CommandUseCaseResult.builder(false)
+                    .message(CommandMessage.sender("friend.remove.sender.notFound", Map.of("target", targetName)))
+                    .build();
+        }
+
+        FriendshipData friendshipData = friendship.get();
+        friendshipData.setFavourite(favourite);
+        friendService.putFriendshipData(friendshipData);
+        if (databaseService != null) {
+            databaseService.save(friendshipData);
+        }
+
+        return CommandUseCaseResult.builder(true)
+                .message(CommandMessage.sender(
+                        favourite ? "friend.favourite.enabled" : "friend.favourite.disabled",
+                        Map.of("target", targetName)
+                ))
+                .build();
     }
 
     private String displayName(UUID playerId) {

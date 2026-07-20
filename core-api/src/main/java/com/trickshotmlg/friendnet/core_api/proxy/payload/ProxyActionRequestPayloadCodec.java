@@ -27,6 +27,7 @@ public final class ProxyActionRequestPayloadCodec {
             }
             output.writeUTF(payload.targetName());
             output.writeBoolean(payload.refreshFriendList());
+            output.writeBoolean(payload.enabled());
             output.flush();
             return bytes.toByteArray();
         } catch (IOException e) {
@@ -44,7 +45,8 @@ public final class ProxyActionRequestPayloadCodec {
             }
             String targetName = input.readUTF();
             boolean refreshFriendList = input.readBoolean();
-            return new ProxyActionRequestPayload(actionType, targetId, targetName, refreshFriendList);
+            boolean enabled = input.readBoolean();
+            return new ProxyActionRequestPayload(actionType, targetId, targetName, refreshFriendList, enabled);
         } catch (IOException | IllegalArgumentException e) {
             throw new ProxyProtocolException(ProxyErrorCode.BAD_REQUEST, "Could not decode proxy action request.", e);
         }

@@ -23,6 +23,8 @@ public final class ProxyFriendListViewPayloadCodec {
             try (DataOutputStream output = new DataOutputStream(bytes)) {
                 writeEntries(output, payload.friends());
                 writeEntries(output, payload.pendingRequests());
+                writeEntries(output, payload.sentRequests());
+                writeEntries(output, payload.blockedPlayers());
             }
             return bytes.toByteArray();
         } catch (IOException e) {
@@ -32,7 +34,7 @@ public final class ProxyFriendListViewPayloadCodec {
 
     public static ProxyFriendListViewPayload decode(byte[] data) {
         try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(data))) {
-            return new ProxyFriendListViewPayload(readEntries(input), readEntries(input));
+            return new ProxyFriendListViewPayload(readEntries(input), readEntries(input), readEntries(input), readEntries(input));
         } catch (IOException | RuntimeException e) {
             throw new ProxyProtocolException(ProxyErrorCode.BAD_REQUEST, "Could not decode friend list payload.", e);
         }
@@ -46,6 +48,7 @@ public final class ProxyFriendListViewPayloadCodec {
             output.writeUTF(entry.displayName());
             output.writeBoolean(entry.online());
             output.writeUTF(entry.currentServerName());
+            output.writeBoolean(entry.favourite());
         }
     }
 
@@ -61,7 +64,8 @@ public final class ProxyFriendListViewPayloadCodec {
             String displayName = input.readUTF();
             boolean online = input.readBoolean();
             String currentServerName = input.readUTF();
-            entries.add(new ProxyFriendEntry(playerId, displayName, online, currentServerName));
+            boolean favourite = input.readBoolean();
+            entries.add(new ProxyFriendEntry(playerId, displayName, online, currentServerName, favourite));
         }
         return entries;
     }

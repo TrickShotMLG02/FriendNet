@@ -41,7 +41,9 @@ public class RequestsGUI extends AbstractGUI {
                 player,
                 FriendGuiViewData.local(
                         ((FriendNetPlugin) plugin).getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                        ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList()
+                        ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
+                        ((FriendNetPlugin) plugin).getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                        ((FriendNetPlugin) plugin).getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
                 )
         );
     }
@@ -67,7 +69,9 @@ public class RequestsGUI extends AbstractGUI {
                 ? viewData
                 : FriendGuiViewData.local(
                 friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList()
+                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
         );
         List<FriendshipData> requests = currentViewData.pendingRequests();
         clampCurrentPage(requests.size());
@@ -187,7 +191,7 @@ public class RequestsGUI extends AbstractGUI {
                     new ActionItemStack(
                             sentRequestsItem,
                             player,
-                            () -> openChild(new SentRequestsGUI(plugin, player)),
+                            () -> openChild(new SentRequestsGUI(plugin, player, currentViewData)),
                             ActionItemStack.SoundProfile.NAVIGATION
                     )
             );

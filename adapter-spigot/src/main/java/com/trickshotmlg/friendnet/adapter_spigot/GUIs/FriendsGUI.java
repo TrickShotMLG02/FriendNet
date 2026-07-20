@@ -55,7 +55,9 @@ public class FriendsGUI extends AbstractGUI {
                 ? viewData
                 : FriendGuiViewData.local(
                 friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList()
+                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
         );
         FriendFilterState filterState = FriendFilterGUI.getFilterState(player);
         List<FriendshipData> friends = applyFilters(
@@ -141,7 +143,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.blocklist.lore"
                     ),
                     player,
-                    () -> this.openChild(new BlocklistGUI(plugin, player)),
+                    () -> this.openChild(new BlocklistGUI(plugin, player, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             );
 
@@ -212,7 +214,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.favorites.lore"
                     ),
                     player,
-                    () -> this.openChild(new FavoriteFriendsGUI(plugin, player)),
+                    () -> this.openChild(new FavoriteFriendsGUI(plugin, player, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             );
 

@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
@@ -29,9 +30,16 @@ public class FavoriteFriendsGUI extends AbstractGUI {
     private final int friendRows = 3;
     private final int friendsPerPage = friendRows * 9;
     private int currentPage = 0;
+    private final FriendGuiViewData viewData;
+    private FriendGuiViewData currentViewData;
 
     public FavoriteFriendsGUI(JavaPlugin plugin, Player player) {
+        this(plugin, player, null);
+    }
+
+    public FavoriteFriendsGUI(JavaPlugin plugin, Player player, FriendGuiViewData viewData) {
         super(plugin, player, 9 * 5, "titles.favoriteFriendsGUI");
+        this.viewData = viewData;
     }
 
     @Override
@@ -39,10 +47,17 @@ public class FavoriteFriendsGUI extends AbstractGUI {
         interactableSlots.clear();
         inventory.clear();
 
-        List<FriendshipData> favoriteFriends = ((FriendNetPlugin) plugin)
-                .getFriendService()
-                .getFriendships(player.getUniqueId())
-                .stream()
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        currentViewData = friendNetPlugin.isProxyBackendMode() && viewData != null
+                ? viewData
+                : FriendGuiViewData.local(
+                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
+        );
+
+        List<FriendshipData> favoriteFriends = currentViewData.friends().stream()
                 .filter(FriendshipData::isFavourite)
                 .toList();
         favoriteFriends = applyFilters(favoriteFriends, FriendFilterGUI.getFilterState(player));
@@ -59,7 +74,7 @@ public class FavoriteFriendsGUI extends AbstractGUI {
             setInteractableItem(i, new ActionItemStack(
                     createFriendItem(friend),
                     player,
-                    () -> openChild(new FriendDetailGUI(plugin, player, friendId)),
+                    () -> openChild(new FriendDetailGUI(plugin, player, friendId, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
@@ -125,7 +140,7 @@ public class FavoriteFriendsGUI extends AbstractGUI {
 
     private ItemStack createFriendItem(FriendshipData friend) {
         UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
-        String friendName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendId);
+        String friendName = getFriendDisplayName(friend);
         PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
 
         return SpigotUtils.createPlayerHead(friendId, friendName, createFriendLore(friend, friendId, playerData));
@@ -215,11 +230,20 @@ public class FavoriteFriendsGUI extends AbstractGUI {
     }
 
     private String getFriendDisplayName(FriendshipData friend) {
-        return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friend.getOtherPlayerId(player.getUniqueId()));
+        UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+        if (currentViewData != null && currentViewData.proxyEntry(friendId) != null) {
+            return currentViewData.proxyEntry(friendId).displayName();
+        }
+
+        return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendId);
     }
 
     private boolean isFriendOnline(FriendshipData friend) {
         UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+        if (currentViewData != null && currentViewData.proxyEntry(friendId) != null) {
+            return currentViewData.proxyEntry(friendId).online();
+        }
+
         return Bukkit.getPlayer(friendId) != null && ((FriendNetPlugin) plugin).getPlayerService().isOnline(friendId);
     }
 

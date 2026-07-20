@@ -65,8 +65,10 @@ public class ProxyProtocolCodecTest extends TestCase {
         UUID friendId = UUID.randomUUID();
         UUID requesterId = UUID.randomUUID();
         ProxyFriendListViewPayload payload = new ProxyFriendListViewPayload(
-                List.of(new ProxyFriendEntry(friendId, "Alex", true, "survival")),
-                List.of(new ProxyFriendEntry(requesterId, "Steve", false, ""))
+                List.of(new ProxyFriendEntry(friendId, "Alex", true, "survival", true)),
+                List.of(new ProxyFriendEntry(requesterId, "Steve", false, "", false)),
+                List.of(),
+                List.of()
         );
 
         ProxyFriendListViewPayload decoded = ProxyFriendListViewPayloadCodec.decode(
@@ -104,7 +106,7 @@ public class ProxyProtocolCodecTest extends TestCase {
                         "friendRequest.accept.sender.success",
                         Map.of("target", "Alex")
                 )),
-                new ProxyFriendListViewPayload(List.of(), List.of())
+                new ProxyFriendListViewPayload(List.of(), List.of(), List.of(), List.of())
         );
 
         ProxyActionResponsePayload decodedResponse = ProxyActionResponsePayloadCodec.decode(
