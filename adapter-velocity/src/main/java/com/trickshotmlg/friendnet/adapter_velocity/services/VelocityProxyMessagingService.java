@@ -101,6 +101,7 @@ public class VelocityProxyMessagingService {
         return switch (request.requestType()) {
             case FRIEND_LIST_VIEW -> handleFriendListView(request, player);
             case FRIEND_ACTION_EXECUTE -> handleFriendAction(request, player);
+            case OPEN_BACKEND_GUI -> throw new ProxyProtocolException(ProxyErrorCode.UNKNOWN_REQUEST, "Backend GUI requests are proxy-to-backend only.");
         };
     }
 

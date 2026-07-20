@@ -1,6 +1,8 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Services;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyMessageKind;
@@ -13,8 +15,10 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPaylo
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyOpenBackendGuiPayloadCodec;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.bukkit.scheduler.BukkitTask;
@@ -95,6 +99,11 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
         try {
             ProxyProtocolMessage response = ProxyProtocolCodec.decode(message);
             ProxyProtocolCodec.verify(response, plugin.getConnectionToken(), System.currentTimeMillis());
+            if (response.kind() == ProxyMessageKind.REQUEST) {
+                handleProxyRequest(player, response);
+                return;
+            }
+
             if (response.kind() != ProxyMessageKind.RESPONSE) {
                 return;
             }
@@ -117,6 +126,33 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
         } catch (RuntimeException e) {
             Logger.error("Could not handle proxy response", e);
         }
+    }
+
+    private void handleProxyRequest(Player player, ProxyProtocolMessage request) {
+        if (!player.getUniqueId().equals(request.playerId())) {
+            Logger.warn("Rejected backend GUI request for mismatched player: " + request.correlationId());
+            return;
+        }
+
+        if (request.requestType() != ProxyRequestType.OPEN_BACKEND_GUI) {
+            Logger.warn("Rejected unsupported proxy-to-backend request: " + request.requestType());
+            return;
+        }
+
+        ProxyBackendGuiType guiType = ProxyOpenBackendGuiPayloadCodec.decode(request.payload());
+        plugin.getFriendGuiService().friendListView(player).whenComplete((viewData, throwable) ->
+                plugin.getServer().getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        Logger.warn("Could not open backend GUI from proxy request: " + throwable.getMessage());
+                        return;
+                    }
+
+                    switch (guiType) {
+                        case FRIENDS -> new FriendsGUI(plugin, player, viewData).open();
+                        case REQUESTS -> new RequestsGUI(plugin, player, viewData).openWithParent(new FriendsGUI(plugin, player, viewData));
+                    }
+                })
+        );
     }
 
     private record PendingRequest(

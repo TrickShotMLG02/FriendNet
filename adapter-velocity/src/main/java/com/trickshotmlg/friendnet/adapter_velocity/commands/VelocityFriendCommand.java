@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_velocity.commands;
 
 import com.trickshotmlg.friendnet.adapter_velocity.FriendNetVelocityPlugin;
+import com.trickshotmlg.friendnet.adapter_velocity.services.VelocityProxyMessagingService;
 import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityCommandResultRenderer;
 import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
@@ -16,9 +17,15 @@ import com.trickshotmlg.friendnet.core_api.interfaces.PermissionNode;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolMessage;
+import com.trickshotmlg.friendnet.core_api.proxy.ProxyRequestType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyOpenBackendGuiPayloadCodec;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
+import com.velocitypowered.api.proxy.ServerConnection;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -223,6 +230,10 @@ public class VelocityFriendCommand implements SimpleCommand {
             return CommandFeedbackUseCases.usage(FriendCommandDefinitions.LIST.usage());
         }
 
+        if (requestBackendGui(plugin, senderId, ProxyBackendGuiType.FRIENDS)) {
+            return CommandUseCaseResult.builder(true).build();
+        }
+
         FriendListViewData viewData = plugin.getApplicationServices().friendCommandUseCases().listViewData(senderId);
         if (viewData.friends().isEmpty()) {
             return CommandUseCaseResult.builder(false)
@@ -247,6 +258,10 @@ public class VelocityFriendCommand implements SimpleCommand {
             return CommandFeedbackUseCases.usage(FriendCommandDefinitions.REQUESTS.usage());
         }
 
+        if (requestBackendGui(plugin, senderId, ProxyBackendGuiType.REQUESTS)) {
+            return CommandUseCaseResult.builder(true).build();
+        }
+
         FriendListViewData viewData = plugin.getApplicationServices().friendCommandUseCases().listViewData(senderId);
         if (viewData.pendingRequests().isEmpty()) {
             return CommandUseCaseResult.builder(false)
@@ -264,6 +279,33 @@ public class VelocityFriendCommand implements SimpleCommand {
             ));
         }
         return result.build();
+    }
+
+    private static boolean requestBackendGui(FriendNetVelocityPlugin plugin, UUID senderId, ProxyBackendGuiType guiType) {
+        if (senderId == null) {
+            return false;
+        }
+
+        Player player = plugin.getServer().getPlayer(senderId).orElse(null);
+        if (player == null) {
+            return false;
+        }
+
+        ServerConnection connection = player.getCurrentServer().orElse(null);
+        if (connection == null) {
+            return false;
+        }
+
+        ProxyProtocolMessage request = ProxyProtocolCodec.request(
+                ProxyRequestType.OPEN_BACKEND_GUI,
+                senderId,
+                "velocity",
+                ProxyOpenBackendGuiPayloadCodec.encode(guiType)
+        );
+        return connection.sendPluginMessage(
+                VelocityProxyMessagingService.CHANNEL,
+                ProxyProtocolCodec.encodeSigned(request, plugin.getConnectionToken())
+        );
     }
 
     private ResolvedCommand resolve(String label, String[] args) {

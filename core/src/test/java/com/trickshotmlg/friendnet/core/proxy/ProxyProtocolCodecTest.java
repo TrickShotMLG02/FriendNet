@@ -10,11 +10,13 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPaylo
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessagePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessageRecipient;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyOpenBackendGuiPayloadCodec;
 import junit.framework.TestCase;
 
 import java.util.List;
@@ -113,5 +115,13 @@ public class ProxyProtocolCodecTest extends TestCase {
         assertEquals("friendRequest.accept.sender.success", decodedResponse.messages().get(0).key());
         assertEquals("Alex", decodedResponse.messages().get(0).placeholders().get("target"));
         assertNotNull(decodedResponse.friendListView());
+    }
+
+    public void testOpenBackendGuiPayloadRoundTrip() {
+        ProxyBackendGuiType decoded = ProxyOpenBackendGuiPayloadCodec.decode(
+                ProxyOpenBackendGuiPayloadCodec.encode(ProxyBackendGuiType.REQUESTS)
+        );
+
+        assertEquals(ProxyBackendGuiType.REQUESTS, decoded);
     }
 }
