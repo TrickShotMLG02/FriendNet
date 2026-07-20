@@ -7,6 +7,7 @@ import com.trickshotmlg.friendnet.core.application.FriendRequestApplicationServi
 import com.trickshotmlg.friendnet.core.application.FriendStatusVisibilityNotifier;
 import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core.application.PlayerSettingsApplicationService;
+import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
 
 public class SpigotApplicationServices {
 
@@ -14,12 +15,14 @@ public class SpigotApplicationServices {
     private final BlocklistApplicationService blocklistService;
     private final FriendRequestApplicationService friendRequestService;
     private final PlayerSettingsApplicationService playerSettingsService;
+    private final FriendCommandUseCases friendCommandUseCases;
 
     public SpigotApplicationServices(FriendNetPlugin plugin) {
         this.knownPlayerLookup = createKnownPlayerLookup(plugin);
         this.blocklistService = createBlocklistService(plugin, knownPlayerLookup);
         this.friendRequestService = createFriendRequestService(plugin, blocklistService);
         this.playerSettingsService = createPlayerSettingsService(plugin);
+        this.friendCommandUseCases = createFriendCommandUseCases(plugin);
     }
 
     protected KnownPlayerLookup createKnownPlayerLookup(FriendNetPlugin plugin) {
@@ -65,6 +68,15 @@ public class SpigotApplicationServices {
         );
     }
 
+    protected FriendCommandUseCases createFriendCommandUseCases(FriendNetPlugin plugin) {
+        return new FriendCommandUseCases(
+                plugin.getFriendService(),
+                friendRequestService,
+                blocklistService,
+                knownPlayerLookup
+        );
+    }
+
     public KnownPlayerLookup knownPlayerLookup() {
         return knownPlayerLookup;
     }
@@ -79,5 +91,9 @@ public class SpigotApplicationServices {
 
     public PlayerSettingsApplicationService playerSettingsService() {
         return playerSettingsService;
+    }
+
+    public FriendCommandUseCases friendCommandUseCases() {
+        return friendCommandUseCases;
     }
 }

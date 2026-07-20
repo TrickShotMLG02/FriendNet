@@ -1,10 +1,9 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
-import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver.KnownPlayerTarget;
-import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -12,7 +11,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class FriendBlockCommand extends AbstractCommand {
@@ -30,23 +28,30 @@ public class FriendBlockCommand extends AbstractCommand {
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            MessageManager.send(sender, "commandFeedback.playersOnlyCommand");
+            SpigotCommandResultRenderer.playersOnly(sender);
             return true;
         }
 
         if (args.length < 1) {
-            MessageManager.send(sender, "commandFeedback.usage", Map.of("usage", getUsage()));
+            SpigotCommandResultRenderer.usage(sender, getUsage());
             return true;
         }
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         Optional<KnownPlayerTarget> target = KnownPlayerResolver.resolve(pl, args[0]);
         if (target.isEmpty()) {
-            MessageManager.send(sender, "commandFeedback.playerNotFound");
+            SpigotCommandResultRenderer.playerNotFound(sender);
             return true;
         }
 
-        new BlocklistActions(pl).block(player, target.get().playerId());
+        SpigotCommandResultRenderer.render(
+                sender,
+                pl.getApplicationServices().friendCommandUseCases().blockPlayer(
+                        player.getUniqueId(),
+                        target.get().playerId(),
+                        target.get().displayName()
+                )
+        );
         return true;
     }
 
@@ -54,12 +59,12 @@ public class FriendBlockCommand extends AbstractCommand {
     protected List<String> tabComplete(CommandSender sender, String[] args) {
         if (args.length == 1 && sender instanceof Player player) {
             FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
-            BlocklistActions blocklistActions = new BlocklistActions(pl);
             String prefix = args[0].toLowerCase();
 
             return Bukkit.getOnlinePlayers().stream()
                     .filter(candidate -> !candidate.getUniqueId().equals(player.getUniqueId()))
-                    .filter(candidate -> !blocklistActions.isBlocked(player.getUniqueId(), candidate.getUniqueId()))
+                    .filter(candidate -> !pl.getApplicationServices().blocklistService()
+                            .isBlocked(player.getUniqueId(), candidate.getUniqueId()))
                     .map(Player::getName)
                     .filter(name -> name.toLowerCase().startsWith(prefix))
                     .sorted(String.CASE_INSENSITIVE_ORDER)
