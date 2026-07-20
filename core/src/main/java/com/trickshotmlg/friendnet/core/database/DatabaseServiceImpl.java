@@ -401,22 +401,11 @@ public class DatabaseServiceImpl implements DatabaseService {
         try {
             DatabaseConnection conn = database.getConnection();
 
-            // create default tables
-            try (PreparedStatement ps = conn.prepareStatement(SQLTables.TABLE_CREATE_PLAYERDATA)) {
-                ps.execute();
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(SQLTables.TABLE_CREATE_FRIENDSHIPS)) {
-                ps.execute();
-            }
-
-            try (PreparedStatement ps = conn.prepareStatement(SQLTables.TABLE_CREATE_BLOCKLIST)) {
-                ps.execute();
-            }
+            new DatabaseMigrationRunner(DatabaseMigrations.all()).migrate(conn);
 
         } catch (SQLException e) {
             state = ServiceState.FAILED;
-            throw new IllegalStateException("Could not initialize database tables: " + e.getMessage(), e);
+            throw new IllegalStateException("Could not migrate database schema: " + e.getMessage(), e);
         }
     }
 

@@ -1,6 +1,12 @@
 package com.trickshotmlg.friendnet.core.database;
 
 public class SQLTables {
+    public static final String TABLE_CREATE_SCHEMA_MIGRATIONS =
+            "CREATE TABLE IF NOT EXISTS friendnet_schema_migrations (" +
+            "version INT PRIMARY KEY, " +
+            "description VARCHAR(255) NOT NULL, " +
+            "applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP" +
+            ");";
 
     public static final String TABLE_CREATE_PLAYERDATA =
             "CREATE TABLE IF NOT EXISTS players (" +
@@ -40,4 +46,5 @@ public class SQLTables {
                     "FOREIGN KEY (blocker_id) REFERENCES players(player_id), " +
                     "FOREIGN KEY (blocked_id) REFERENCES players(player_id)" +
                     ");";
+
 }
