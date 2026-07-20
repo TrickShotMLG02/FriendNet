@@ -168,6 +168,10 @@ public class FriendDetailGUI extends AbstractGUI {
         List<String> lore = new ArrayList<>();
 
         lore.add(locale("friendEntries.lore.status", Map.of("status", formatOnlineStatus())));
+        String serverName = formatCurrentServer();
+        if (serverName != null) {
+            lore.add(locale("friendEntries.lore.server", Map.of("server", ChatColor.YELLOW + serverName)));
+        }
         lore.add(locale("friendEntries.lore.favourite", Map.of("value", formatBoolean(friendshipData.isFavourite()))));
         lore.add("");
         lore.add(locale("friendEntries.lore.friendsSince", Map.of("date", ChatColor.YELLOW + formatTimestamp(friendshipData.getFriendSince()))));
@@ -263,6 +267,20 @@ public class FriendDetailGUI extends AbstractGUI {
 
     private String formatOnlineStatus() {
         return isFriendOnline() ? locale("friendEntries.status.online") : locale("friendEntries.status.offline");
+    }
+
+    private String formatCurrentServer() {
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (!friendNetPlugin.isProxyBackendMode() || viewData == null) {
+            return null;
+        }
+
+        ProxyFriendEntry proxyEntry = viewData.proxyEntry(friendId);
+        if (proxyEntry == null || proxyEntry.currentServerName().isBlank()) {
+            return null;
+        }
+
+        return proxyEntry.currentServerName();
     }
 
     private String formatBoolean(boolean value) {

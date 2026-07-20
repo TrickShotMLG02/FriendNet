@@ -7,6 +7,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -150,6 +151,10 @@ public class FavoriteFriendsGUI extends AbstractGUI {
         List<String> lore = new ArrayList<>();
 
         lore.add(locale("friendEntries.lore.status", Map.of("status", formatOnlineStatus(friend))));
+        String serverName = formatCurrentServer(friendId);
+        if (serverName != null) {
+            lore.add(locale("friendEntries.lore.server", Map.of("server", ChatColor.YELLOW + serverName)));
+        }
         lore.add("");
         lore.add(locale("friendEntries.lore.friendsSince", Map.of("date", ChatColor.YELLOW + formatTimestamp(friend.getFriendSince()))));
         lore.add(locale("friendEntries.lore.lastSeen", Map.of("date", formatLastSeen(friend, playerData))));
@@ -236,6 +241,20 @@ public class FavoriteFriendsGUI extends AbstractGUI {
         }
 
         return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendId);
+    }
+
+    private String formatCurrentServer(UUID friendId) {
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (!friendNetPlugin.isProxyBackendMode() || currentViewData == null) {
+            return null;
+        }
+
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry == null || proxyEntry.currentServerName().isBlank()) {
+            return null;
+        }
+
+        return proxyEntry.currentServerName();
     }
 
     private boolean isFriendOnline(FriendshipData friend) {

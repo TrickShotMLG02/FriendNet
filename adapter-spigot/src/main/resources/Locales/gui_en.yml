@@ -153,6 +153,7 @@ friendsGUI:
 friendEntries:
   lore:
     status: "&7Status: %status%"
+    server: "&7Server: %server%"
     favourite: "&7Favourite: %value%"
     friendsSince: "&7Friends since: %date%"
     lastSeen: "&7Last seen: %date%"

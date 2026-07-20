@@ -282,6 +282,10 @@ public class FriendsGUI extends AbstractGUI {
         List<String> lore = new ArrayList<>();
 
         lore.add(locale("friendEntries.lore.status", Map.of("status", formatOnlineStatus(friend, friendId))));
+        String serverName = formatCurrentServer(friendId);
+        if (serverName != null) {
+            lore.add(locale("friendEntries.lore.server", Map.of("server", ChatColor.YELLOW + serverName)));
+        }
         lore.add(locale("friendEntries.lore.favourite", Map.of("value", formatBoolean(friend.isFavourite()))));
         lore.add("");
         lore.add(locale("friendEntries.lore.friendsSince", Map.of("date", ChatColor.YELLOW + formatTimestamp(friend.getFriendSince()))));
@@ -378,6 +382,20 @@ public class FriendsGUI extends AbstractGUI {
         }
 
         return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendId);
+    }
+
+    private String formatCurrentServer(UUID friendId) {
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (!friendNetPlugin.isProxyBackendMode()) {
+            return null;
+        }
+
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry == null || proxyEntry.currentServerName().isBlank()) {
+            return null;
+        }
+
+        return proxyEntry.currentServerName();
     }
 
     private Timestamp getLastSeen(FriendshipData friend) {
