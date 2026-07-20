@@ -48,6 +48,11 @@ public class SpigotPlayer implements PlatformPlayer {
         return player.getName();
     }
 
+    @Override
+    public String getDisplayName() {
+        return player.getDisplayName();
+    }
+
     /**
      * Sends a message to the player.
      *

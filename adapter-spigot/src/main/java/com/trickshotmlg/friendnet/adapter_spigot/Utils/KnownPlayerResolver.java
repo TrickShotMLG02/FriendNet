@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Utils;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import org.bukkit.Bukkit;
@@ -21,36 +22,20 @@ public final class KnownPlayerResolver {
             return Optional.empty();
         }
 
-        Player onlineTarget = Bukkit.getPlayerExact(name);
-        if (onlineTarget != null) {
-            PlayerData playerData = plugin.getPlayerService().getPlayerData(onlineTarget.getUniqueId());
-            if (playerData == null) {
-                playerData = plugin.getDatabaseService()
-                        .find(onlineTarget.getUniqueId(), PlayerData.class)
-                        .orElseGet(() -> plugin.getPlayerService().initPlayer(onlineTarget.getUniqueId()));
-                playerData.setLastDisplayName(onlineTarget.getDisplayName());
-                plugin.getPlayerService().putPlayerData(playerData);
-            }
-
-            return Optional.of(new KnownPlayerTarget(onlineTarget, playerData, onlineTarget.getName()));
-        }
-
-        return plugin.getDatabaseService().findPlayerByLastDisplayName(name)
-                .map(playerData -> {
-                    plugin.getPlayerService().putPlayerData(playerData);
-                    return new KnownPlayerTarget(null, playerData, displayNameOrFallback(playerData));
-                });
+        return createLookup(plugin).resolve(name)
+                .map(player -> new KnownPlayerTarget(
+                        Bukkit.getPlayer(player.playerId()),
+                        player.playerData(),
+                        player.displayName()
+                ));
     }
 
     public static String displayName(FriendNetPlugin plugin, UUID playerId) {
-        if (plugin != null && playerId != null) {
-            String displayName = SpigotUtils.getPlayerDisplayName(plugin, playerId);
-            if (displayName != null && !displayName.isBlank()) {
-                return displayName;
-            }
+        if (plugin == null) {
+            return playerId != null ? playerId.toString() : "Unknown";
         }
 
-        return playerId != null ? playerId.toString() : "Unknown";
+        return createLookup(plugin).displayName(playerId);
     }
 
     public static List<String> suggestFriendshipPlayers(
@@ -59,12 +44,7 @@ public final class KnownPlayerResolver {
             UUID viewerId,
             String prefix
     ) {
-        String normalizedPrefix = prefix == null ? "" : prefix.toLowerCase();
-        return friendships.stream()
-                .map(friendship -> displayName(plugin, friendship.getOtherPlayerId(viewerId)))
-                .filter(name -> name.toLowerCase().startsWith(normalizedPrefix))
-                .sorted(String.CASE_INSENSITIVE_ORDER)
-                .toList();
+        return createLookup(plugin).suggestFriendshipPlayers(friendships, viewerId, prefix);
     }
 
     public static List<String> suggestOnlinePlayers(Player sender, String prefix) {
@@ -77,13 +57,8 @@ public final class KnownPlayerResolver {
                 .toList();
     }
 
-    private static String displayNameOrFallback(PlayerData playerData) {
-        String displayName = playerData.getLastDisplayName();
-        if (displayName != null && !displayName.isBlank()) {
-            return displayName;
-        }
-
-        return playerData.getPlayerId().toString();
+    public static KnownPlayerLookup createLookup(FriendNetPlugin plugin) {
+        return plugin.getApplicationServices().knownPlayerLookup();
     }
 
     public record KnownPlayerTarget(Player onlinePlayer, PlayerData playerData, String displayName) {

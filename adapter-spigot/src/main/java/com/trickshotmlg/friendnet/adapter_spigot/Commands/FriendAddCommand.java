@@ -5,6 +5,8 @@ import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver.KnownPlayerTarget;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.core.application.FriendRequestApplicationService;
+import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
@@ -50,7 +52,7 @@ public class FriendAddCommand extends AbstractCommand {
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
-        BlocklistActions blocklistActions = new BlocklistActions(pl);
+        FriendRequestApplicationService requestService = pl.getApplicationServices().friendRequestService();
         Optional<KnownPlayerTarget> optionalTarget = KnownPlayerResolver.resolve(pl, args[0]);
 
         if (optionalTarget.isEmpty()) {
@@ -61,65 +63,31 @@ public class FriendAddCommand extends AbstractCommand {
         KnownPlayerTarget target = optionalTarget.get();
         var targetId = target.playerId();
         String targetName = target.displayName();
-
-        if (targetId.equals(player.getUniqueId())) {
-            MessageManager.send(sender, "friendRequest.send.sender.cannotSelf");
-            return true;
-        }
-
-        if (blocklistActions.isBlocked(player.getUniqueId(), targetId)) {
-            MessageManager.send(sender, "blocklist.friendRequest.senderBlocked", Map.of("target", targetName));
-            return true;
-        }
-
-        if (blocklistActions.isBlocked(targetId, player.getUniqueId())) {
-            MessageManager.send(sender, "blocklist.friendRequest.targetBlocked", Map.of("target", targetName));
-            return true;
-        }
-
         PlayerData targetData = target.playerData();
 
-        if (!targetData.isAllowFriendRequests()) {
-            MessageManager.send(sender, "friendRequest.send.sender.disabled", Map.of("target", targetName));
-            return true;
-        }
-
-        boolean success = fs.sendFriendRequest(player.getUniqueId(), targetId);
-        if (success) {
-
-            // --- Accept button ---
-            TextComponent accept = MessageManager.createButton(
-                    targetId,
-                    "chatButtons.acceptRequest.text",
-                    Map.of(),
-                    "chatButtons.acceptRequest.hover",
-                    Map.of(),
-                    ClickEvent.Action.RUN_COMMAND,
-                    "/friend accept " + player.getName()
-            );
-
-            // --- Deny button ---
-            TextComponent deny = MessageManager.createButton(
-                    targetId,
-                    "chatButtons.denyRequest.text",
-                    Map.of(),
-                    "chatButtons.denyRequest.hover",
-                    Map.of(),
-                    ClickEvent.Action.RUN_COMMAND,
-                    "/friend deny " + player.getName()
-            );
-
-            if (targetData.isAutoAcceptFriends()) {
-                success = fs.acceptFriendRequest(targetId, player.getUniqueId());
-                if (success) {
-                    MessageManager.send(sender, "friendRequest.send.sender.autoAccepted", Map.of("target", targetName));
-                    if (target.onlinePlayer() != null && targetData.isFriendRequestNotifications()) {
-                        MessageManager.send(target.onlinePlayer(), "friendRequest.send.target.autoAccepted", Map.of("sender", player.getName()));
-                    }
-                } else {
-                    MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", targetName));
-                }
-            } else {
+        switch (requestService.sendFriendRequest(
+                player.getUniqueId(),
+                new KnownPlayerLookup.KnownPlayer(targetId, targetName, targetData, target.onlinePlayer() != null)
+        )) {
+            case SENT -> {
+                TextComponent accept = MessageManager.createButton(
+                        targetId,
+                        "chatButtons.acceptRequest.text",
+                        Map.of(),
+                        "chatButtons.acceptRequest.hover",
+                        Map.of(),
+                        ClickEvent.Action.RUN_COMMAND,
+                        "/friend accept " + player.getName()
+                );
+                TextComponent deny = MessageManager.createButton(
+                        targetId,
+                        "chatButtons.denyRequest.text",
+                        Map.of(),
+                        "chatButtons.denyRequest.hover",
+                        Map.of(),
+                        ClickEvent.Action.RUN_COMMAND,
+                        "/friend deny " + player.getName()
+                );
                 MessageManager.send(sender, "friendRequest.send.sender.success", Map.of("target", targetName));
                 if (target.onlinePlayer() != null && targetData.isFriendRequestNotifications()) {
                     MessageManager.send(target.onlinePlayer(), "friendRequest.send.target.success",
@@ -131,22 +99,29 @@ public class FriendAddCommand extends AbstractCommand {
                     );
                 }
             }
-        } else {
-            // CODE COPIED! from FriendAcceptCommand.java
-            if (fs.requestPending(player.getUniqueId(), targetId)) {
-                success = fs.acceptFriendRequest(player.getUniqueId(), targetId);
-
-                if (success) {
-                    MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", targetName));
-                    if (target.onlinePlayer() != null) {
-                        MessageManager.send(target.onlinePlayer(), "friendRequest.accept.target.success", Map.of("sender", player.getName()));
-                    }
-                } else {
-                    MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", targetName));
+            case AUTO_ACCEPTED -> {
+                MessageManager.send(sender, "friendRequest.send.sender.autoAccepted", Map.of("target", targetName));
+                if (target.onlinePlayer() != null && targetData.isFriendRequestNotifications()) {
+                    MessageManager.send(target.onlinePlayer(), "friendRequest.send.target.autoAccepted", Map.of("sender", player.getName()));
                 }
-            } else {
-                MessageManager.send(sender, "friendRequest.send.sender.alreadyPending", Map.of("target", targetName));
             }
+            case ACCEPTED_INCOMING -> {
+                MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", targetName));
+                if (target.onlinePlayer() != null) {
+                    MessageManager.send(target.onlinePlayer(), "friendRequest.accept.target.success", Map.of("sender", player.getName()));
+                }
+            }
+            case CANNOT_SELF -> MessageManager.send(sender, "friendRequest.send.sender.cannotSelf");
+            case SENDER_BLOCKED_TARGET ->
+                    MessageManager.send(sender, "blocklist.friendRequest.senderBlocked", Map.of("target", targetName));
+            case TARGET_BLOCKED_SENDER ->
+                    MessageManager.send(sender, "blocklist.friendRequest.targetBlocked", Map.of("target", targetName));
+            case TARGET_DISABLED_REQUESTS ->
+                    MessageManager.send(sender, "friendRequest.send.sender.disabled", Map.of("target", targetName));
+            case AUTO_ACCEPT_FAILED ->
+                    MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", targetName));
+            case ALREADY_PENDING ->
+                MessageManager.send(sender, "friendRequest.send.sender.alreadyPending", Map.of("target", targetName));
         }
 
         return true;

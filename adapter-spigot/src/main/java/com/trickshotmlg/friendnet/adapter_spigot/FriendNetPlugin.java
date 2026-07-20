@@ -40,6 +40,7 @@ public final class FriendNetPlugin extends JavaPlugin {
     private DatabaseService databaseService;
     private PlayerDataSaveQueue playerDataSaveQueue;
     private Platform platform;
+    private SpigotApplicationServices applicationServices;
 
     public FileConfiguration config = this.getConfig();
     File defaultConfigFile;
@@ -93,6 +94,7 @@ public final class FriendNetPlugin extends JavaPlugin {
         this.playerService = new PlayerServiceImpl();
         this.friendService = new FriendServiceImpl(this.databaseService, this.playerService);
         this.playerDataSaveQueue = new PlayerDataSaveQueue(this, playerService, databaseService, isStandaloneMode());
+        this.applicationServices = new SpigotApplicationServices(this);
 
         this.databaseService.init();
         this.databaseService.postInit();
@@ -171,6 +173,14 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     public DatabaseService getDatabaseService() {
         return databaseService;
+    }
+
+    public Platform getPlatform() {
+        return platform;
+    }
+
+    public SpigotApplicationServices getApplicationServices() {
+        return applicationServices;
     }
 
     private boolean isStandaloneMode() {
