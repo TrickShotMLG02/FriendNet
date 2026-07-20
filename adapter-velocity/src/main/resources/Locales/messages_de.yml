@@ -1,0 +1,14 @@
+# Global settings
+prefix: "&7[&aFreunde&7]"
+
+noPermission: "&4&lDu hast keine ausreichenden Berechtigungen, um diesen Befehl auszufuehren"
+configReloadSuccess: "&bPlugin-Konfigurationen wurden erfolgreich neu geladen"
+configReloadError: "&4Fehler beim Neuladen der Plugin-Konfigurationen"
+
+commandFeedback:
+  usage: "&eVerwendung: %usage%"
+
+friend:
+  status:
+    online: "&a%player% ist jetzt online"
+    offline: "&c%player% ist jetzt offline"
