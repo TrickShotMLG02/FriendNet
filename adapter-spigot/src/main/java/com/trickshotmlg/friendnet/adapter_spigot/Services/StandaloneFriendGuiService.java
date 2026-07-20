@@ -3,13 +3,16 @@ package com.trickshotmlg.friendnet.adapter_spigot.Services;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core.application.proxy.ProxyActionDispatcher;
+import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
 import org.bukkit.entity.Player;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -55,24 +58,49 @@ public class StandaloneFriendGuiService implements FriendGuiService {
                 toFriendEntries(playerId, viewData.pendingRequests()),
                 toFriendEntries(playerId, plugin.getFriendService().getSentRequests(playerId).stream().toList()),
                 plugin.getApplicationServices().blocklistService().getBlockedPlayers(playerId).stream()
-                        .map(blockedPlayer -> toEntry(blockedPlayer.getBlockedId(), false))
+                        .map(this::toBlockedEntry)
                         .toList()
         );
     }
 
     private List<ProxyFriendEntry> toFriendEntries(UUID viewerId, List<FriendshipData> friendships) {
         return friendships.stream()
-                .map(friendship -> toEntry(friendship.getOtherPlayerId(viewerId), friendship.isFavourite()))
+                .map(friendship -> toEntry(
+                        friendship.getOtherPlayerId(viewerId),
+                        friendship.isFavourite(),
+                        toMillis(friendship.getRequestSentTime()),
+                        toMillis(friendship.getFriendSince()),
+                        -1L
+                ))
                 .toList();
     }
 
-    private ProxyFriendEntry toEntry(UUID playerId, boolean favourite) {
+    private ProxyFriendEntry toBlockedEntry(BlocklistData blockedPlayer) {
+        return toEntry(blockedPlayer.getBlockedId(), false, -1L, -1L, toMillis(blockedPlayer.getBlockedAt()));
+    }
+
+    private ProxyFriendEntry toEntry(
+            UUID playerId,
+            boolean favourite,
+            long requestSentTimeMillis,
+            long friendSinceMillis,
+            long blockedAtMillis
+    ) {
+        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
         return new ProxyFriendEntry(
                 playerId,
                 plugin.getApplicationServices().knownPlayerLookup().displayName(playerId),
                 plugin.getPlayerService().isOnline(playerId),
                 "",
-                favourite
+                favourite,
+                requestSentTimeMillis,
+                friendSinceMillis,
+                blockedAtMillis,
+                playerData != null ? toMillis(playerData.getLastSeen()) : -1L
         );
+    }
+
+    private long toMillis(Timestamp timestamp) {
+        return timestamp == null ? -1L : timestamp.getTime();
     }
 }

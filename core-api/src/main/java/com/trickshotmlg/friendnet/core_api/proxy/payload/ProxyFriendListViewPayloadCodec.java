@@ -49,6 +49,10 @@ public final class ProxyFriendListViewPayloadCodec {
             output.writeBoolean(entry.online());
             output.writeUTF(entry.currentServerName());
             output.writeBoolean(entry.favourite());
+            output.writeLong(entry.requestSentTimeMillis());
+            output.writeLong(entry.friendSinceMillis());
+            output.writeLong(entry.blockedAtMillis());
+            output.writeLong(entry.lastSeenMillis());
         }
     }
 
@@ -65,7 +69,21 @@ public final class ProxyFriendListViewPayloadCodec {
             boolean online = input.readBoolean();
             String currentServerName = input.readUTF();
             boolean favourite = input.readBoolean();
-            entries.add(new ProxyFriendEntry(playerId, displayName, online, currentServerName, favourite));
+            long requestSentTimeMillis = input.readLong();
+            long friendSinceMillis = input.readLong();
+            long blockedAtMillis = input.readLong();
+            long lastSeenMillis = input.readLong();
+            entries.add(new ProxyFriendEntry(
+                    playerId,
+                    displayName,
+                    online,
+                    currentServerName,
+                    favourite,
+                    requestSentTimeMillis,
+                    friendSinceMillis,
+                    blockedAtMillis,
+                    lastSeenMillis
+            ));
         }
         return entries;
     }

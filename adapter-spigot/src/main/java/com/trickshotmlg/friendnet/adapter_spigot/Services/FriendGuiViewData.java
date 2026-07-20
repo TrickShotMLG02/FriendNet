@@ -6,6 +6,7 @@ import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,8 +47,8 @@ public record FriendGuiViewData(
                         viewerId,
                         entry.playerId(),
                         FriendshipStatus.Accepted,
-                        null,
-                        null,
+                        timestamp(entry.requestSentTimeMillis()),
+                        timestamp(entry.friendSinceMillis()),
                         entry.favourite()
                 ))
                 .toList();
@@ -56,7 +57,7 @@ public record FriendGuiViewData(
                         entry.playerId(),
                         viewerId,
                         FriendshipStatus.Pending,
-                        null,
+                        timestamp(entry.requestSentTimeMillis()),
                         null,
                         false
                 ))
@@ -66,13 +67,13 @@ public record FriendGuiViewData(
                         viewerId,
                         entry.playerId(),
                         FriendshipStatus.Pending,
-                        null,
+                        timestamp(entry.requestSentTimeMillis()),
                         null,
                         false
                 ))
                 .toList();
         List<BlocklistData> blockedPlayers = payload.blockedPlayers().stream()
-                .map(entry -> new BlocklistData(viewerId, entry.playerId(), null))
+                .map(entry -> new BlocklistData(viewerId, entry.playerId(), timestamp(entry.blockedAtMillis())))
                 .toList();
         Map<UUID, ProxyFriendEntry> entries = Stream.of(
                         payload.friends().stream(),
@@ -83,6 +84,10 @@ public record FriendGuiViewData(
                 .flatMap(stream -> stream)
                 .collect(Collectors.toMap(ProxyFriendEntry::playerId, entry -> entry, (left, right) -> left));
         return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, entries);
+    }
+
+    private static Timestamp timestamp(long millis) {
+        return millis < 0 ? null : new Timestamp(millis);
     }
 
     public boolean hasProxyEntry(UUID playerId) {

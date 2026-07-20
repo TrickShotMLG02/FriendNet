@@ -206,7 +206,8 @@ public class SentRequestDetailGUI extends AbstractGUI {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
                     }
                     if (response.success()) {
-                        goBack();
+                        new SentRequestsGUI(plugin, player, viewData)
+                                .openWithParent(new RequestsGUI(plugin, player, viewData));
                     } else {
                         buildInventory();
                     }

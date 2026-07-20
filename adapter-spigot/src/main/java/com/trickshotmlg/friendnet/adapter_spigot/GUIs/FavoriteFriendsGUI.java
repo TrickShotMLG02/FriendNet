@@ -142,7 +142,9 @@ public class FavoriteFriendsGUI extends AbstractGUI {
     private ItemStack createFriendItem(FriendshipData friend) {
         UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
         String friendName = getFriendDisplayName(friend);
-        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
+        PlayerData playerData = ((FriendNetPlugin) plugin).isProxyBackendMode()
+                ? null
+                : SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
 
         return SpigotUtils.createPlayerHead(friendId, friendName, createFriendLore(friend, friendId, playerData));
     }
@@ -171,7 +173,9 @@ public class FavoriteFriendsGUI extends AbstractGUI {
             return locale("friendEntries.lastSeen.now");
         }
 
-        return ChatColor.YELLOW + formatTimestamp(playerData != null ? playerData.getLastSeen() : null);
+        Timestamp proxyLastSeen = proxyLastSeen(friend.getOtherPlayerId(player.getUniqueId()));
+        Timestamp lastSeen = proxyLastSeen != null ? proxyLastSeen : playerData != null ? playerData.getLastSeen() : null;
+        return ChatColor.YELLOW + formatTimestamp(lastSeen);
     }
 
     private String formatTimestamp(Timestamp timestamp) {
@@ -230,8 +234,30 @@ public class FavoriteFriendsGUI extends AbstractGUI {
     }
 
     private Timestamp getLastSeen(FriendshipData friend) {
+        Timestamp proxyLastSeen = proxyLastSeen(friend.getOtherPlayerId(player.getUniqueId()));
+        if (proxyLastSeen != null) {
+            return proxyLastSeen;
+        }
+
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            return null;
+        }
+
         PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friend.getOtherPlayerId(player.getUniqueId()));
         return playerData != null ? playerData.getLastSeen() : null;
+    }
+
+    private Timestamp proxyLastSeen(UUID friendId) {
+        if (currentViewData == null) {
+            return null;
+        }
+
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry == null || proxyEntry.lastSeenMillis() < 0) {
+            return null;
+        }
+
+        return new Timestamp(proxyEntry.lastSeenMillis());
     }
 
     private String getFriendDisplayName(FriendshipData friend) {

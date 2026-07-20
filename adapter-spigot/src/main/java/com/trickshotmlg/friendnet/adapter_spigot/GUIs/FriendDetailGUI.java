@@ -74,7 +74,9 @@ public class FriendDetailGUI extends AbstractGUI {
         }
 
         FriendshipData friendshipData = friendship.get();
-        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
+        PlayerData playerData = ((FriendNetPlugin) plugin).isProxyBackendMode()
+                ? null
+                : SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
 
         inventory.setItem(13, SpigotUtils.createPlayerHead(friendId, getFriendDisplayName(), createFriendLore(friendshipData, playerData)));
 
@@ -292,7 +294,22 @@ public class FriendDetailGUI extends AbstractGUI {
             return locale("friendEntries.lastSeen.now");
         }
 
-        return ChatColor.YELLOW + formatTimestamp(playerData != null ? playerData.getLastSeen() : null);
+        Timestamp proxyLastSeen = proxyLastSeen();
+        Timestamp lastSeen = proxyLastSeen != null ? proxyLastSeen : playerData != null ? playerData.getLastSeen() : null;
+        return ChatColor.YELLOW + formatTimestamp(lastSeen);
+    }
+
+    private Timestamp proxyLastSeen() {
+        if (viewData == null) {
+            return null;
+        }
+
+        ProxyFriendEntry proxyEntry = viewData.proxyEntry(friendId);
+        if (proxyEntry == null || proxyEntry.lastSeenMillis() < 0) {
+            return null;
+        }
+
+        return new Timestamp(proxyEntry.lastSeenMillis());
     }
 
     private String formatTimestamp(Timestamp timestamp) {
@@ -352,7 +369,7 @@ public class FriendDetailGUI extends AbstractGUI {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
                     }
                     if (closeToParent && response.success()) {
-                        goBack();
+                        new FriendsGUI(plugin, player, viewData).open();
                     } else {
                         buildInventory();
                     }

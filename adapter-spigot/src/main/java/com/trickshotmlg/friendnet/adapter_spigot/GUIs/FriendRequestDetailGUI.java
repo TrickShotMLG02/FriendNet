@@ -229,7 +229,8 @@ public class FriendRequestDetailGUI extends AbstractGUI {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
                     }
                     if (response.success()) {
-                        goBack();
+                        new RequestsGUI(plugin, player, viewData)
+                                .openWithParent(new FriendsGUI(plugin, player, viewData));
                     } else {
                         buildInventory();
                     }

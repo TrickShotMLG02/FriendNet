@@ -7,7 +7,11 @@ public record ProxyFriendEntry(
         String displayName,
         boolean online,
         String currentServerName,
-        boolean favourite
+        boolean favourite,
+        long requestSentTimeMillis,
+        long friendSinceMillis,
+        long blockedAtMillis,
+        long lastSeenMillis
 ) {
     public ProxyFriendEntry {
         if (playerId == null) {
