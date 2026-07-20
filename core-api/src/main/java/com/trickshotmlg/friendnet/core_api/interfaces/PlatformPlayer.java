@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.core_api.interfaces;
 
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.UUID;
 
@@ -69,10 +70,20 @@ public interface PlatformPlayer {
      */
     boolean hasPermission(String permission);
 
+    /**
+     * Returns the current backend server name when the platform can provide it.
+     *
+     * @return the server name for proxy-aware platforms; otherwise {@link Optional#empty()}
+     */
+    default Optional<String> getCurrentServerName() {
+        return Optional.empty();
+    }
+
     default String toStringRepresentation() {
         StringJoiner sj = new StringJoiner(", ", getClass().getSimpleName() + "{", "}");
         sj.add("uuid=" + getUniqueId());
         sj.add("name=" + getName());
+        getCurrentServerName().ifPresent(serverName -> sj.add("server=" + serverName));
         return sj.toString();
     }
 }
