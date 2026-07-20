@@ -159,6 +159,11 @@ public class FriendRequestDetailGUI extends AbstractGUI {
         goBack();
     }
 
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
     private void denyRequest() {
         if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
             executeProxyAction(ProxyActionType.DENY_REQUEST);
@@ -227,6 +232,7 @@ public class FriendRequestDetailGUI extends AbstractGUI {
                     ProxyActionResponseRenderer.render(player, response);
                     if (response.friendListView() != null) {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        updateViewDataChain(viewData);
                     }
                     if (response.success()) {
                         new RequestsGUI(plugin, player, viewData)

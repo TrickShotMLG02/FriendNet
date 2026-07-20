@@ -297,6 +297,11 @@ public class RequestsGUI extends AbstractGUI {
         return FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), "gui", key, placeholders);
     }
 
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
     private String getDisplayName(UUID playerId) {
         ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(playerId);
         if (proxyEntry != null && !proxyEntry.displayName().isBlank()) {
@@ -339,6 +344,7 @@ public class RequestsGUI extends AbstractGUI {
                     ProxyActionResponseRenderer.render(player, response);
                     if (response.friendListView() != null) {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        updateViewDataChain(viewData);
                     }
                     buildInventory();
                 })

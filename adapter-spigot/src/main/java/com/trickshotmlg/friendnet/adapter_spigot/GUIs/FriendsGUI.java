@@ -32,7 +32,7 @@ public class FriendsGUI extends AbstractGUI {
 
     private int currentPage = 0;
     private final int friendsPerPage = friendRows * 9;
-    private final FriendGuiViewData viewData;
+    private FriendGuiViewData viewData;
     private FriendGuiViewData currentViewData;
 
     public FriendsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
@@ -278,6 +278,11 @@ public class FriendsGUI extends AbstractGUI {
                 : SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendID);
 
         return SpigotUtils.createPlayerHead(friendID, friendName, createFriendLore(friend, friendID, playerData));
+    }
+
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
     }
 
     private List<String> createFriendLore(FriendshipData friend, UUID friendId, PlayerData playerData) {

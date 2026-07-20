@@ -184,6 +184,11 @@ public class BlocklistGUI extends AbstractGUI {
         return displayName.isBlank() ? playerId.toString() : displayName;
     }
 
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
     private List<String> createBlockedPlayerLore(BlocklistData blockedPlayer) {
         List<String> lore = new ArrayList<>();
         lore.add(locale("blocklistGUI.blockedPlayer.lore.blockedAt", Map.of("date", ChatColor.YELLOW + formatTimestamp(blockedPlayer.getBlockedAt()))));
@@ -235,6 +240,7 @@ public class BlocklistGUI extends AbstractGUI {
                     ProxyActionResponseRenderer.render(player, response);
                     if (response.friendListView() != null) {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        updateViewDataChain(viewData);
                     }
                     currentPage = 0;
                     buildInventory();

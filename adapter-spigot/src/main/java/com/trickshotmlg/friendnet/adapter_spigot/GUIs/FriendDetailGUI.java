@@ -215,6 +215,11 @@ public class FriendDetailGUI extends AbstractGUI {
         goBack();
     }
 
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
     private void blockPlayer() {
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
         if (friendNetPlugin.isProxyBackendMode()) {
@@ -367,6 +372,7 @@ public class FriendDetailGUI extends AbstractGUI {
                     ProxyActionResponseRenderer.render(player, response);
                     if (response.friendListView() != null) {
                         viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        updateViewDataChain(viewData);
                     }
                     if (closeToParent && response.success()) {
                         new FriendsGUI(plugin, player, viewData).open();
