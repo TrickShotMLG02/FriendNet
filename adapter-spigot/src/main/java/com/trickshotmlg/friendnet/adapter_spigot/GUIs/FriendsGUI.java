@@ -258,9 +258,8 @@ public class FriendsGUI extends AbstractGUI {
     private ItemStack createFriendItem(FriendshipData friend) {
 
         UUID friendID = friend.getOtherPlayerId(this.player.getUniqueId());
-        // TODO: Make sure that the player data is present of the player. Maybe cache only usernames or keep full PlayerData and not remove on Disconnect
         String friendName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendID);
-        PlayerData playerData = ((FriendNetPlugin) plugin).getPlayerService().getPlayerData(friendID);
+        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendID);
 
         return SpigotUtils.createPlayerHead(friendID, friendName, createFriendLore(friend, friendID, playerData));
     }
@@ -362,7 +361,7 @@ public class FriendsGUI extends AbstractGUI {
     }
 
     private Timestamp getLastSeen(FriendshipData friend) {
-        PlayerData playerData = ((FriendNetPlugin) plugin).getPlayerService().getPlayerData(friend.getOtherPlayerId(player.getUniqueId()));
+        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friend.getOtherPlayerId(player.getUniqueId()));
         return playerData != null ? playerData.getLastSeen() : null;
     }
 
