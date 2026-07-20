@@ -2,16 +2,14 @@ package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
-import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core.application.FriendRequestApplicationService;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
+import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
-import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
-import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -24,17 +22,20 @@ public class FriendRequestActions {
     private final FriendService friendService;
     private final FriendNetPlugin plugin;
     private final FriendRequestApplicationService requestService;
+    private final FriendCommandUseCases commandUseCases;
 
     public FriendRequestActions(FriendService friendService) {
         this.friendService = friendService;
         this.plugin = null;
         this.requestService = new FriendRequestApplicationService(friendService, null);
+        this.commandUseCases = null;
     }
 
     public FriendRequestActions(FriendNetPlugin plugin) {
         this.friendService = plugin.getFriendService();
         this.plugin = plugin;
         this.requestService = plugin.getApplicationServices().friendRequestService();
+        this.commandUseCases = plugin.getApplicationServices().friendCommandUseCases();
     }
 
     /**
@@ -49,17 +50,14 @@ public class FriendRequestActions {
     }
 
     public boolean acceptRequest(Player sender, UUID requesterId, String requesterName) {
-        return switch (requestService.acceptRequest(sender.getUniqueId(), requesterId)) {
-            case ACCEPTED -> {
-                MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", requesterName));
-                MessageManager.send(requesterId, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
-                yield true;
-            }
-            case NOT_FOUND -> {
-                MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", requesterName));
-                yield false;
-            }
-        };
+        if (commandUseCases == null) {
+            return requestService.acceptRequest(sender.getUniqueId(), requesterId)
+                    == FriendRequestApplicationService.AcceptResult.ACCEPTED;
+        }
+
+        var result = commandUseCases.acceptRequest(sender.getUniqueId(), sender.getName(), requesterId, requesterName);
+        SpigotCommandResultRenderer.render(sender, result);
+        return result.success();
     }
 
     /**
@@ -70,29 +68,14 @@ public class FriendRequestActions {
      * @return The number of requests successfully accepted.
      */
     public int acceptAllRequests(Player sender) {
-        Set<FriendshipData> requests = friendService.getPendingRequests(sender.getUniqueId());
-        int accepted = 0;
-
-        if (requests.isEmpty()) {
-            MessageManager.send(sender, "friendRequest.accept.sender.nonePending");
-            return accepted;
+        if (commandUseCases == null) {
+            return requestService.acceptAllRequests(sender.getUniqueId());
         }
 
-        for (FriendshipData r : requests) {
-            UUID requesterId = r.getRequesterId();
-            String targetName = getDisplayName(requesterId);
-
-            if (requestService.acceptRequest(sender.getUniqueId(), requesterId)
-                    == FriendRequestApplicationService.AcceptResult.ACCEPTED) {
-                MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", targetName));
-                MessageManager.send(requesterId, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
-                accepted++;
-            } else {
-                MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", targetName));
-            }
-        }
-
-        return accepted;
+        int requestCount = friendService.getPendingRequests(sender.getUniqueId()).size();
+        var result = commandUseCases.acceptAllRequests(sender.getUniqueId(), sender.getName());
+        SpigotCommandResultRenderer.render(sender, result);
+        return result.success() ? requestCount : 0;
     }
 
     /**
@@ -107,16 +90,14 @@ public class FriendRequestActions {
     }
 
     public boolean denyRequest(Player sender, UUID requesterId, String requesterName) {
-        return switch (requestService.denyRequest(sender.getUniqueId(), requesterId)) {
-            case DENIED -> {
-                MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", requesterName));
-                yield true;
-            }
-            case NOT_FOUND -> {
-                MessageManager.send(sender, "friendRequest.deny.sender.notFound", Map.of("target", requesterName));
-                yield false;
-            }
-        };
+        if (commandUseCases == null) {
+            return requestService.denyRequest(sender.getUniqueId(), requesterId)
+                    == FriendRequestApplicationService.DenyResult.DENIED;
+        }
+
+        var result = commandUseCases.denyRequest(sender.getUniqueId(), requesterId, requesterName);
+        SpigotCommandResultRenderer.render(sender, result);
+        return result.success();
     }
 
     /**
@@ -127,28 +108,14 @@ public class FriendRequestActions {
      * @return The number of requests successfully denied.
      */
     public int denyAllRequests(Player sender) {
-        Set<FriendshipData> requests = friendService.getPendingRequests(sender.getUniqueId());
-        int denied = 0;
-
-        if (requests.isEmpty()) {
-            MessageManager.send(sender, "friendRequest.deny.sender.nonePending");
-            return denied;
+        if (commandUseCases == null) {
+            return requestService.denyAllRequests(sender.getUniqueId());
         }
 
-        for (FriendshipData r : requests) {
-            UUID requesterId = r.getRequesterId();
-            String targetName = getDisplayName(requesterId);
-
-            if (requestService.denyRequest(sender.getUniqueId(), requesterId)
-                    == FriendRequestApplicationService.DenyResult.DENIED) {
-                MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", targetName));
-                denied++;
-            } else {
-                MessageManager.send(sender, "friendRequest.deny.sender.notFound", Map.of("target", targetName));
-            }
-        }
-
-        return denied;
+        int requestCount = friendService.getPendingRequests(sender.getUniqueId()).size();
+        var result = commandUseCases.denyAllRequests(sender.getUniqueId());
+        SpigotCommandResultRenderer.render(sender, result);
+        return result.success() ? requestCount : 0;
     }
 
     /**
@@ -164,16 +131,14 @@ public class FriendRequestActions {
     }
 
     public boolean cancelRequest(Player requester, UUID targetId, String targetName) {
-        return switch (requestService.cancelRequest(requester.getUniqueId(), targetId)) {
-            case CANCELLED -> {
-                MessageManager.send(requester, "friendRequest.cancel.sender.success", Map.of("target", targetName));
-                yield true;
-            }
-            case NOT_FOUND -> {
-                MessageManager.send(requester, "friendRequest.cancel.sender.notFound", Map.of("target", targetName));
-                yield false;
-            }
-        };
+        if (commandUseCases == null) {
+            return requestService.cancelRequest(requester.getUniqueId(), targetId)
+                    == FriendRequestApplicationService.CancelResult.CANCELLED;
+        }
+
+        var result = commandUseCases.cancelRequest(requester.getUniqueId(), targetId, targetName);
+        SpigotCommandResultRenderer.render(requester, result);
+        return result.success();
     }
 
     /**
@@ -184,28 +149,14 @@ public class FriendRequestActions {
      * @return The number of requests successfully cancelled.
      */
     public int cancelAllRequests(Player sender) {
-        Set<FriendshipData> requests = friendService.getSentRequests(sender.getUniqueId());
-        int cancelled = 0;
-
-        if (requests.isEmpty()) {
-            MessageManager.send(sender, "friendRequest.cancel.sender.nonePending");
-            return cancelled;
+        if (commandUseCases == null) {
+            return requestService.cancelAllRequests(sender.getUniqueId());
         }
 
-        for (FriendshipData r : requests) {
-            UUID targetId = r.getOtherPlayerId(sender.getUniqueId());
-            String targetName = getDisplayName(targetId);
-
-            if (requestService.cancelRequest(sender.getUniqueId(), targetId)
-                    == FriendRequestApplicationService.CancelResult.CANCELLED) {
-                MessageManager.send(sender, "friendRequest.cancel.sender.success", Map.of("target", targetName));
-                cancelled++;
-            } else {
-                MessageManager.send(sender, "friendRequest.cancel.sender.notFound", Map.of("target", targetName));
-            }
-        }
-
-        return cancelled;
+        int requestCount = friendService.getSentRequests(sender.getUniqueId()).size();
+        var result = commandUseCases.cancelAllRequests(sender.getUniqueId());
+        SpigotCommandResultRenderer.render(sender, result);
+        return result.success() ? requestCount : 0;
     }
 
     private String getDisplayName(UUID playerId) {

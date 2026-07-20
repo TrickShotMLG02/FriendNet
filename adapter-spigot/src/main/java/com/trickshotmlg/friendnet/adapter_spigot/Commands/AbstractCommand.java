@@ -1,7 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
-import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.interfaces.PermissionNode;
 import org.bukkit.command.*;
@@ -58,7 +58,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             // no subcommand — execute this command
             if (!hasPermission(sender)) {
-                MessageManager.send(sender, "noPermission");
+                SpigotCommandResultRenderer.noPermission(sender);
                 return true;
             }
             return execute(sender, args);
@@ -71,7 +71,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
         // No matching subcommand — maybe execute this one
         if (!hasPermission(sender)) {
-            MessageManager.send(sender, "noPermission");
+            SpigotCommandResultRenderer.noPermission(sender);
             return true;
         }
 

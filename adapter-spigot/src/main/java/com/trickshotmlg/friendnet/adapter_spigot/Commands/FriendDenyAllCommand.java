@@ -1,15 +1,13 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
-import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
-import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
-import java.util.Map;
 
 public class FriendDenyAllCommand extends AbstractCommand{
 
@@ -26,18 +24,21 @@ public class FriendDenyAllCommand extends AbstractCommand{
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            MessageManager.send(sender, "commandFeedback.playersOnlyCommand");
+            SpigotCommandResultRenderer.playersOnly(sender);
             return true;
         }
 
         if (args.length > 0) {
-            MessageManager.send(sender, "commandFeedback.usage", Map.of("usage", getUsage()));
+            SpigotCommandResultRenderer.usage(sender, getUsage());
             return true;
         }
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
 
-        new FriendRequestActions(pl).denyAllRequests(player);
+        SpigotCommandResultRenderer.render(
+                sender,
+                pl.getApplicationServices().friendCommandUseCases().denyAllRequests(player.getUniqueId())
+        );
 
         return true;
     }

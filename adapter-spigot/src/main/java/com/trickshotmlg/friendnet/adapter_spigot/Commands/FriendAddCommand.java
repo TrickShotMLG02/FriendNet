@@ -4,21 +4,17 @@ import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver.KnownPlayerTarget;
-import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
-import com.trickshotmlg.friendnet.core.application.FriendRequestApplicationService;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
 import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
-import net.md_5.bungee.api.chat.ClickEvent;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public class FriendAddCommand extends AbstractCommand {
@@ -41,22 +37,21 @@ public class FriendAddCommand extends AbstractCommand {
     @Override
     protected boolean execute(CommandSender sender, String[] args) {
         if (!(sender instanceof Player player)) {
-            MessageManager.send(sender, "commandFeedback.playersOnlyCommand");
+            SpigotCommandResultRenderer.playersOnly(sender);
             return true;
         }
 
         if (args.length < 1) {
-            MessageManager.send(sender, "commandFeedback.usage", Map.of("usage", getUsage()));
+            SpigotCommandResultRenderer.usage(sender, getUsage());
             return true;
         }
 
         FriendNetPlugin pl = (FriendNetPlugin) getPlugin();
         FriendService fs = pl.getFriendService();
-        FriendRequestApplicationService requestService = pl.getApplicationServices().friendRequestService();
         Optional<KnownPlayerTarget> optionalTarget = KnownPlayerResolver.resolve(pl, args[0]);
 
         if (optionalTarget.isEmpty()) {
-            MessageManager.send(sender, "commandFeedback.playerNotFound");
+            SpigotCommandResultRenderer.playerNotFound(sender);
             return true;
         }
 
@@ -65,64 +60,14 @@ public class FriendAddCommand extends AbstractCommand {
         String targetName = target.displayName();
         PlayerData targetData = target.playerData();
 
-        switch (requestService.sendFriendRequest(
-                player.getUniqueId(),
-                new KnownPlayerLookup.KnownPlayer(targetId, targetName, targetData, target.onlinePlayer() != null)
-        )) {
-            case SENT -> {
-                TextComponent accept = MessageManager.createButton(
-                        targetId,
-                        "chatButtons.acceptRequest.text",
-                        Map.of(),
-                        "chatButtons.acceptRequest.hover",
-                        Map.of(),
-                        ClickEvent.Action.RUN_COMMAND,
-                        "/friend accept " + player.getName()
-                );
-                TextComponent deny = MessageManager.createButton(
-                        targetId,
-                        "chatButtons.denyRequest.text",
-                        Map.of(),
-                        "chatButtons.denyRequest.hover",
-                        Map.of(),
-                        ClickEvent.Action.RUN_COMMAND,
-                        "/friend deny " + player.getName()
-                );
-                MessageManager.send(sender, "friendRequest.send.sender.success", Map.of("target", targetName));
-                if (target.onlinePlayer() != null && targetData.isFriendRequestNotifications()) {
-                    MessageManager.send(target.onlinePlayer(), "friendRequest.send.target.success",
-                            Map.of(
-                                    "sender", player.getName(),
-                                    "acceptRequest", accept,
-                                    "denyRequest", deny
-                            )
-                    );
-                }
-            }
-            case AUTO_ACCEPTED -> {
-                MessageManager.send(sender, "friendRequest.send.sender.autoAccepted", Map.of("target", targetName));
-                if (target.onlinePlayer() != null && targetData.isFriendRequestNotifications()) {
-                    MessageManager.send(target.onlinePlayer(), "friendRequest.send.target.autoAccepted", Map.of("sender", player.getName()));
-                }
-            }
-            case ACCEPTED_INCOMING -> {
-                MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", targetName));
-                if (target.onlinePlayer() != null) {
-                    MessageManager.send(target.onlinePlayer(), "friendRequest.accept.target.success", Map.of("sender", player.getName()));
-                }
-            }
-            case CANNOT_SELF -> MessageManager.send(sender, "friendRequest.send.sender.cannotSelf");
-            case SENDER_BLOCKED_TARGET ->
-                    MessageManager.send(sender, "blocklist.friendRequest.senderBlocked", Map.of("target", targetName));
-            case TARGET_BLOCKED_SENDER ->
-                    MessageManager.send(sender, "blocklist.friendRequest.targetBlocked", Map.of("target", targetName));
-            case TARGET_DISABLED_REQUESTS ->
-                    MessageManager.send(sender, "friendRequest.send.sender.disabled", Map.of("target", targetName));
-            case AUTO_ACCEPT_FAILED ->
-                    MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", targetName));
-            case ALREADY_PENDING ->
-                MessageManager.send(sender, "friendRequest.send.sender.alreadyPending", Map.of("target", targetName));
-        }
+        SpigotCommandResultRenderer.render(
+                sender,
+                pl.getApplicationServices().friendCommandUseCases().sendFriendRequest(
+                        player.getUniqueId(),
+                        player.getName(),
+                        new KnownPlayerLookup.KnownPlayer(targetId, targetName, targetData, target.onlinePlayer() != null)
+                )
+        );
 
         return true;
     }

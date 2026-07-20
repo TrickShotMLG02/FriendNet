@@ -5,6 +5,9 @@ import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core_api.enums.ServiceState;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
+import com.trickshotmlg.friendnet.core.application.command.CommandEventType;
+import com.trickshotmlg.friendnet.core.application.command.CommandMessageRecipient;
+import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
@@ -74,6 +77,31 @@ public class ApplicationServiceTest extends TestCase {
         assertEquals(1, notifier.offlineNotifications);
         assertEquals(1, notifier.onlineNotifications);
         assertTrue(playerService.isOnline(player));
+    }
+
+    public void testFriendCommandUseCaseReturnsMessagesAndEventsForFriendAdd() {
+        PlayerServiceImpl playerService = new PlayerServiceImpl();
+        FriendServiceImpl friendService = new FriendServiceImpl(new FakeDatabaseService(), playerService);
+        FriendRequestApplicationService requestService = new FriendRequestApplicationService(friendService, null);
+        FriendCommandUseCases useCases = new FriendCommandUseCases(friendService, requestService, null, null);
+        UUID sender = UUID.randomUUID();
+        UUID target = UUID.randomUUID();
+        PlayerData targetData = new PlayerData(target);
+
+        var result = useCases.sendFriendRequest(
+                sender,
+                "Sender",
+                new KnownPlayerLookup.KnownPlayer(target, "Target", targetData, true)
+        );
+
+        assertTrue(result.success());
+        assertEquals(1, result.messages().size());
+        assertEquals(CommandMessageRecipient.SENDER, result.messages().get(0).recipient());
+        assertEquals("friendRequest.send.sender.success", result.messages().get(0).key());
+        assertEquals(1, result.events().size());
+        assertEquals(CommandEventType.FRIEND_REQUEST_SENT, result.events().get(0).type());
+        assertEquals(sender, result.events().get(0).actorId());
+        assertEquals(target, result.events().get(0).targetId());
     }
 
     private static class RecordingStatusNotifier implements FriendStatusVisibilityNotifier {

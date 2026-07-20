@@ -2,23 +2,25 @@ package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
-import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
 import com.trickshotmlg.friendnet.core.application.BlocklistApplicationService;
+import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import org.bukkit.entity.Player;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public class BlocklistActions {
 
     private final FriendNetPlugin plugin;
     private final BlocklistApplicationService blocklistService;
+    private final FriendCommandUseCases commandUseCases;
 
     public BlocklistActions(FriendNetPlugin plugin) {
         this.plugin = plugin;
         this.blocklistService = plugin.getApplicationServices().blocklistService();
+        this.commandUseCases = plugin.getApplicationServices().friendCommandUseCases();
     }
 
     public List<BlocklistData> getBlockedPlayers(UUID blockerId) {
@@ -34,31 +36,21 @@ public class BlocklistActions {
     }
 
     public boolean block(Player blocker, UUID blockedId) {
-        return switch (blocklistService.block(blocker.getUniqueId(), blockedId)) {
-            case BLOCKED -> {
-                MessageManager.send(blocker, "blocklist.block.success", Map.of("target", getDisplayName(blockedId)));
-                yield true;
-            }
-            case ALREADY_BLOCKED -> {
-                MessageManager.send(blocker, "blocklist.block.already", Map.of("target", getDisplayName(blockedId)));
-                yield false;
-            }
-            case SELF -> {
-                MessageManager.send(blocker, "blocklist.block.self");
-                yield false;
-            }
-        };
+        var result = commandUseCases.blockPlayer(blocker.getUniqueId(), blockedId, getDisplayName(blockedId));
+        SpigotCommandResultRenderer.render(blocker, result);
+        return result.success();
     }
 
     public boolean unblock(Player blocker, UUID blockedId) {
-        blocklistService.unblock(blocker.getUniqueId(), blockedId);
-        MessageManager.send(blocker, "blocklist.unblock.success", Map.of("target", getDisplayName(blockedId)));
-        return true;
+        var result = commandUseCases.unblockPlayer(blocker.getUniqueId(), blockedId, getDisplayName(blockedId));
+        SpigotCommandResultRenderer.render(blocker, result);
+        return result.success();
     }
 
     public int clear(Player blocker) {
-        int count = blocklistService.clear(blocker.getUniqueId());
-        MessageManager.send(blocker, "blocklist.clear.success", Map.of("count", count));
+        int count = getBlockedPlayers(blocker.getUniqueId()).size();
+        var result = commandUseCases.clearBlocklist(blocker.getUniqueId());
+        SpigotCommandResultRenderer.render(blocker, result);
         return count;
     }
 
