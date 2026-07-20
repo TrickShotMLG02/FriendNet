@@ -1,0 +1,36 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="FriendNet Spigot Dev Server" type="MavenRunConfiguration" factoryName="Maven">
+    <MavenSettings>
+      <option name="myRunnerParameters">
+        <MavenRunnerParameters>
+          <option name="goals">
+            <list>
+              <option value="-pl" />
+              <option value="adapter-spigot" />
+              <option value="-am" />
+              <option value="-DskipTests" />
+              <option value="-Dfriendnet.dev.java.executable=C:\Program Files\Java\jdk-21\bin\java.exe" />
+              <option value="install" />
+            </list>
+          </option>
+          <option name="pomFileName" value="pom.xml" />
+          <option name="profiles">
+            <set>
+              <option value="dev-server" />
+              <option value="run-dev-server" />
+            </set>
+          </option>
+          <option name="profilesMap">
+            <map />
+          </option>
+          <option name="projectsCmdOptionValues">
+            <list />
+          </option>
+          <option name="resolveToWorkspace" value="false" />
+          <option name="workingDirPath" value="$PROJECT_DIR$" />
+        </MavenRunnerParameters>
+      </option>
+    </MavenSettings>
+    <method v="2" />
+  </configuration>
+</component>

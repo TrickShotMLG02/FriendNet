@@ -18,9 +18,19 @@
     <name>Adapter Velocity</name>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <velocity-api.version>3.4.0-SNAPSHOT</velocity-api.version>
         <snakeyaml.version>2.5</snakeyaml.version>
+        <friendnet.dev.proxy.dir>${maven.multiModuleProjectDirectory}/dev-proxy</friendnet.dev.proxy.dir>
+        <friendnet.dev.proxy.jar>${friendnet.dev.proxy.dir}/velocity.jar</friendnet.dev.proxy.jar>
+        <friendnet.dev.proxy.xms>512M</friendnet.dev.proxy.xms>
+        <friendnet.dev.proxy.xmx>1G</friendnet.dev.proxy.xmx>
+        <friendnet.dev.proxy.debug.port>5006</friendnet.dev.proxy.debug.port>
+        <friendnet.dev.proxy.debug.suspend>n</friendnet.dev.proxy.debug.suspend>
+        <friendnet.dev.velocity.version>3.4.0</friendnet.dev.velocity.version>
+        <friendnet.dev.java.executable>${java.home}/bin/java</friendnet.dev.java.executable>
+        <friendnet.dev.proxy.download.force>false</friendnet.dev.proxy.download.force>
+        <friendnet.dev.proxy.userAgent>FriendNetDevProxy/1.0 (local development)</friendnet.dev.proxy.userAgent>
     </properties>
 
     <dependencies>
@@ -111,4 +121,95 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
     </repositories>
+
+    <profiles>
+        <profile>
+            <id>dev-proxy</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>download-velocity-proxy</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>java</goal>
+                                </goals>
+                                <configuration>
+                                    <mainClass>com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityProxyDownloader</mainClass>
+                                    <classpathScope>compile</classpathScope>
+                                    <arguments>
+                                        <argument>${friendnet.dev.velocity.version}</argument>
+                                        <argument>${friendnet.dev.proxy.jar}</argument>
+                                        <argument>${friendnet.dev.proxy.download.force}</argument>
+                                        <argument>${friendnet.dev.proxy.userAgent}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>prepare-dev-proxy</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <mkdir dir="${friendnet.dev.proxy.dir}/plugins" />
+                                        <copy file="${project.build.directory}/friendnet-velocity.jar"
+                                              todir="${friendnet.dev.proxy.dir}/plugins"
+                                              overwrite="true" />
+                                        <echo message="Copied FriendNet to ${friendnet.dev.proxy.dir}/plugins" />
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>run-dev-proxy</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>run-dev-proxy</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <workingDirectory>${friendnet.dev.proxy.dir}</workingDirectory>
+                                    <executable>${friendnet.dev.java.executable}</executable>
+                                    <arguments>
+                                        <argument>-Xms${friendnet.dev.proxy.xms}</argument>
+                                        <argument>-Xmx${friendnet.dev.proxy.xmx}</argument>
+                                        <argument>-agentlib:jdwp=transport=dt_socket,server=y,suspend=${friendnet.dev.proxy.debug.suspend},address=*:${friendnet.dev.proxy.debug.port}</argument>
+                                        <argument>-jar</argument>
+                                        <argument>${friendnet.dev.proxy.jar}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

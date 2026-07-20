@@ -4,6 +4,7 @@
 /core/target/
 /core-api/target/
 /dev-server/
+/dev-proxy/
 
 # IntelliJ workspace/module files generated locally
 .idea/workspace.xml

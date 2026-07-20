@@ -1,12 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="FriendNet Dev Server" type="MavenRunConfiguration" factoryName="Maven">
+  <configuration default="false" name="FriendNet Velocity Dev Proxy" type="MavenRunConfiguration" factoryName="Maven">
     <MavenSettings>
       <option name="myRunnerParameters">
         <MavenRunnerParameters>
           <option name="goals">
             <list>
               <option value="-pl" />
-              <option value="adapter-spigot" />
+              <option value="adapter-velocity" />
               <option value="-am" />
               <option value="-DskipTests" />
               <option value="-Dfriendnet.dev.java.executable=C:\Program Files\Java\jdk-21\bin\java.exe" />
@@ -16,8 +16,8 @@
           <option name="pomFileName" value="pom.xml" />
           <option name="profiles">
             <set>
-              <option value="dev-server" />
-              <option value="run-dev-server" />
+              <option value="dev-proxy" />
+              <option value="run-dev-proxy" />
             </set>
           </option>
           <option name="profilesMap">
