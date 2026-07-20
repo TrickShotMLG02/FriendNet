@@ -126,7 +126,7 @@ public class FavoriteFriendsGUI extends AbstractGUI {
     private ItemStack createFriendItem(FriendshipData friend) {
         UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
         String friendName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendId);
-        PlayerData playerData = ((FriendNetPlugin) plugin).getPlayerService().getPlayerData(friendId);
+        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
 
         return SpigotUtils.createPlayerHead(friendId, friendName, createFriendLore(friend, friendId, playerData));
     }
@@ -210,7 +210,7 @@ public class FavoriteFriendsGUI extends AbstractGUI {
     }
 
     private Timestamp getLastSeen(FriendshipData friend) {
-        PlayerData playerData = ((FriendNetPlugin) plugin).getPlayerService().getPlayerData(friend.getOtherPlayerId(player.getUniqueId()));
+        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friend.getOtherPlayerId(player.getUniqueId()));
         return playerData != null ? playerData.getLastSeen() : null;
     }
 

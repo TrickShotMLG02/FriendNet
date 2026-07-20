@@ -63,7 +63,7 @@ public class FriendDetailGUI extends AbstractGUI {
         }
 
         FriendshipData friendshipData = friendship.get();
-        PlayerData playerData = ((FriendNetPlugin) plugin).getPlayerService().getPlayerData(friendId);
+        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
 
         inventory.setItem(13, SpigotUtils.createPlayerHead(friendId, getFriendDisplayName(), createFriendLore(friendshipData, playerData)));
 

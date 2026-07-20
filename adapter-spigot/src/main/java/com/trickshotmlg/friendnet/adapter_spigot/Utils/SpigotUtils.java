@@ -60,8 +60,7 @@ public final class SpigotUtils {
 
         // try to fetch last known player display name
         if (plugin != null) {
-            PlayerService ps = plugin.getPlayerService();
-            PlayerData pd = ps.getPlayerData(uuid);
+            PlayerData pd = getPlayerData(plugin, uuid);
 
             if (pd != null && pd.getLastDisplayName() != null && !pd.getLastDisplayName().isBlank()) {
                 return pd.getLastDisplayName();
@@ -72,6 +71,26 @@ public final class SpigotUtils {
         return getOnlinePlayer(uuid)
                 .map(Player::getDisplayName)
                 .orElseGet(() -> getOfflinePlayer(uuid).getName() != null ? getOfflinePlayer(uuid).getName() : "");
+    }
+
+    public static PlayerData getPlayerData(FriendNetPlugin plugin, UUID uuid) {
+        if (plugin == null || uuid == null) {
+            return null;
+        }
+
+        PlayerService playerService = plugin.getPlayerService();
+        PlayerData playerData = playerService.getPlayerData(uuid);
+        if (playerData != null) {
+            return playerData;
+        }
+
+        return plugin.getDatabaseService()
+                .find(uuid, PlayerData.class)
+                .map(loadedPlayerData -> {
+                    playerService.putPlayerData(loadedPlayerData);
+                    return loadedPlayerData;
+                })
+                .orElse(null);
     }
 
     /**

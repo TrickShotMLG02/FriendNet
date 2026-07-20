@@ -35,6 +35,7 @@
         <sqlite-jdbc.version>3.46.1.0</sqlite-jdbc.version>
         <mysql-connector-j.version>8.4.0</mysql-connector-j.version>
         <mariadb-java-client.version>3.3.3</mariadb-java-client.version>
+        <testcontainers.version>1.21.4</testcontainers.version>
     </properties>
 
     <!-- central dependency versions for children to use -->
@@ -64,6 +65,16 @@
                 <groupId>org.mariadb.jdbc</groupId>
                 <artifactId>mariadb-java-client</artifactId>
                 <version>${mariadb-java-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>mysql</artifactId>
+                <version>${testcontainers.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>mariadb</artifactId>
+                <version>${testcontainers.version}</version>
             </dependency>
             <!-- add more centrally pinned dependencies here -->
         </dependencies>

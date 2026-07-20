@@ -206,15 +206,22 @@ public final class FriendNetPlugin extends JavaPlugin {
             super.reloadConfig();
             config = getConfig();
 
-            // load locales from disk
-            LocaleManager.loadLocales();
+            if (config.getStringList("SupportedLocales").isEmpty()) {
+                Logger.error("Could not reload configs: SupportedLocales must contain at least one locale.", null);
+                return false;
+            }
 
-            //TODO: Reload listeners
-            //reloadListeners();
+            if (config.getString("DefaultLocale", "").isBlank()) {
+                Logger.error("Could not reload configs: DefaultLocale must be set.", null);
+                return false;
+            }
+
+            LocaleManager.loadLocales();
+            MessageManager.loadMessages();
 
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            Logger.error("Could not reload plugin configs", e);
             return false;
         }
     }
