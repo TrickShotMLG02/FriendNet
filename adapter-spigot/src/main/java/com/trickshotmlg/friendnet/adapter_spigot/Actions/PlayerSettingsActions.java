@@ -1,32 +1,23 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Actions;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
-import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
-import com.trickshotmlg.friendnet.adapter_spigot.Utils.FriendStatusNotifier;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
-import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
+import com.trickshotmlg.friendnet.core.application.PlayerSettingsApplicationService;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
-import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import org.bukkit.entity.Player;
 
 public class PlayerSettingsActions {
 
-    private final FriendNetPlugin plugin;
-    private final PlayerService playerService;
-    private final PlayerDataSaveQueue playerDataSaveQueue;
+    private final PlayerSettingsApplicationService settingsService;
     private final Player player;
 
     public PlayerSettingsActions(FriendNetPlugin plugin, Player player) {
-        this.plugin = plugin;
-        this.playerService = plugin.getPlayerService();
-        this.playerDataSaveQueue = plugin.getPlayerDataSaveQueue();
+        this.settingsService = plugin.getApplicationServices().playerSettingsService();
         this.player = player;
     }
 
     public boolean setAllowFriendRequests(boolean allowFriendRequests) {
-        PlayerData pd = playerService.getPlayerData(player.getUniqueId());
-        if (pd != null) {
-            pd.setAllowFriendRequests(allowFriendRequests);
+        if (settingsService.setAllowFriendRequests(player.getUniqueId(), allowFriendRequests)) {
             completeSettingsChange("playerSettings.allowFriendRequests", allowFriendRequests);
             return true;
         }
@@ -35,28 +26,7 @@ public class PlayerSettingsActions {
     }
 
     public boolean setShowOnlineStatus(boolean showOnlineStatus) {
-        PlayerData pd = playerService.getPlayerData(player.getUniqueId());
-        if (pd != null) {
-            boolean changed = pd.isShowOnlineStatus() != showOnlineStatus;
-            boolean wasVisibleOnline = playerService.isOnline(player.getUniqueId());
-
-            pd.setShowOnlineStatus(showOnlineStatus);
-            if (changed) {
-                if (showOnlineStatus) {
-                    pd.setLastSeen();
-                    playerService.setOnline(player.getUniqueId(), true);
-                    FriendStatusNotifier.notifyOnline(plugin, player.getUniqueId());
-                } else {
-                    if (wasVisibleOnline) {
-                        pd.setLastSeen();
-                    }
-                    playerService.setOnline(player.getUniqueId(), false);
-                    if (wasVisibleOnline) {
-                        FriendStatusNotifier.notifyOffline(plugin, player.getUniqueId());
-                    }
-                }
-            }
-
+        if (settingsService.setShowOnlineStatus(player.getUniqueId(), showOnlineStatus)) {
             completeSettingsChange("playerSettings.showOnlineStatus", showOnlineStatus);
             return true;
         }
@@ -65,9 +35,7 @@ public class PlayerSettingsActions {
     }
 
     public boolean setAutoAcceptFriends(boolean autoAcceptFriends) {
-        PlayerData pd = playerService.getPlayerData(player.getUniqueId());
-        if (pd != null) {
-            pd.setAutoAcceptFriends(autoAcceptFriends);
+        if (settingsService.setAutoAcceptFriends(player.getUniqueId(), autoAcceptFriends)) {
             completeSettingsChange("playerSettings.autoAcceptFriends", autoAcceptFriends);
             return true;
         }
@@ -76,9 +44,7 @@ public class PlayerSettingsActions {
     }
 
     public boolean setFriendRequestNotifications(boolean friendRequestNotifications) {
-        PlayerData pd = playerService.getPlayerData(player.getUniqueId());
-        if (pd != null) {
-            pd.setFriendRequestNotifications(friendRequestNotifications);
+        if (settingsService.setFriendRequestNotifications(player.getUniqueId(), friendRequestNotifications)) {
             completeSettingsChange("playerSettings.friendRequestNotifications", friendRequestNotifications);
             return true;
         }
@@ -87,9 +53,7 @@ public class PlayerSettingsActions {
     }
 
     public boolean setFriendListPublic(boolean friendListPublic) {
-        PlayerData pd = playerService.getPlayerData(player.getUniqueId());
-        if (pd != null) {
-            pd.setFriendListPublic(friendListPublic);
+        if (settingsService.setFriendListPublic(player.getUniqueId(), friendListPublic)) {
             completeSettingsChange("playerSettings.friendListPublic", friendListPublic);
             return true;
         }
@@ -98,10 +62,7 @@ public class PlayerSettingsActions {
     }
 
     public boolean setLocale(LocaleKey locale) {
-        PlayerData pd = playerService.getPlayerData(player.getUniqueId());
-        if (pd != null) {
-            pd.setLocale(locale);
-            markDirty();
+        if (settingsService.setLocale(player.getUniqueId(), locale)) {
             MessageManager.send(player, "playerSettings.locale.changed");
             return true;
         }
@@ -109,14 +70,7 @@ public class PlayerSettingsActions {
         return false;
     }
 
-    private void markDirty() {
-        if (playerDataSaveQueue != null) {
-            playerDataSaveQueue.markDirty(player.getUniqueId());
-        }
-    }
-
     private void completeSettingsChange(String messageKeyPrefix, boolean enabled) {
-        markDirty();
         MessageManager.send(player, messageKeyPrefix + (enabled ? ".enabled" : ".disabled"));
     }
 }

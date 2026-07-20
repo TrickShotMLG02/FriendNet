@@ -4,6 +4,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.KnownPlayerResolver;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.FriendRequestApplicationService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import org.bukkit.OfflinePlayer;
@@ -22,15 +23,18 @@ public class FriendRequestActions {
 
     private final FriendService friendService;
     private final FriendNetPlugin plugin;
+    private final FriendRequestApplicationService requestService;
 
     public FriendRequestActions(FriendService friendService) {
         this.friendService = friendService;
         this.plugin = null;
+        this.requestService = new FriendRequestApplicationService(friendService, null);
     }
 
     public FriendRequestActions(FriendNetPlugin plugin) {
         this.friendService = plugin.getFriendService();
         this.plugin = plugin;
+        this.requestService = plugin.getApplicationServices().friendRequestService();
     }
 
     /**
@@ -45,16 +49,17 @@ public class FriendRequestActions {
     }
 
     public boolean acceptRequest(Player sender, UUID requesterId, String requesterName) {
-        boolean success = friendService.acceptFriendRequest(sender.getUniqueId(), requesterId);
-
-        if (success) {
-            MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", requesterName));
-            MessageManager.send(requesterId, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
-        } else {
-            MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", requesterName));
-        }
-
-        return success;
+        return switch (requestService.acceptRequest(sender.getUniqueId(), requesterId)) {
+            case ACCEPTED -> {
+                MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", requesterName));
+                MessageManager.send(requesterId, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
+                yield true;
+            }
+            case NOT_FOUND -> {
+                MessageManager.send(sender, "friendRequest.accept.sender.notFound", Map.of("target", requesterName));
+                yield false;
+            }
+        };
     }
 
     /**
@@ -77,9 +82,8 @@ public class FriendRequestActions {
             UUID requesterId = r.getRequesterId();
             String targetName = getDisplayName(requesterId);
 
-            boolean success = friendService.acceptFriendRequest(sender.getUniqueId(), requesterId);
-
-            if (success) {
+            if (requestService.acceptRequest(sender.getUniqueId(), requesterId)
+                    == FriendRequestApplicationService.AcceptResult.ACCEPTED) {
                 MessageManager.send(sender, "friendRequest.accept.sender.success", Map.of("target", targetName));
                 MessageManager.send(requesterId, "friendRequest.accept.target.success", Map.of("sender", sender.getName()));
                 accepted++;
@@ -103,15 +107,16 @@ public class FriendRequestActions {
     }
 
     public boolean denyRequest(Player sender, UUID requesterId, String requesterName) {
-        boolean success = friendService.denyFriendRequest(sender.getUniqueId(), requesterId);
-
-        if (success) {
-            MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", requesterName));
-        } else {
-            MessageManager.send(sender, "friendRequest.deny.sender.notFound", Map.of("target", requesterName));
-        }
-
-        return success;
+        return switch (requestService.denyRequest(sender.getUniqueId(), requesterId)) {
+            case DENIED -> {
+                MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", requesterName));
+                yield true;
+            }
+            case NOT_FOUND -> {
+                MessageManager.send(sender, "friendRequest.deny.sender.notFound", Map.of("target", requesterName));
+                yield false;
+            }
+        };
     }
 
     /**
@@ -134,8 +139,8 @@ public class FriendRequestActions {
             UUID requesterId = r.getRequesterId();
             String targetName = getDisplayName(requesterId);
 
-            boolean success = friendService.denyFriendRequest(sender.getUniqueId(), requesterId);
-            if (success) {
+            if (requestService.denyRequest(sender.getUniqueId(), requesterId)
+                    == FriendRequestApplicationService.DenyResult.DENIED) {
                 MessageManager.send(sender, "friendRequest.deny.sender.success", Map.of("target", targetName));
                 denied++;
             } else {
@@ -159,15 +164,16 @@ public class FriendRequestActions {
     }
 
     public boolean cancelRequest(Player requester, UUID targetId, String targetName) {
-        boolean success = friendService.cancelRequest(requester.getUniqueId(), targetId);
-
-        if (success) {
-            MessageManager.send(requester, "friendRequest.cancel.sender.success", Map.of("target", targetName));
-        } else {
-            MessageManager.send(requester, "friendRequest.cancel.sender.notFound", Map.of("target", targetName));
-        }
-
-        return success;
+        return switch (requestService.cancelRequest(requester.getUniqueId(), targetId)) {
+            case CANCELLED -> {
+                MessageManager.send(requester, "friendRequest.cancel.sender.success", Map.of("target", targetName));
+                yield true;
+            }
+            case NOT_FOUND -> {
+                MessageManager.send(requester, "friendRequest.cancel.sender.notFound", Map.of("target", targetName));
+                yield false;
+            }
+        };
     }
 
     /**
@@ -190,8 +196,8 @@ public class FriendRequestActions {
             UUID targetId = r.getOtherPlayerId(sender.getUniqueId());
             String targetName = getDisplayName(targetId);
 
-            boolean success = friendService.cancelRequest(sender.getUniqueId(), targetId);
-            if (success) {
+            if (requestService.cancelRequest(sender.getUniqueId(), targetId)
+                    == FriendRequestApplicationService.CancelResult.CANCELLED) {
                 MessageManager.send(sender, "friendRequest.cancel.sender.success", Map.of("target", targetName));
                 cancelled++;
             } else {

@@ -31,6 +31,19 @@ public interface PlatformPlayer {
     String getName();
 
     /**
+     * Returns the display name shown by the platform, if it has one.
+     * <p>
+     * Adapters can override this when their platform distinguishes account names
+     * from formatted display names.
+     * </p>
+     *
+     * @return the display name for this player
+     */
+    default String getDisplayName() {
+        return getName();
+    }
+
+    /**
      * Sends a message to the player.
      * <p>
      * Implementations should handle sending the message appropriately
