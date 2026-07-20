@@ -7,3 +7,8 @@ configReloadError: "&4Fehler beim Neuladen der Plugin-Konfigurationen"
 
 commandFeedback:
   usage: "&eVerwendung: %usage%"
+
+friend:
+  status:
+    online: "&a%player% ist jetzt online"
+    offline: "&c%player% ist jetzt offline"

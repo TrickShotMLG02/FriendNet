@@ -9,16 +9,19 @@ import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityLogger;
 import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityMessageManager;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
 import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core.NetworkAuthorityServiceImpl;
 import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core.database.DatabaseServiceImpl;
 import com.trickshotmlg.friendnet.core.database.MySQLDatabase;
 import com.trickshotmlg.friendnet.core.database.SQLiteDatabase;
 import com.trickshotmlg.friendnet.core.events.EventBus;
 import com.trickshotmlg.friendnet.core_api.enums.DatabaseType;
+import com.trickshotmlg.friendnet.core_api.enums.NetworkRole;
 import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.NetworkAuthorityService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
@@ -51,6 +54,7 @@ public final class FriendNetVelocityPlugin {
     private FriendService friendService;
     private PlayerService playerService;
     private DatabaseService databaseService;
+    private NetworkAuthorityService networkAuthorityService;
     private VelocityPlayerDataSaveQueue playerDataSaveQueue;
     private Platform platform;
 
@@ -103,6 +107,7 @@ public final class FriendNetVelocityPlugin {
         this.databaseService = new DatabaseServiceImpl(createDatabaseFromConfig());
         this.playerService = new PlayerServiceImpl();
         this.friendService = new FriendServiceImpl(databaseService, playerService);
+        this.networkAuthorityService = new NetworkAuthorityServiceImpl(NetworkRole.PROXY_AUTHORITY);
         this.playerDataSaveQueue = new VelocityPlayerDataSaveQueue(this, playerService, databaseService);
 
         this.databaseService.init();
@@ -112,7 +117,7 @@ public final class FriendNetVelocityPlugin {
     }
 
     private void registerListeners() {
-        server.getEventManager().register(this, new VelocityPlayerStatusListener(this, friendService, playerService, databaseService));
+        server.getEventManager().register(this, new VelocityPlayerStatusListener(this, friendService, playerService, databaseService, networkAuthorityService));
     }
 
     private void registerCommands() {
@@ -183,6 +188,10 @@ public final class FriendNetVelocityPlugin {
 
     public DatabaseService getDatabaseService() {
         return databaseService;
+    }
+
+    public NetworkAuthorityService getNetworkAuthorityService() {
+        return networkAuthorityService;
     }
 
     public VelocityPlayerDataSaveQueue getPlayerDataSaveQueue() {
