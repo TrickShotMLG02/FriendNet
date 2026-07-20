@@ -44,6 +44,8 @@ public class VelocityMessageManager {
 
     public void loadMessages() {
         loadLocaleRegistry();
+        messages.clear();
+        loadBundledLocaleFiles();
         copyBundledLocaleFiles();
         loadLocaleFiles();
     }
@@ -174,7 +176,6 @@ public class VelocityMessageManager {
     }
 
     private void loadLocaleFiles() {
-        messages.clear();
         Path localesDirectory = plugin.getDataDirectory().resolve("Locales");
         if (!Files.isDirectory(localesDirectory)) {
             return;
@@ -213,12 +214,62 @@ public class VelocityMessageManager {
             Object loaded = new Yaml().load(inputStream);
             if (loaded instanceof Map<?, ?> loadedMap) {
                 messages.computeIfAbsent(type, ignored -> new HashMap<>())
-                        .put(locale, (Map<String, Object>) loadedMap);
+                        .merge(locale, (Map<String, Object>) loadedMap, this::mergeMaps);
                 Logger.debug("Loaded Velocity locale file " + filename);
             }
         } catch (IOException e) {
             throw new IllegalStateException("Could not load Velocity locale file " + filename, e);
         }
+    }
+
+    private void loadBundledLocaleFiles() {
+        for (String resourceName : getBundledLocaleResourceNames()) {
+            String filename = Path.of(resourceName).getFileName().toString();
+            int lastDot = filename.lastIndexOf('.');
+            if (lastDot == -1) {
+                continue;
+            }
+
+            String nameWithoutExtension = filename.substring(0, lastDot);
+            Matcher matcher = LOCALE_PATTERN.matcher(nameWithoutExtension);
+            if (!matcher.find()) {
+                continue;
+            }
+
+            String type = nameWithoutExtension.substring(0, matcher.start()).toLowerCase();
+            LocaleKey locale = new LocaleKey(matcher.group(1));
+            if (!isSupportedLocale(locale)) {
+                continue;
+            }
+
+            try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourceName)) {
+                Object loaded = inputStream != null ? new Yaml().load(inputStream) : null;
+                if (loaded instanceof Map<?, ?> loadedMap) {
+                    messages.computeIfAbsent(type, ignored -> new HashMap<>())
+                            .merge(locale, (Map<String, Object>) loadedMap, this::mergeMaps);
+                    Logger.debug("Loaded bundled Velocity locale file " + filename);
+                }
+            } catch (IOException e) {
+                throw new IllegalStateException("Could not load bundled Velocity locale file " + filename, e);
+            }
+        }
+    }
+
+    private Map<String, Object> mergeMaps(Map<String, Object> base, Map<String, Object> overrides) {
+        Map<String, Object> merged = new HashMap<>(base);
+        for (Map.Entry<String, Object> entry : overrides.entrySet()) {
+            Object current = merged.get(entry.getKey());
+            Object override = entry.getValue();
+            if (current instanceof Map<?, ?> currentMap && override instanceof Map<?, ?> overrideMap) {
+                merged.put(
+                        entry.getKey(),
+                        mergeMaps((Map<String, Object>) currentMap, (Map<String, Object>) overrideMap)
+                );
+            } else {
+                merged.put(entry.getKey(), override);
+            }
+        }
+        return merged;
     }
 
     private boolean isSupportedLocale(LocaleKey locale) {
