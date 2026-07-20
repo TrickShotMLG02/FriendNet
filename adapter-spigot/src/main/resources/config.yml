@@ -3,6 +3,14 @@
 # Proxy: this backend delegates persistent FriendNet state to the proxy and acts as a GUI/client adapter.
 Mode: Standalone
 
+# Shared secret for Spigot <-> proxy plugin messaging in Proxy mode.
+# Set the same value on the Velocity adapter. Change this before using proxy mode.
+ConnectionToken: change-me
+
+# Optional logical name sent to the proxy with backend requests.
+# Empty uses the server name from Bukkit.
+BackendServerName: ""
+
 # The backend to use: SQLite, MySQL, MariaDB (case-insensitive)
 DatabaseType: SQLite
 

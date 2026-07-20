@@ -6,6 +6,7 @@ import com.trickshotmlg.friendnet.adapter_velocity.commands.VelocityFriendComman
 import com.trickshotmlg.friendnet.adapter_velocity.config.VelocityConfig;
 import com.trickshotmlg.friendnet.adapter_velocity.listeners.VelocityPlayerStatusListener;
 import com.trickshotmlg.friendnet.adapter_velocity.services.VelocityPlayerDataSaveQueue;
+import com.trickshotmlg.friendnet.adapter_velocity.services.VelocityProxyMessagingService;
 import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityLogger;
 import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityMessageManager;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
@@ -24,6 +25,7 @@ import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.NetworkAuthorityService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
+import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.event.Subscribe;
@@ -59,6 +61,7 @@ public final class FriendNetVelocityPlugin {
     private VelocityPlayerDataSaveQueue playerDataSaveQueue;
     private Platform platform;
     private VelocityApplicationServices applicationServices;
+    private VelocityProxyMessagingService proxyMessagingService;
 
     @Inject
     public FriendNetVelocityPlugin(ProxyServer server, org.slf4j.Logger logger, @DataDirectory Path dataDirectory) {
@@ -93,6 +96,9 @@ public final class FriendNetVelocityPlugin {
         if (databaseService != null) {
             databaseService.stop();
         }
+        if (proxyMessagingService != null) {
+            proxyMessagingService.unregister();
+        }
 
         Logger.info("FriendNet Velocity adapter disabled!");
     }
@@ -112,11 +118,14 @@ public final class FriendNetVelocityPlugin {
         this.networkAuthorityService = new NetworkAuthorityServiceImpl(NetworkRole.PROXY_AUTHORITY);
         this.playerDataSaveQueue = new VelocityPlayerDataSaveQueue(this, playerService, databaseService);
         this.applicationServices = new VelocityApplicationServices(this);
+        this.proxyMessagingService = new VelocityProxyMessagingService(this);
 
         this.databaseService.init();
         this.databaseService.postInit();
         this.databaseService.start();
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalSeconds());
+        this.proxyMessagingService.register();
+        warnIfConnectionTokenUnsafe();
     }
 
     private void registerListeners() {
@@ -219,12 +228,22 @@ public final class FriendNetVelocityPlugin {
         return config;
     }
 
+    public String getConnectionToken() {
+        return config.getString("ConnectionToken", FriendNetProxyProtocol.DEFAULT_CONNECTION_TOKEN);
+    }
+
     public VelocityMessageManager getMessageManager() {
         return messageManager;
     }
 
     public Path getDataDirectory() {
         return dataDirectory;
+    }
+
+    private void warnIfConnectionTokenUnsafe() {
+        if (FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
+            Logger.warn("FriendNet Velocity is using the default or blank ConnectionToken. Set a shared secret in Spigot and Velocity configs.");
+        }
     }
 
     private static final class PluginStartupException extends RuntimeException {

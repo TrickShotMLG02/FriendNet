@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.GUIListener;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.ProxyBackendDatabaseService;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.SpigotProxyMessagingClient;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotLogger;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
@@ -25,6 +26,7 @@ import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.NetworkAuthorityService;
+import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -46,6 +48,7 @@ public final class FriendNetPlugin extends JavaPlugin {
     private Platform platform;
     private SpigotApplicationServices applicationServices;
     private NetworkAuthorityService networkAuthorityService;
+    private SpigotProxyMessagingClient proxyMessagingClient;
 
     public FileConfiguration config = this.getConfig();
     File defaultConfigFile;
@@ -81,6 +84,9 @@ public final class FriendNetPlugin extends JavaPlugin {
         if (databaseService != null) {
             databaseService.stop();
         }
+        if (proxyMessagingClient != null) {
+            proxyMessagingClient.unregister();
+        }
 
         Logger.info("FriendNet disabled!");
     }
@@ -109,9 +115,13 @@ public final class FriendNetPlugin extends JavaPlugin {
             this.databaseService.init();
             this.databaseService.postInit();
             this.databaseService.start();
+        } else {
+            this.proxyMessagingClient = new SpigotProxyMessagingClient(this);
+            this.proxyMessagingClient.register();
         }
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalTicks());
         Logger.info("FriendNet Spigot running as " + networkAuthorityService.getNetworkRole());
+        warnIfProxyTokenUnsafe();
     }
 
     private Database createDatabaseFromConfig() {
@@ -199,8 +209,30 @@ public final class FriendNetPlugin extends JavaPlugin {
         return networkAuthorityService;
     }
 
+    public SpigotProxyMessagingClient getProxyMessagingClient() {
+        return proxyMessagingClient;
+    }
+
     public boolean isProxyBackendMode() {
         return networkAuthorityService != null && networkAuthorityService.delegatesPersistentState();
+    }
+
+    public String getConnectionToken() {
+        return config.getString("ConnectionToken", FriendNetProxyProtocol.DEFAULT_CONNECTION_TOKEN);
+    }
+
+    public String getProxyBackendServerName() {
+        String configuredName = config.getString("BackendServerName", "");
+        if (configuredName != null && !configuredName.isBlank()) {
+            return configuredName;
+        }
+        return "backend";
+    }
+
+    private void warnIfProxyTokenUnsafe() {
+        if (isProxyBackendMode() && FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
+            Logger.warn("FriendNet proxy mode is using the default or blank ConnectionToken. Set a shared secret in Spigot and Velocity configs.");
+        }
     }
 
     private NetworkRole parseSpigotNetworkRole(String value) {

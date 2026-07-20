@@ -5,6 +5,10 @@ PlayerDataFlushIntervalSeconds: 30
 
 Debug: true
 
+# Shared secret for Spigot <-> proxy plugin messaging.
+# Set the same value on every Spigot backend adapter. Change this before production use.
+ConnectionToken: change-me
+
 SupportedLocales:
   - en_US
   - de
