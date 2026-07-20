@@ -8,21 +8,35 @@ import com.trickshotmlg.friendnet.core.application.FriendStatusVisibilityNotifie
 import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core.application.PlayerSettingsApplicationService;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
+import com.trickshotmlg.friendnet.core.application.proxy.ProxyActionDispatcher;
+import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.models.NetworkPlayerPresence;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 public class VelocityApplicationServices {
 
+    private final FriendNetVelocityPlugin plugin;
     private final KnownPlayerLookup knownPlayerLookup;
     private final BlocklistApplicationService blocklistService;
     private final FriendRequestApplicationService friendRequestService;
     private final PlayerSettingsApplicationService playerSettingsService;
     private final FriendCommandUseCases friendCommandUseCases;
+    private final ProxyActionDispatcher proxyActionDispatcher;
 
     public VelocityApplicationServices(FriendNetVelocityPlugin plugin) {
+        this.plugin = plugin;
         this.knownPlayerLookup = createKnownPlayerLookup(plugin);
         this.blocklistService = createBlocklistService(plugin, knownPlayerLookup);
         this.friendRequestService = createFriendRequestService(plugin, blocklistService);
         this.playerSettingsService = createPlayerSettingsService(plugin);
         this.friendCommandUseCases = createFriendCommandUseCases(plugin);
+        this.proxyActionDispatcher = createProxyActionDispatcher(plugin);
     }
 
     protected KnownPlayerLookup createKnownPlayerLookup(FriendNetVelocityPlugin plugin) {
@@ -77,6 +91,44 @@ public class VelocityApplicationServices {
         );
     }
 
+    protected ProxyActionDispatcher createProxyActionDispatcher(FriendNetVelocityPlugin plugin) {
+        return new ProxyActionDispatcher(
+                friendCommandUseCases,
+                knownPlayerLookup,
+                this::friendListViewPayload
+        );
+    }
+
+    public ProxyFriendListViewPayload friendListViewPayload(UUID viewerId) {
+        FriendListViewData viewData = friendCommandUseCases.listViewData(viewerId);
+        return new ProxyFriendListViewPayload(
+                toEntries(viewerId, viewData.friends()),
+                toEntries(viewerId, viewData.pendingRequests())
+        );
+    }
+
+    private List<ProxyFriendEntry> toEntries(UUID viewerId, List<FriendshipData> friendships) {
+        return friendships.stream()
+                .map(friendship -> toEntry(friendship.getOtherPlayerId(viewerId)))
+                .toList();
+    }
+
+    private ProxyFriendEntry toEntry(UUID playerId) {
+        Optional<NetworkPlayerPresence> presence = plugin.getNetworkAuthorityService().getPresence(playerId);
+        String displayName = presence
+                .map(NetworkPlayerPresence::displayName)
+                .filter(name -> !name.isBlank())
+                .orElseGet(() -> knownPlayerLookup.displayName(playerId));
+        boolean online = presence
+                .map(status -> status.online() && status.visibleOnline())
+                .orElse(false);
+        String serverName = presence
+                .map(NetworkPlayerPresence::serverName)
+                .orElse("");
+
+        return new ProxyFriendEntry(playerId, displayName, online, serverName);
+    }
+
     public KnownPlayerLookup knownPlayerLookup() {
         return knownPlayerLookup;
     }
@@ -95,5 +147,9 @@ public class VelocityApplicationServices {
 
     public FriendCommandUseCases friendCommandUseCases() {
         return friendCommandUseCases;
+    }
+
+    public ProxyActionDispatcher proxyActionDispatcher() {
+        return proxyActionDispatcher;
     }
 }

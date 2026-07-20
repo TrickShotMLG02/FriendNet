@@ -5,12 +5,20 @@ import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolException;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolMessage;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyRequestType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessagePayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessageRecipient;
 import junit.framework.TestCase;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class ProxyProtocolCodecTest extends TestCase {
@@ -66,5 +74,44 @@ public class ProxyProtocolCodecTest extends TestCase {
         assertEquals(friendId, decoded.friends().get(0).playerId());
         assertEquals("survival", decoded.friends().get(0).currentServerName());
         assertEquals(requesterId, decoded.pendingRequests().get(0).playerId());
+    }
+
+    public void testActionPayloadRoundTrip() {
+        UUID targetId = UUID.randomUUID();
+        ProxyActionRequestPayload request = new ProxyActionRequestPayload(
+                ProxyActionType.ACCEPT_REQUEST,
+                targetId,
+                "Alex",
+                true
+        );
+
+        ProxyActionRequestPayload decodedRequest = ProxyActionRequestPayloadCodec.decode(
+                ProxyActionRequestPayloadCodec.encode(request)
+        );
+
+        assertEquals(ProxyActionType.ACCEPT_REQUEST, decodedRequest.actionType());
+        assertEquals(targetId, decodedRequest.targetId());
+        assertEquals("Alex", decodedRequest.targetName());
+        assertTrue(decodedRequest.refreshFriendList());
+
+        ProxyActionResponsePayload response = new ProxyActionResponsePayload(
+                true,
+                List.of(new ProxyMessagePayload(
+                        ProxyMessageRecipient.SENDER,
+                        null,
+                        "friendRequest.accept.sender.success",
+                        Map.of("target", "Alex")
+                )),
+                new ProxyFriendListViewPayload(List.of(), List.of())
+        );
+
+        ProxyActionResponsePayload decodedResponse = ProxyActionResponsePayloadCodec.decode(
+                ProxyActionResponsePayloadCodec.encode(response)
+        );
+
+        assertTrue(decodedResponse.success());
+        assertEquals("friendRequest.accept.sender.success", decodedResponse.messages().get(0).key());
+        assertEquals("Alex", decodedResponse.messages().get(0).placeholders().get("target"));
+        assertNotNull(decodedResponse.friendListView());
     }
 }

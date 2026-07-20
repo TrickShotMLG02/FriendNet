@@ -2,10 +2,8 @@ package com.trickshotmlg.friendnet.adapter_velocity.services;
 
 import com.trickshotmlg.friendnet.adapter_velocity.FriendNetVelocityPlugin;
 import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
-import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
-import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
-import com.trickshotmlg.friendnet.core_api.models.NetworkPlayerPresence;
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyErrorCode;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyMessageKind;
@@ -14,18 +12,17 @@ import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolException;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolMessage;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyRequestType;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyResponseStatus;
-import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
-import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
 
 public class VelocityProxyMessagingService {
 
@@ -67,8 +64,8 @@ public class VelocityProxyMessagingService {
         }
 
         try {
-            validate(request, event, connection);
-            send(connection, handleRequest(request));
+            Player player = validate(request, event, connection);
+            send(connection, handleRequest(request, player));
         } catch (ProxyProtocolException e) {
             Logger.warn("Rejected FriendNet proxy request " + request.correlationId() + ": " + e.getMessage());
             send(connection, ProxyProtocolCodec.response(request, ProxyResponseStatus.ERROR, e.getErrorCode(), new byte[0]));
@@ -78,7 +75,7 @@ public class VelocityProxyMessagingService {
         }
     }
 
-    private void validate(ProxyProtocolMessage request, PluginMessageEvent event, ServerConnection connection) {
+    private Player validate(ProxyProtocolMessage request, PluginMessageEvent event, ServerConnection connection) {
         ProxyProtocolCodec.verify(request, plugin.getConnectionToken(), System.currentTimeMillis());
         if (request.kind() != ProxyMessageKind.REQUEST) {
             throw new ProxyProtocolException(ProxyErrorCode.BAD_REQUEST, "Expected request message.");
@@ -96,56 +93,60 @@ public class VelocityProxyMessagingService {
             Logger.debug("FriendNet request source name differs from Velocity connection: declared="
                     + request.sourceServer() + ", actual=" + connection.getServerInfo().getName());
         }
+
+        return player;
     }
 
-    private ProxyProtocolMessage handleRequest(ProxyProtocolMessage request) {
-        if (request.requestType() != ProxyRequestType.FRIEND_LIST_VIEW) {
-            throw new ProxyProtocolException(ProxyErrorCode.UNKNOWN_REQUEST, "Unknown request type: " + request.requestType());
-        }
+    private ProxyProtocolMessage handleRequest(ProxyProtocolMessage request, Player player) {
+        return switch (request.requestType()) {
+            case FRIEND_LIST_VIEW -> handleFriendListView(request, player);
+            case FRIEND_ACTION_EXECUTE -> handleFriendAction(request, player);
+        };
+    }
 
-        Player player = plugin.getServer().getPlayer(request.playerId())
-                .orElseThrow(() -> new ProxyProtocolException(ProxyErrorCode.PLAYER_REQUIRED, "Player is not connected to proxy."));
-
-        if (!player.hasPermission(FriendCommandDefinitions.LIST.permission().getPermissionPrefixed())) {
-            throw new ProxyProtocolException(ProxyErrorCode.PERMISSION_DENIED, "Player lacks permission for friend list view.");
-        }
-
-        FriendListViewData viewData = plugin.getApplicationServices()
-                .friendCommandUseCases()
-                .listViewData(request.playerId());
-        ProxyFriendListViewPayload payload = new ProxyFriendListViewPayload(
-                toEntries(request.playerId(), viewData.friends()),
-                toEntries(request.playerId(), viewData.pendingRequests())
-        );
-
+    private ProxyProtocolMessage handleFriendListView(ProxyProtocolMessage request, Player player) {
+        ensurePermission(player, FriendCommandDefinitions.LIST);
         return ProxyProtocolCodec.response(
                 request,
                 ProxyResponseStatus.SUCCESS,
                 ProxyErrorCode.NONE,
-                ProxyFriendListViewPayloadCodec.encode(payload)
+                ProxyFriendListViewPayloadCodec.encode(plugin.getApplicationServices().friendListViewPayload(request.playerId()))
         );
     }
 
-    private List<ProxyFriendEntry> toEntries(UUID viewerId, List<FriendshipData> friendships) {
-        return friendships.stream()
-                .map(friendship -> toEntry(friendship.getOtherPlayerId(viewerId)))
-                .toList();
+    private ProxyProtocolMessage handleFriendAction(ProxyProtocolMessage request, Player player) {
+        ProxyActionRequestPayload actionRequest = ProxyActionRequestPayloadCodec.decode(request.payload());
+        ensurePermission(player, definitionFor(actionRequest.actionType()));
+        ProxyActionResponsePayload payload = plugin.getApplicationServices()
+                .proxyActionDispatcher()
+                .dispatch(player.getUniqueId(), player.getUsername(), actionRequest);
+        return ProxyProtocolCodec.response(
+                request,
+                ProxyResponseStatus.SUCCESS,
+                ProxyErrorCode.NONE,
+                ProxyActionResponsePayloadCodec.encode(payload)
+        );
     }
 
-    private ProxyFriendEntry toEntry(UUID playerId) {
-        Optional<NetworkPlayerPresence> presence = plugin.getNetworkAuthorityService().getPresence(playerId);
-        String displayName = presence
-                .map(NetworkPlayerPresence::displayName)
-                .filter(name -> !name.isBlank())
-                .orElseGet(() -> plugin.getApplicationServices().knownPlayerLookup().displayName(playerId));
-        boolean online = presence
-                .map(status -> status.online() && status.visibleOnline())
-                .orElse(false);
-        String serverName = presence
-                .map(NetworkPlayerPresence::serverName)
-                .orElse("");
+    private void ensurePermission(Player player, CommandDefinition definition) {
+        if (!player.hasPermission(definition.permission().getPermissionPrefixed())) {
+            throw new ProxyProtocolException(ProxyErrorCode.PERMISSION_DENIED, "Player lacks permission: " + definition.permission().getPermissionPrefixed());
+        }
+    }
 
-        return new ProxyFriendEntry(playerId, displayName, online, serverName);
+    private CommandDefinition definitionFor(ProxyActionType actionType) {
+        return switch (actionType) {
+            case ADD_FRIEND -> FriendCommandDefinitions.ADD;
+            case REMOVE_FRIEND -> FriendCommandDefinitions.REMOVE;
+            case ACCEPT_REQUEST -> FriendCommandDefinitions.ACCEPT;
+            case ACCEPT_ALL_REQUESTS -> FriendCommandDefinitions.ACCEPT_ALL;
+            case DENY_REQUEST -> FriendCommandDefinitions.DENY;
+            case DENY_ALL_REQUESTS -> FriendCommandDefinitions.DENY_ALL;
+            case CANCEL_REQUEST, CANCEL_ALL_REQUESTS -> FriendCommandDefinitions.CANCEL;
+            case BLOCK_PLAYER -> FriendCommandDefinitions.BLOCK;
+            case UNBLOCK_PLAYER -> FriendCommandDefinitions.UNBLOCK;
+            case CLEAR_BLOCKLIST -> FriendCommandDefinitions.BLOCK;
+        };
     }
 
     private void send(ServerConnection connection, ProxyProtocolMessage response) {

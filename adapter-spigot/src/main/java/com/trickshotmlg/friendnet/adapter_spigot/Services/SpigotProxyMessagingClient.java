@@ -9,6 +9,10 @@ import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolException;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolMessage;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyRequestType;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyResponseStatus;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
 import org.bukkit.entity.Player;
@@ -54,6 +58,18 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
 
         CompletableFuture<ProxyProtocolMessage> responseFuture = send(player, request);
         return responseFuture.thenApply(response -> ProxyFriendListViewPayloadCodec.decode(response.payload()));
+    }
+
+    public CompletableFuture<ProxyActionResponsePayload> executeFriendAction(Player player, ProxyActionRequestPayload actionRequest) {
+        ProxyProtocolMessage request = ProxyProtocolCodec.request(
+                ProxyRequestType.FRIEND_ACTION_EXECUTE,
+                player.getUniqueId(),
+                "",
+                ProxyActionRequestPayloadCodec.encode(actionRequest)
+        );
+
+        CompletableFuture<ProxyProtocolMessage> responseFuture = send(player, request);
+        return responseFuture.thenApply(response -> ProxyActionResponsePayloadCodec.decode(response.payload()));
     }
 
     private CompletableFuture<ProxyProtocolMessage> send(Player player, ProxyProtocolMessage request) {
