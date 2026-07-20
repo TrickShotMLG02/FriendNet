@@ -4,11 +4,13 @@ import com.trickshotmlg.friendnet.adapter_spigot.Commands.FriendCommand;
 import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.GUIListener;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.ProxyBackendDatabaseService;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotLogger;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
 import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core.NetworkAuthorityServiceImpl;
 import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core.database.DatabaseServiceImpl;
 import com.trickshotmlg.friendnet.core.database.MySQLDatabase;
@@ -16,11 +18,13 @@ import com.trickshotmlg.friendnet.core.database.SQLiteDatabase;
 import com.trickshotmlg.friendnet.core.events.PlayerJoinEvent;
 import com.trickshotmlg.friendnet.core.events.EventBus;
 import com.trickshotmlg.friendnet.core_api.enums.DatabaseType;
+import com.trickshotmlg.friendnet.core_api.enums.NetworkRole;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.Platform;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.NetworkAuthorityService;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,6 +45,7 @@ public final class FriendNetPlugin extends JavaPlugin {
     private PlayerDataSaveQueue playerDataSaveQueue;
     private Platform platform;
     private SpigotApplicationServices applicationServices;
+    private NetworkAuthorityService networkAuthorityService;
 
     public FileConfiguration config = this.getConfig();
     File defaultConfigFile;
@@ -90,16 +95,23 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private void initializeServices() {
-        this.databaseService = new DatabaseServiceImpl(createDatabaseFromConfig());
+        NetworkRole networkRole = parseSpigotNetworkRole(config.getString("Mode", "Standalone"));
+        this.networkAuthorityService = new NetworkAuthorityServiceImpl(networkRole);
+        this.databaseService = networkAuthorityService.ownsPersistentState()
+                ? new DatabaseServiceImpl(createDatabaseFromConfig())
+                : new ProxyBackendDatabaseService();
         this.playerService = new PlayerServiceImpl();
         this.friendService = new FriendServiceImpl(this.databaseService, this.playerService);
-        this.playerDataSaveQueue = new PlayerDataSaveQueue(this, playerService, databaseService, isStandaloneMode());
+        this.playerDataSaveQueue = new PlayerDataSaveQueue(this, playerService, databaseService, networkAuthorityService.ownsPersistentState());
         this.applicationServices = new SpigotApplicationServices(this);
 
-        this.databaseService.init();
-        this.databaseService.postInit();
-        this.databaseService.start();
+        if (networkAuthorityService.ownsPersistentState()) {
+            this.databaseService.init();
+            this.databaseService.postInit();
+            this.databaseService.start();
+        }
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalTicks());
+        Logger.info("FriendNet Spigot running as " + networkAuthorityService.getNetworkRole());
     }
 
     private Database createDatabaseFromConfig() {
@@ -183,8 +195,25 @@ public final class FriendNetPlugin extends JavaPlugin {
         return applicationServices;
     }
 
-    private boolean isStandaloneMode() {
-        return "Standalone".equalsIgnoreCase(config.getString("Mode", "Standalone"));
+    public NetworkAuthorityService getNetworkAuthorityService() {
+        return networkAuthorityService;
+    }
+
+    public boolean isProxyBackendMode() {
+        return networkAuthorityService != null && networkAuthorityService.delegatesPersistentState();
+    }
+
+    private NetworkRole parseSpigotNetworkRole(String value) {
+        if (value == null || value.isBlank()) {
+            return NetworkRole.STANDALONE;
+        }
+
+        String normalized = value.trim().replace("-", "").replace("_", "").toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "standalone" -> NetworkRole.STANDALONE;
+            case "proxy", "backend", "proxybackend" -> NetworkRole.PROXY_BACKEND;
+            default -> throw new PluginStartupException("Unknown Mode '" + value + "' in config.yml. Supported values: Standalone, Proxy.");
+        };
     }
 
     private long getPlayerDataFlushIntervalTicks() {

@@ -54,6 +54,13 @@ public class PlayerStatusListener extends AbstractListener {
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
 
+        if (plugin.isProxyBackendMode()) {
+            playerService.putPlayerData(initializedPlayerData);
+            playerService.setOnline(playerId, true);
+            Logger.debug(spigotPlayer.getName() + " joined in proxy backend mode; status notification is owned by proxy.");
+            return;
+        }
+
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             // load player data
             Optional<PlayerData> pld = databaseService.find(playerId, PlayerData.class);
@@ -104,12 +111,14 @@ public class PlayerStatusListener extends AbstractListener {
         playerData.setLastDisplayName(event.getPlayer().getDisplayName());
         playerService.setOnline(playerId, false);
 
-        if (wasVisibleOnline) {
+        if (wasVisibleOnline && !plugin.isProxyBackendMode()) {
             FriendStatusNotifier.notifyOffline(plugin, playerId);
         }
 
         PlayerData playerDataToSave = playerData;
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> playerDataSaveQueue.saveNow(playerDataToSave));
+        if (!plugin.isProxyBackendMode()) {
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> playerDataSaveQueue.saveNow(playerDataToSave));
+        }
 
         // remove playerData as it is no longer needed
         playerService.removePlayerData(playerId);

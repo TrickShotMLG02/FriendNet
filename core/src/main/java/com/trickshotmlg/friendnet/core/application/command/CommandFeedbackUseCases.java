@@ -36,4 +36,16 @@ public final class CommandFeedbackUseCases {
                 .message(CommandMessage.sender(success ? "configReloadSuccess" : "configReloadError"))
                 .build();
     }
+
+    public static CommandUseCaseResult proxyBackendCommandDisabled() {
+        return CommandUseCaseResult.builder(false)
+                .message(CommandMessage.sender("commandFeedback.proxyBackendCommandDisabled"))
+                .build();
+    }
+
+    public static CommandUseCaseResult proxyBackendGuiUnavailable() {
+        return CommandUseCaseResult.builder(false)
+                .message(CommandMessage.sender("commandFeedback.proxyBackendGuiUnavailable"))
+                .build();
+    }
 }
