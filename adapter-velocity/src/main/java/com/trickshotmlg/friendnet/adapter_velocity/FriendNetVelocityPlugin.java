@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.adapter_velocity;
 
 import com.google.inject.Inject;
 import com.trickshotmlg.friendnet.adapter_velocity.commands.FriendNetVelocityCommand;
+import com.trickshotmlg.friendnet.adapter_velocity.commands.VelocityFriendCommand;
 import com.trickshotmlg.friendnet.adapter_velocity.config.VelocityConfig;
 import com.trickshotmlg.friendnet.adapter_velocity.listeners.VelocityPlayerStatusListener;
 import com.trickshotmlg.friendnet.adapter_velocity.services.VelocityPlayerDataSaveQueue;
@@ -57,6 +58,7 @@ public final class FriendNetVelocityPlugin {
     private NetworkAuthorityService networkAuthorityService;
     private VelocityPlayerDataSaveQueue playerDataSaveQueue;
     private Platform platform;
+    private VelocityApplicationServices applicationServices;
 
     @Inject
     public FriendNetVelocityPlugin(ProxyServer server, org.slf4j.Logger logger, @DataDirectory Path dataDirectory) {
@@ -109,6 +111,7 @@ public final class FriendNetVelocityPlugin {
         this.friendService = new FriendServiceImpl(databaseService, playerService);
         this.networkAuthorityService = new NetworkAuthorityServiceImpl(NetworkRole.PROXY_AUTHORITY);
         this.playerDataSaveQueue = new VelocityPlayerDataSaveQueue(this, playerService, databaseService);
+        this.applicationServices = new VelocityApplicationServices(this);
 
         this.databaseService.init();
         this.databaseService.postInit();
@@ -127,6 +130,12 @@ public final class FriendNetVelocityPlugin {
                 .plugin(this)
                 .build();
         commandManager.register(commandMeta, new FriendNetVelocityCommand(this));
+
+        CommandMeta friendCommandMeta = commandManager.metaBuilder("friend")
+                .aliases("friends")
+                .plugin(this)
+                .build();
+        commandManager.register(friendCommandMeta, new VelocityFriendCommand(this));
     }
 
     private Database createDatabaseFromConfig() {
@@ -200,6 +209,10 @@ public final class FriendNetVelocityPlugin {
 
     public Platform getPlatform() {
         return platform;
+    }
+
+    public VelocityApplicationServices getApplicationServices() {
+        return applicationServices;
     }
 
     public VelocityConfig getConfig() {

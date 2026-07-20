@@ -6,9 +6,83 @@ configReloadSuccess: "&bPlugin-Konfigurationen wurden erfolgreich neu geladen"
 configReloadError: "&4Fehler beim Neuladen der Plugin-Konfigurationen"
 
 commandFeedback:
+  playersOnlyCommand: "&cNur Spieler koennen diesen Befehl benutzen!"
+  commandNotFound: "&cDieser Befehl wurde nicht gefunden!"
+  playerNotFound: "&cDieser Spieler wurde nicht gefunden!"
   usage: "&eVerwendung: %usage%"
+
+friendRequest:
+  send:
+    sender:
+      success: "&aDu hast eine Freundschaftsanfrage an &e%target% &agesendet"
+      autoAccepted: "&e%target% &ahat deine Freundschaftsanfrage automatisch angenommen"
+      cannotSelf: "&cDu kannst dir selbst keine Freundschaftsanfrage senden"
+      alreadyPending: "&cDu hast &e%target% &cbereits eine Freundschaftsanfrage gesendet"
+      disabled: "&e%target% &chat Freundschaftsanfragen deaktiviert"
+    target:
+      success: "&aDu hast eine Freundschaftsanfrage von &e%sender% &aerhalten &7(%acceptRequest% &7/ %denyRequest%&7)"
+      autoAccepted: "&aDu hast eine Freundschaftsanfrage von &e%sender% &aautomatisch angenommen"
+      alreadyPending: "&e%sender% &chat dir bereits eine Freundschaftsanfrage gesendet"
+
+  accept:
+    sender:
+      success: "&aDu hast die Freundschaftsanfrage von &e%target% &aangenommen"
+      notFound: "&cKeine ausstehende Freundschaftsanfrage von &e%target%"
+      nonePending: "&cDu hast keine ausstehenden Freundschaftsanfragen"
+    target:
+      success: "&e%sender% &ahat deine Freundschaftsanfrage angenommen"
+      notFound: "&c%sender% hat versucht, eine Anfrage anzunehmen, die nicht existiert"
+
+  deny:
+    sender:
+      success: "&aDu hast die Freundschaftsanfrage von &e%target% &aabgelehnt"
+      notFound: "&cKeine ausstehende Freundschaftsanfrage von &e%target%"
+      nonePending: "&cDu hast keine ausstehenden Freundschaftsanfragen"
+    target:
+      success: "&e%sender% &ahat deine Freundschaftsanfrage abgelehnt"
+      notFound: "&c%sender% hat versucht, eine Anfrage abzulehnen, die nicht existiert"
+
+  cancel:
+    sender:
+      success: "&aDu hast die Freundschaftsanfrage an &e%target% &aabgebrochen"
+      notFound: "&cDie Freundschaftsanfrage an &e%target% &ckann nicht mehr abgebrochen werden"
+      nonePending: "&cDu hast keine gesendeten Freundschaftsanfragen"
+    target:
+      success: "&e%sender% &ahat die Freundschaftsanfrage abgebrochen"
+      notFound: "&c%sender% hat versucht, eine Anfrage abzubrechen, die nicht existiert"
 
 friend:
   status:
     online: "&a%player% ist jetzt online"
     offline: "&c%player% ist jetzt offline"
+  remove:
+    sender:
+      success: "&e%target% &bist nicht mehr dein Freund"
+      notFound: "&e%target% &cist nicht in deiner Freundesliste"
+    target:
+      success: "&e%sender% &bhat dich aus seiner Freundesliste entfernt"
+      notFound: "&c%sender% hat versucht, dich zu entfernen, aber du bist nicht in seiner Freundesliste"
+
+blocklist:
+  block:
+    success: "&e%target% &cwurde blockiert"
+    already: "&e%target% &cist bereits blockiert"
+    self: "&cDu kannst dich nicht selbst blockieren"
+  unblock:
+    success: "&e%target% &aist nicht mehr blockiert"
+    notFound: "&e%target% &cist nicht blockiert"
+  clear:
+    success: "&e%count% &aSpieler wurden aus deiner Blockliste entfernt"
+    empty: "&cDeine Blockliste ist bereits leer"
+  friendRequest:
+    senderBlocked: "&cDu hast &e%target% &cblockiert. Entblocke den Spieler, bevor du eine Anfrage sendest."
+    targetBlocked: "&e%target% &cnimmt keine Freundschaftsanfragen von dir an."
+
+friendList:
+  header: "&aDeine Freunde:"
+  entry: "&e%target%"
+  empty: "&cDeine Freundesliste ist leer"
+
+requestList:
+  header: "&aDu hast ausstehende Freundschaftsanfragen von folgenden Spielern:"
+  entry: "&e%target%"
