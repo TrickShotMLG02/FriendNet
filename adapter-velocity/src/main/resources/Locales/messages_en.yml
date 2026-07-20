@@ -2,6 +2,7 @@
 prefix: "&7[&aFriends&7]"
 
 noPermission: "&4&lYou don't have enough Permissions to execute this command"
+commandNotFound: "&4&lThis command wasn't found"
 configReloadSuccess: "&bSuccessfully reloaded Plugin Configs"
 configReloadError: "&4Error while reloading Plugin Configs"
 
@@ -10,6 +11,16 @@ commandFeedback:
   commandNotFound: "&cThis command wasn't found!"
   playerNotFound: "&cThis player wasn't found!"
   usage: "&eUsage: %usage%"
+  proxyBackendCommandDisabled: "&cFriend commands are handled by the proxy on this network."
+  proxyBackendGuiUnavailable: "&cFriend GUIs need the proxy bridge before they can be used in proxy mode."
+
+chatButtons:
+  acceptRequest:
+    text: "&a[Accept]"
+    hover: "&bClick here to accept the request"
+  denyRequest:
+    text: "&c[Deny]"
+    hover: "&bClick here to deny the request"
 
 friendRequest:
   send:
@@ -20,7 +31,7 @@ friendRequest:
       alreadyPending: "&cYou already sent a friend request to &e%target%"
       disabled: "&e%target% &chas disabled friend requests"
     target:
-      success: "&aYou received a friend request from &e%sender% &7(%acceptRequest% &7/ %denyRequest%&7)"
+      success: "&aYou received a friend request from &e%sender% %acceptRequest% %denyRequest%"
       autoAccepted: "&aYou automatically accepted a friend request from &e%sender%"
       alreadyPending: "&e%sender% &chas already sent you a friend request"
 
@@ -53,8 +64,8 @@ friendRequest:
 
 friend:
   status:
-    online: "&a%player% is now online"
-    offline: "&c%player% is now offline"
+    online: "&e%player% &ais now online"
+    offline: "&e%player% &cis now offline"
   remove:
     sender:
       success: "&e%target% &bis no longer your friend"
@@ -62,6 +73,9 @@ friend:
     target:
       success: "&e%sender% &bremoved you from their friends list"
       notFound: "&c%sender% tried to remove you but you are not their friend"
+  favourite:
+    enabled: "&e%target% &ais now a favourite"
+    disabled: "&e%target% &cis no longer a favourite"
 
 blocklist:
   block:
@@ -90,14 +104,14 @@ requestList:
 
 playerSettings:
   allowFriendRequests:
-    enabled: "&aYou now allow friend requests"
-    disabled: "&cYou no longer allow friend requests"
+    enabled: "&aFriend requests are now enabled"
+    disabled: "&cFriend requests are now disabled"
   showOnlineStatus:
     enabled: "&aYour online status is now visible"
     disabled: "&cYour online status is now hidden"
   autoAcceptFriends:
-    enabled: "&aFriend requests are now accepted automatically"
-    disabled: "&cFriend requests are no longer accepted automatically"
+    enabled: "&aFriend requests will now be accepted automatically"
+    disabled: "&cFriend requests will no longer be accepted automatically"
   friendRequestNotifications:
     enabled: "&aFriend request notifications are now enabled"
     disabled: "&cFriend request notifications are now disabled"

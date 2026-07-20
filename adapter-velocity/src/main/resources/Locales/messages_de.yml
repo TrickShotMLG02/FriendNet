@@ -2,6 +2,7 @@
 prefix: "&7[&aFreunde&7]"
 
 noPermission: "&4&lDu hast keine ausreichenden Berechtigungen, um diesen Befehl auszufuehren"
+commandNotFound: "&4&lDieser Befehl wurde nicht gefunden"
 configReloadSuccess: "&bPlugin-Konfigurationen wurden erfolgreich neu geladen"
 configReloadError: "&4Fehler beim Neuladen der Plugin-Konfigurationen"
 
@@ -10,6 +11,16 @@ commandFeedback:
   commandNotFound: "&cDieser Befehl wurde nicht gefunden!"
   playerNotFound: "&cDieser Spieler wurde nicht gefunden!"
   usage: "&eVerwendung: %usage%"
+  proxyBackendCommandDisabled: "&cFreunde-Befehle werden in diesem Netzwerk vom Proxy verarbeitet."
+  proxyBackendGuiUnavailable: "&cFreunde-GUIs benoetigen die Proxy-Verbindung, bevor sie im Proxy-Modus verwendet werden koennen."
+
+chatButtons:
+  acceptRequest:
+    text: "&a[Annehmen]"
+    hover: "&bKlicke hier, um die Anfrage anzunehmen"
+  denyRequest:
+    text: "&c[Ablehnen]"
+    hover: "&bKlicke hier, um die Anfrage abzulehnen"
 
 friendRequest:
   send:
@@ -20,7 +31,7 @@ friendRequest:
       alreadyPending: "&cDu hast &e%target% &cbereits eine Freundschaftsanfrage gesendet"
       disabled: "&e%target% &chat Freundschaftsanfragen deaktiviert"
     target:
-      success: "&aDu hast eine Freundschaftsanfrage von &e%sender% &aerhalten &7(%acceptRequest% &7/ %denyRequest%&7)"
+      success: "&aDu hast eine Freundschaftsanfrage von &e%sender% &aerhalten %acceptRequest% %denyRequest%"
       autoAccepted: "&aDu hast eine Freundschaftsanfrage von &e%sender% &aautomatisch angenommen"
       alreadyPending: "&e%sender% &chat dir bereits eine Freundschaftsanfrage gesendet"
 
@@ -53,8 +64,8 @@ friendRequest:
 
 friend:
   status:
-    online: "&a%player% ist jetzt online"
-    offline: "&c%player% ist jetzt offline"
+    online: "&e%player% &aist jetzt online"
+    offline: "&e%player% &cist jetzt offline"
   remove:
     sender:
       success: "&e%target% &bist nicht mehr dein Freund"
@@ -62,6 +73,9 @@ friend:
     target:
       success: "&e%sender% &bhat dich aus seiner Freundesliste entfernt"
       notFound: "&c%sender% hat versucht, dich zu entfernen, aber du bist nicht in seiner Freundesliste"
+  favourite:
+    enabled: "&e%target% &aist jetzt ein Favorit"
+    disabled: "&e%target% &cist kein Favorit mehr"
 
 blocklist:
   block:
@@ -90,8 +104,8 @@ requestList:
 
 playerSettings:
   allowFriendRequests:
-    enabled: "&aDu erlaubst jetzt Freundschaftsanfragen"
-    disabled: "&cDu erlaubst keine Freundschaftsanfragen mehr"
+    enabled: "&aFreundschaftsanfragen sind jetzt aktiviert"
+    disabled: "&cFreundschaftsanfragen sind jetzt deaktiviert"
   showOnlineStatus:
     enabled: "&aDein Online-Status ist jetzt sichtbar"
     disabled: "&cDein Online-Status ist jetzt verborgen"
