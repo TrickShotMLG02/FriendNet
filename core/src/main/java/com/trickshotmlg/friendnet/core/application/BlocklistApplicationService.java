@@ -62,6 +62,10 @@ public class BlocklistApplicationService {
     }
 
     public boolean unblock(UUID blockerId, UUID blockedId) {
+        if (!isBlocked(blockerId, blockedId)) {
+            return false;
+        }
+
         databaseService.delete(new BlocklistData(blockerId, blockedId));
         return true;
     }

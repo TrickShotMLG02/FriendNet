@@ -87,8 +87,10 @@ blocklist:
     self: "&cYou cannot block yourself"
   unblock:
     success: "&e%target% &ais no longer blocked"
+    notFound: "&e%target% &cis not blocked"
   clear:
     success: "&aRemoved &e%count% &aplayers from your blocklist"
+    empty: "&cYour blocklist is already empty"
   friendRequest:
     senderBlocked: "&cYou blocked &e%target%&c. Unblock them before sending a friend request."
     targetBlocked: "&e%target% &cis not accepting friend requests from you."

@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
 import com.trickshotmlg.friendnet.core_api.enums.ServiceState;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
+import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core.application.command.CommandEventType;
 import com.trickshotmlg.friendnet.core.application.command.CommandMessageRecipient;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
@@ -104,6 +105,50 @@ public class ApplicationServiceTest extends TestCase {
         assertEquals(target, result.events().get(0).targetId());
     }
 
+    public void testUnblockReturnsNotFoundWhenPlayerIsNotBlocked() {
+        PlayerServiceImpl playerService = new PlayerServiceImpl();
+        FakeDatabaseService databaseService = new FakeDatabaseService();
+        FriendServiceImpl friendService = new FriendServiceImpl(databaseService, playerService);
+        BlocklistApplicationService blocklistService = new BlocklistApplicationService(databaseService, friendService, null);
+        FriendCommandUseCases useCases = new FriendCommandUseCases(friendService, null, blocklistService, null);
+        UUID sender = UUID.randomUUID();
+        UUID target = UUID.randomUUID();
+
+        var result = useCases.unblockPlayer(sender, target, "Target");
+
+        assertFalse(result.success());
+        assertEquals(1, result.messages().size());
+        assertEquals("blocklist.unblock.notFound", result.messages().get(0).key());
+    }
+
+    public void testClearBlocklistReturnsEmptyWhenNothingWasRemoved() {
+        PlayerServiceImpl playerService = new PlayerServiceImpl();
+        FakeDatabaseService databaseService = new FakeDatabaseService();
+        FriendServiceImpl friendService = new FriendServiceImpl(databaseService, playerService);
+        BlocklistApplicationService blocklistService = new BlocklistApplicationService(databaseService, friendService, null);
+        FriendCommandUseCases useCases = new FriendCommandUseCases(friendService, null, blocklistService, null);
+
+        var result = useCases.clearBlocklist(UUID.randomUUID());
+
+        assertFalse(result.success());
+        assertEquals(1, result.messages().size());
+        assertEquals("blocklist.clear.empty", result.messages().get(0).key());
+    }
+
+    public void testAcceptAllRequestsReturnsFailureWhenNoRequestWasAccepted() {
+        UUID sender = UUID.randomUUID();
+        UUID requester = UUID.randomUUID();
+        FriendService staleFriendService = new StalePendingFriendService(sender, requester);
+        FriendRequestApplicationService requestService = new FriendRequestApplicationService(staleFriendService, null);
+        FriendCommandUseCases useCases = new FriendCommandUseCases(staleFriendService, requestService, null, null);
+
+        var result = useCases.acceptAllRequests(sender, "Sender");
+
+        assertFalse(result.success());
+        assertEquals(1, result.messages().size());
+        assertEquals("friendRequest.accept.sender.notFound", result.messages().get(0).key());
+    }
+
     private static class RecordingStatusNotifier implements FriendStatusVisibilityNotifier {
         private int onlineNotifications;
         private int offlineNotifications;
@@ -192,6 +237,81 @@ public class ApplicationServiceTest extends TestCase {
         @Override
         public boolean isRunning() {
             return true;
+        }
+    }
+
+    private static class StalePendingFriendService implements FriendService {
+        private final UUID recipient;
+        private final UUID requester;
+
+        private StalePendingFriendService(UUID recipient, UUID requester) {
+            this.recipient = recipient;
+            this.requester = requester;
+        }
+
+        @Override
+        public boolean acceptFriendRequest(UUID player, UUID requester) {
+            return false;
+        }
+
+        @Override
+        public boolean denyFriendRequest(UUID player, UUID requester) {
+            return false;
+        }
+
+        @Override
+        public boolean sendFriendRequest(UUID player, UUID target) {
+            return false;
+        }
+
+        @Override
+        public boolean removeFriend(UUID player, UUID target) {
+            return false;
+        }
+
+        @Override
+        public boolean cancelRequest(UUID requester, UUID target) {
+            return false;
+        }
+
+        @Override
+        public boolean areFriends(UUID player, UUID target) {
+            return false;
+        }
+
+        @Override
+        public boolean requestPending(UUID player, UUID requester) {
+            return false;
+        }
+
+        @Override
+        public Set<FriendshipData> getFriendships(UUID player) {
+            return Set.of();
+        }
+
+        @Override
+        public Set<FriendshipData> getPendingRequests(UUID player) {
+            return Set.of(new FriendshipData(requester, recipient));
+        }
+
+        @Override
+        public Set<FriendshipData> getSentRequests(UUID player) {
+            return Set.of();
+        }
+
+        @Override
+        public Optional<FriendshipData> getFriendshipData(UUID player1, UUID player2) {
+            return Optional.empty();
+        }
+
+        @Override
+        public boolean putFriendshipData(FriendshipData friendshipData) {
+            return false;
+        }
+
+        @Override
+        public boolean removeFriendshipData(FriendshipData friendshipData) {
+            return false;
         }
     }
 }

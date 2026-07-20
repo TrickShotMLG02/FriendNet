@@ -114,12 +114,14 @@ public class FriendCommandUseCases {
                     .build();
         }
 
+        int accepted = 0;
         CommandUseCaseResult.Builder result = CommandUseCaseResult.builder(true);
         for (FriendshipData request : requests) {
             UUID requesterId = request.getRequesterId();
-            String requesterName = knownPlayerLookup.displayName(requesterId);
+            String requesterName = displayName(requesterId);
             if (requestService.acceptRequest(senderId, requesterId)
                     == FriendRequestApplicationService.AcceptResult.ACCEPTED) {
+                accepted++;
                 result.message(CommandMessage.sender("friendRequest.accept.sender.success", Map.of("target", requesterName)));
                 result.message(CommandMessage.player(requesterId, "friendRequest.accept.target.success", Map.of("sender", senderName)));
             } else {
@@ -127,7 +129,8 @@ public class FriendCommandUseCases {
             }
         }
 
-        return result.build();
+        CommandUseCaseResult builtResult = result.build();
+        return new CommandUseCaseResult(accepted > 0, builtResult.messages(), builtResult.events());
     }
 
     public CommandUseCaseResult denyRequest(UUID senderId, UUID requesterId, String requesterName) {
@@ -149,19 +152,22 @@ public class FriendCommandUseCases {
                     .build();
         }
 
+        int denied = 0;
         CommandUseCaseResult.Builder result = CommandUseCaseResult.builder(true);
         for (FriendshipData request : requests) {
             UUID requesterId = request.getRequesterId();
-            String requesterName = knownPlayerLookup.displayName(requesterId);
+            String requesterName = displayName(requesterId);
             if (requestService.denyRequest(senderId, requesterId)
                     == FriendRequestApplicationService.DenyResult.DENIED) {
+                denied++;
                 result.message(CommandMessage.sender("friendRequest.deny.sender.success", Map.of("target", requesterName)));
             } else {
                 result.message(CommandMessage.sender("friendRequest.deny.sender.notFound", Map.of("target", requesterName)));
             }
         }
 
-        return result.build();
+        CommandUseCaseResult builtResult = result.build();
+        return new CommandUseCaseResult(denied > 0, builtResult.messages(), builtResult.events());
     }
 
     public CommandUseCaseResult cancelRequest(UUID senderId, UUID targetId, String targetName) {
@@ -183,19 +189,22 @@ public class FriendCommandUseCases {
                     .build();
         }
 
+        int cancelled = 0;
         CommandUseCaseResult.Builder result = CommandUseCaseResult.builder(true);
         for (FriendshipData request : requests) {
             UUID targetId = request.getOtherPlayerId(senderId);
-            String targetName = knownPlayerLookup.displayName(targetId);
+            String targetName = displayName(targetId);
             if (requestService.cancelRequest(senderId, targetId)
                     == FriendRequestApplicationService.CancelResult.CANCELLED) {
+                cancelled++;
                 result.message(CommandMessage.sender("friendRequest.cancel.sender.success", Map.of("target", targetName)));
             } else {
                 result.message(CommandMessage.sender("friendRequest.cancel.sender.notFound", Map.of("target", targetName)));
             }
         }
 
-        return result.build();
+        CommandUseCaseResult builtResult = result.build();
+        return new CommandUseCaseResult(cancelled > 0, builtResult.messages(), builtResult.events());
     }
 
     public CommandUseCaseResult removeFriend(UUID senderId, UUID targetId, String targetName) {
@@ -225,14 +234,25 @@ public class FriendCommandUseCases {
     }
 
     public CommandUseCaseResult unblockPlayer(UUID senderId, UUID targetId, String targetName) {
-        blocklistService.unblock(senderId, targetId);
-        return CommandUseCaseResult.builder(true)
-                .message(CommandMessage.sender("blocklist.unblock.success", Map.of("target", targetName)))
+        if (blocklistService.unblock(senderId, targetId)) {
+            return CommandUseCaseResult.builder(true)
+                    .message(CommandMessage.sender("blocklist.unblock.success", Map.of("target", targetName)))
+                    .build();
+        }
+
+        return CommandUseCaseResult.builder(false)
+                .message(CommandMessage.sender("blocklist.unblock.notFound", Map.of("target", targetName)))
                 .build();
     }
 
     public CommandUseCaseResult clearBlocklist(UUID senderId) {
         int count = blocklistService.clear(senderId);
+        if (count == 0) {
+            return CommandUseCaseResult.builder(false)
+                    .message(CommandMessage.sender("blocklist.clear.empty"))
+                    .build();
+        }
+
         return CommandUseCaseResult.builder(true)
                 .message(CommandMessage.sender("blocklist.clear.success", Map.of("count", count)))
                 .build();
@@ -243,5 +263,13 @@ public class FriendCommandUseCases {
                 friendService.getFriendships(playerId).stream().toList(),
                 friendService.getPendingRequests(playerId).stream().toList()
         );
+    }
+
+    private String displayName(UUID playerId) {
+        if (knownPlayerLookup == null) {
+            return playerId != null ? playerId.toString() : "Unknown";
+        }
+
+        return knownPlayerLookup.displayName(playerId);
     }
 }

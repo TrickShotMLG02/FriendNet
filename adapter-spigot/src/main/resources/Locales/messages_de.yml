@@ -92,8 +92,10 @@ blocklist:
     self: '&cDu kannst dich nicht selbst blockieren'
   unblock:
     success: '&e%target% &aist nicht mehr blockiert'
+    notFound: '&e%target% &cist nicht blockiert'
   clear:
     success: '&e%count% &aSpieler wurden aus deiner Blockliste entfernt'
+    empty: '&cDeine Blockliste ist bereits leer'
   friendRequest:
     senderBlocked: '&cDu hast &e%target% &cblockiert. Entblocke den Spieler, bevor du eine Anfrage sendest.'
     targetBlocked: '&e%target% &cnimmt keine Freundschaftsanfragen von dir an.'
