@@ -129,11 +129,13 @@ public class PlayerData {
     public String toString() {
         return "PlayerData{" +
                 "playerId=" + playerId +
+                ", lastDisplayName='" + lastDisplayName + '\'' +
                 ", allow_friend_requests=" + allowFriendRequests +
                 ", show_online_status=" + showOnlineStatus +
                 ", auto_accept_friends=" + autoAcceptFriends +
                 ", friend_request_notifications=" + friendRequestNotifications +
                 ", friend_list_public=" + friendListPublic +
+                ", locale=" + (locale != null ? locale.getCode() : null) +
                 ", firstSeen=" + firstSeen +
                 ", lastSeen=" + lastSeen +
                 '}';

@@ -63,10 +63,10 @@ public class VelocityPlayerStatusListener {
             if (storedPlayerData.isPresent()) {
                 playerData = storedPlayerData.get();
                 playerData.setLastDisplayName(lastDisplayName);
-                Logger.debug("playerData: " + playerData);
             } else {
                 playerData = initializedPlayerData;
             }
+            Logger.debug("Loaded player data on proxy join: " + playerData);
 
             playerService.putPlayerData(playerData);
             playerService.setOnline(playerId, playerData.isShowOnlineStatus());
