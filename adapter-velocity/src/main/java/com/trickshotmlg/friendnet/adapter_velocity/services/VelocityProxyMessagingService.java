@@ -18,11 +18,17 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayl
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessagePayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessageRecipient;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class VelocityProxyMessagingService {
 
@@ -121,6 +127,7 @@ public class VelocityProxyMessagingService {
         ProxyActionResponsePayload payload = plugin.getApplicationServices()
                 .proxyActionDispatcher()
                 .dispatch(player.getUniqueId(), player.getUsername(), actionRequest);
+        payload = deliverPlayerMessages(payload);
         return ProxyProtocolCodec.response(
                 request,
                 ProxyResponseStatus.SUCCESS,
@@ -155,6 +162,25 @@ public class VelocityProxyMessagingService {
                  SET_FRIEND_LIST_PUBLIC,
                  SET_LOCALE -> FriendCommandDefinitions.ROOT;
         };
+    }
+
+    private ProxyActionResponsePayload deliverPlayerMessages(ProxyActionResponsePayload payload) {
+        List<ProxyMessagePayload> backendMessages = payload.messages().stream()
+                .filter(message -> {
+                    if (message.recipient() != ProxyMessageRecipient.PLAYER) {
+                        return true;
+                    }
+
+                    plugin.getServer().getPlayer(message.recipientId()).ifPresent(target -> {
+                        Map<String, Object> placeholders = message.placeholders().entrySet().stream()
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                        plugin.getMessageManager().send(target, message.key(), placeholders);
+                    });
+                    return false;
+                })
+                .toList();
+
+        return new ProxyActionResponsePayload(payload.success(), backendMessages, payload.friendListView());
     }
 
     private void send(ServerConnection connection, ProxyProtocolMessage response) {
