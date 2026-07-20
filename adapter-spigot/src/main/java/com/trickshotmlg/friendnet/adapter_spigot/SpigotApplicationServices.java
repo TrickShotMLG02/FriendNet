@@ -45,7 +45,9 @@ public class SpigotApplicationServices {
 
     protected PlayerSettingsApplicationService createPlayerSettingsService(FriendNetPlugin plugin) {
         PlayerDataSaveQueue playerDataSaveQueue = plugin.getPlayerDataSaveQueue();
-        FriendStatusVisibilityNotifier statusNotifier = new FriendStatusVisibilityNotifier() {
+        FriendStatusVisibilityNotifier statusNotifier = plugin.isProxyBackendMode()
+                ? FriendStatusVisibilityNotifier.NONE
+                : new FriendStatusVisibilityNotifier() {
             @Override
             public void notifyOnline(java.util.UUID playerId) {
                 FriendStatusNotifier.notifyOnline(plugin, playerId);

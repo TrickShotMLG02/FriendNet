@@ -1,4 +1,6 @@
-# Mode for the plugin: Proxy, Standalone
+# Mode for the Spigot adapter.
+# Standalone: this backend owns DB state, commands, join/quit, and notifications.
+# Proxy: this backend delegates persistent FriendNet state to the proxy and acts as a GUI/client adapter.
 Mode: Standalone
 
 # The backend to use: SQLite, MySQL, MariaDB (case-insensitive)

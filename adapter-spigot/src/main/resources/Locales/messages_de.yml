@@ -14,6 +14,8 @@ commandFeedback:
   commandNotFound: '&cDieser Befehl wurde nicht gefunden!'
   playerNotFound: '&cDieser Spieler wurde nicht gefunden!'
   usage: '&eVerwendung: %usage%'
+  proxyBackendCommandDisabled: '&cFreunde-Befehle werden in diesem Netzwerk vom Proxy verarbeitet.'
+  proxyBackendGuiUnavailable: '&cFreunde-GUIs benoetigen die Proxy-Verbindung, bevor sie im Proxy-Modus verwendet werden koennen.'
 
 # Chat button text / hover messages (reusable)
 

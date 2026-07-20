@@ -78,6 +78,10 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (plugin.isProxyBackendMode()) {
+            return List.of();
+        }
+
         if (isAlias(alias, "friends")) {
             return List.of();
         }

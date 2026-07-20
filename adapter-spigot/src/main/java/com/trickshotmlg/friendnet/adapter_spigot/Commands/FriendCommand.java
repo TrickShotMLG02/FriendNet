@@ -41,6 +41,11 @@ public class FriendCommand extends AbstractCommand {
 
     private static CommandRegistry createRegistry(FriendNetPlugin plugin) {
         CommandRegistry registry = FriendCommandDefinitions.registryWithUsageHandlers();
+        if (plugin.isProxyBackendMode()) {
+            registerProxyBackendHandlers(plugin, registry);
+            return registry;
+        }
+
         FriendCommandUseCases useCases = plugin.getApplicationServices().friendCommandUseCases();
 
         registry.register(FriendCommandDefinitions.ADD, context -> {
@@ -150,6 +155,19 @@ public class FriendCommand extends AbstractCommand {
         );
 
         return registry;
+    }
+
+    private static void registerProxyBackendHandlers(FriendNetPlugin plugin, CommandRegistry registry) {
+        FriendCommandDefinitions.all().stream()
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.RELOAD.path()))
+                .forEach(definition -> registry.override(definition.path(), (context, next) ->
+                        definition.platformSpecific()
+                                ? CommandFeedbackUseCases.proxyBackendGuiUnavailable()
+                                : CommandFeedbackUseCases.proxyBackendCommandDisabled()
+                ));
+        registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) ->
+                CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
+        );
     }
 
     private static Optional<KnownPlayerLookup.KnownPlayer> resolveTarget(FriendNetPlugin plugin, String name) {
