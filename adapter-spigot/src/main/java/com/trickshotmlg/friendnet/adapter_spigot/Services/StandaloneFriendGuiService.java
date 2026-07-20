@@ -67,7 +67,7 @@ public class StandaloneFriendGuiService implements FriendGuiService {
                 viewerData == null || viewerData.isShowOnlineStatus(),
                 viewerData != null && viewerData.isAutoAcceptFriends(),
                 viewerData == null || viewerData.isFriendRequestNotifications(),
-                viewerData == null || viewerData.isFriendListPublic(),
+                viewerData != null && viewerData.isFriendListPublic(),
                 viewerData != null && viewerData.getLocale() != null
                         ? viewerData.getLocale().getCode()
                         : defaultLocaleCode()

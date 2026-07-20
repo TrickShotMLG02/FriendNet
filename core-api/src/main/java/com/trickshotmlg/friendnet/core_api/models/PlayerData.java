@@ -18,7 +18,7 @@ public class PlayerData {
     private boolean showOnlineStatus = true;
     private boolean autoAcceptFriends = false;
     private boolean friendRequestNotifications = true;
-    private boolean friendListPublic = true;
+    private boolean friendListPublic = false;
     private LocaleKey locale = new LocaleKey("en");
 
     public String getLastDisplayName() {

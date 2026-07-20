@@ -47,7 +47,7 @@ public record FriendGuiViewData(
             List<FriendshipData> sentRequests,
             List<BlocklistData> blockedPlayers
     ) {
-        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, Map.of(), true, true, false, true, true, defaultLocaleCode());
+        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, Map.of(), true, true, false, true, false, defaultLocaleCode());
     }
 
     public static FriendGuiViewData fromProxyPayload(UUID viewerId, ProxyFriendListViewPayload payload) {
