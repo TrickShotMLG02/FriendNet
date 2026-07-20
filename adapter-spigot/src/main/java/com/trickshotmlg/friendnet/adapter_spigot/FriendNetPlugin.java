@@ -221,14 +221,6 @@ public final class FriendNetPlugin extends JavaPlugin {
         return config.getString("ConnectionToken", FriendNetProxyProtocol.DEFAULT_CONNECTION_TOKEN);
     }
 
-    public String getProxyBackendServerName() {
-        String configuredName = config.getString("BackendServerName", "");
-        if (configuredName != null && !configuredName.isBlank()) {
-            return configuredName;
-        }
-        return "backend";
-    }
-
     private void warnIfProxyTokenUnsafe() {
         if (isProxyBackendMode() && FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
             Logger.warn("FriendNet proxy mode is using the default or blank ConnectionToken. Set a shared secret in Spigot and Velocity configs.");

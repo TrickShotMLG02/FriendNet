@@ -92,7 +92,7 @@ public class VelocityProxyMessagingService {
             throw new ProxyProtocolException(ProxyErrorCode.AUTHENTICATION_FAILED, "Player identity does not match plugin message target.");
         }
 
-        if (!connection.getServerInfo().getName().equals(request.sourceServer())) {
+        if (!request.sourceServer().isBlank() && !connection.getServerInfo().getName().equals(request.sourceServer())) {
             Logger.debug("FriendNet request source name differs from Velocity connection: declared="
                     + request.sourceServer() + ", actual=" + connection.getServerInfo().getName());
         }

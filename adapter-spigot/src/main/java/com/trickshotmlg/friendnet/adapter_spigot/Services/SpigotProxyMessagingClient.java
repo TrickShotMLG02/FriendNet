@@ -48,7 +48,7 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
         ProxyProtocolMessage request = ProxyProtocolCodec.request(
                 ProxyRequestType.FRIEND_LIST_VIEW,
                 player.getUniqueId(),
-                plugin.getProxyBackendServerName(),
+                "",
                 new byte[0]
         );
 
