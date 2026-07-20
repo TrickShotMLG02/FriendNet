@@ -402,21 +402,21 @@ public class DatabaseServiceImpl implements DatabaseService {
             DatabaseConnection conn = database.getConnection();
 
             // create default tables
-            PreparedStatement ps = conn.prepareStatement(SQLTables.TABLE_CREATE_PLAYERDATA);
-            ps.execute();
-            ps.close();
+            try (PreparedStatement ps = conn.prepareStatement(SQLTables.TABLE_CREATE_PLAYERDATA)) {
+                ps.execute();
+            }
 
-            ps = conn.prepareStatement(SQLTables.TABLE_CREATE_FRIENDSHIPS);
-            ps.execute();
-            ps.close();
+            try (PreparedStatement ps = conn.prepareStatement(SQLTables.TABLE_CREATE_FRIENDSHIPS)) {
+                ps.execute();
+            }
 
-            ps = conn.prepareStatement(SQLTables.TABLE_CREATE_BLOCKLIST);
-            ps.execute();
-            ps.close();
+            try (PreparedStatement ps = conn.prepareStatement(SQLTables.TABLE_CREATE_BLOCKLIST)) {
+                ps.execute();
+            }
 
         } catch (SQLException e) {
             state = ServiceState.FAILED;
-            Logger.error("Error while creating initial database tables!", e);
+            throw new IllegalStateException("Could not initialize database tables: " + e.getMessage(), e);
         }
     }
 
@@ -425,6 +425,9 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void start() {
+        if (state == ServiceState.FAILED) {
+            throw new IllegalStateException("Database service cannot start because initialization failed.");
+        }
         state = ServiceState.STARTED;
     }
 

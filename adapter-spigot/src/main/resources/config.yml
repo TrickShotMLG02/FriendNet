@@ -1,7 +1,7 @@
 # Mode for the plugin: Proxy, Standalone
 Mode: Standalone
 
-# The backend to use: MySQL, SQLite, MariaDB
+# The backend to use: SQLite, MySQL, MariaDB (case-insensitive)
 DatabaseType: SQLite
 
 # Interval for coalesced standalone player-data writes.
@@ -14,7 +14,7 @@ SupportedLocales:
 
 DefaultLocale: "en_US"
 
-# The settings for MySQL Connection
+# The settings for MySQL/MariaDB Connection
 MySQL:
   host: localhost:3306
   dbName: friendnet

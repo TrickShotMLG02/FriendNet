@@ -1,6 +1,5 @@
 package com.trickshotmlg.friendnet.core.database;
 
-import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.enums.DatabaseType;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
@@ -39,13 +38,11 @@ public class SQLiteDatabase implements Database {
     public void connect() throws SQLException {
         try {
             Class.forName("org.sqlite.JDBC");
-            connection = new SimpleDatabaseConnection(DriverManager.getConnection("jdbc:sqlite:" + sqlFile));
-        }
-        catch (SQLException ex) {
-            Logger.error(ex.getMessage(), ex);
         } catch (ClassNotFoundException ex) {
-            Logger.error("You need the SQLite JDBC library. Google it. Put it in /lib folder.\n" + ex.getMessage(), ex);
+            throw new SQLException("SQLite JDBC driver was not found. Make sure sqlite-jdbc is available in the plugin jar.", ex);
         }
+
+        connection = new SimpleDatabaseConnection(DriverManager.getConnection("jdbc:sqlite:" + sqlFile));
     }
 
     /**
@@ -62,30 +59,26 @@ public class SQLiteDatabase implements Database {
      */
     @Override
     public DatabaseConnection getConnection() throws SQLException {
-        if (!this.dataFolder.exists()) {
-            this.dataFolder.mkdirs();
+        if (!this.dataFolder.exists() && !this.dataFolder.mkdirs()) {
+            throw new SQLException("Could not create plugin data folder: " + this.dataFolder.getAbsolutePath());
         }
 
         if (!this.sqlFile.exists()) {
             try {
-                this.sqlFile.createNewFile();
+                if (!this.sqlFile.createNewFile()) {
+                    throw new SQLException("Could not create SQLite database file: " + this.sqlFile.getAbsolutePath());
+                }
             } catch (IOException e) {
-                Logger.error("File write error: " + this.dbName + ".db\n" + e.getMessage(), e);
+                throw new SQLException("Could not create SQLite database file: " + this.sqlFile.getAbsolutePath(), e);
             }
         }
 
-        try {
-            if (connection != null && !connection.isClosed()) {
-                return connection;
-            }
-
-            // no active connection - connect and return new connection
-            connect();
+        if (connection != null && !connection.isClosed()) {
             return connection;
-
-        } catch (SQLException ex) {
-            Logger.error("SQLite exception on initialize\n" + ex.getMessage(), ex);
         }
-        return null;
+
+        // no active connection - connect and return new connection
+        connect();
+        return connection;
     }
 }

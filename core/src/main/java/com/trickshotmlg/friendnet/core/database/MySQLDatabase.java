@@ -39,6 +39,7 @@ public class MySQLDatabase implements Database {
      */
     @Override
     public void connect() throws SQLException {
+        loadDriver();
         String protocol = databaseType == DatabaseType.MariaDB ? "mariadb" : "mysql";
         String url = "jdbc:" + protocol + "://" + host + "/" + database + "?useSSL=false";
         connection = new SimpleDatabaseConnection(DriverManager.getConnection(url, username, password));
@@ -63,5 +64,26 @@ public class MySQLDatabase implements Database {
         // no active connection - connect and return new connection
         connect();
         return connection;
+    }
+
+    private void loadDriver() throws SQLException {
+        String driverClass = getDriverClass();
+        try {
+            Class.forName(driverClass);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("JDBC driver was not found for " + databaseType + ". Missing class: " + driverClass, e);
+        }
+    }
+
+    private String getDriverClass() throws SQLException {
+        if (databaseType == DatabaseType.MySQL) {
+            return "com.mysql.cj.jdbc.Driver";
+        }
+
+        if (databaseType == DatabaseType.MariaDB) {
+            return "org.mariadb.jdbc.Driver";
+        }
+
+        throw new SQLException("Unsupported SQL database type for MySQLDatabase: " + databaseType);
     }
 }
