@@ -1,160 +1,179 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
+import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
-import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
+import com.trickshotmlg.friendnet.core.application.command.CommandExecutionContext;
+import com.trickshotmlg.friendnet.core.application.command.CommandFeedbackUseCases;
+import com.trickshotmlg.friendnet.core.application.command.CommandPath;
+import com.trickshotmlg.friendnet.core.application.command.CommandRegistry;
 import com.trickshotmlg.friendnet.core_api.interfaces.PermissionNode;
-import org.bukkit.command.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
-    private final JavaPlugin plugin;
-    private final String name;
-    private final PermissionNode permission;
-    private final String description;
-    private final String usage;
-    private final Map<String, AbstractCommand> subCommands = new HashMap<>();
-    private AbstractCommand parent; // for permission inheritance
+    private final FriendNetPlugin plugin;
+    private final CommandPath primaryPath;
+    private final CommandRegistry registry;
+    private final Map<CommandPath, TabCompletionHandler> tabCompletionHandlers = new HashMap<>();
 
-    protected AbstractCommand(JavaPlugin plugin, String name, String description, String usage, PermissionNode permission) {
+    protected AbstractCommand(FriendNetPlugin plugin, CommandPath primaryPath, CommandRegistry registry) {
         this.plugin = plugin;
-        this.name = name;
-        this.description = description;
-        this.usage = usage;
-        this.permission = permission;
-
-        Logger.debug("Registered Command: " + this);
+        this.primaryPath = primaryPath;
+        this.registry = registry;
     }
 
-    public JavaPlugin getPlugin() { return plugin; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public String getUsage() { return usage; }
-    public PermissionNode getPermission() { return permission; }
-
-    public AbstractCommand getParent() { return parent; }
-    public void setParent(AbstractCommand parent) { this.parent = parent; }
-
-    public void registerSubCommand(AbstractCommand sub) {
-        sub.setParent(this);
-        subCommands.put(sub.getName().toLowerCase(), sub);
+    protected FriendNetPlugin getPlugin() {
+        return plugin;
     }
 
-    public Collection<AbstractCommand> getSubCommands() { return subCommands.values(); }
+    protected CommandRegistry getRegistry() {
+        return registry;
+    }
 
-    protected abstract boolean execute(CommandSender sender, String[] args);
-    protected abstract List<String> tabComplete(CommandSender sender, String[] args);
+    protected void registerTabCompletion(CommandPath path, TabCompletionHandler handler) {
+        tabCompletionHandlers.put(path, handler);
+    }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        return handleCommand(sender, args);
-    }
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        ResolvedCommand resolvedCommand = resolve(label, args);
+        Optional<CommandDefinition> definition = registry.definition(resolvedCommand.path());
 
-    public boolean handleCommand(CommandSender sender, String[] args) {
-        if (args.length == 0) {
-            // no subcommand — execute this command
-            if (!hasPermission(sender)) {
-                SpigotCommandResultRenderer.noPermission(sender);
-                return true;
-            }
-            return execute(sender, args);
+        if (definition.isEmpty()) {
+            SpigotCommandResultRenderer.render(sender, CommandFeedbackUseCases.usage(primaryUsage(sender)));
+            return true;
         }
 
-        AbstractCommand sub = subCommands.get(args[0].toLowerCase());
-        if (sub != null) {
-            return sub.handleCommand(sender, Arrays.copyOfRange(args, 1, args.length));
-        }
-
-        // No matching subcommand — maybe execute this one
-        if (!hasPermission(sender)) {
+        CommandDefinition commandDefinition = definition.get();
+        if (!hasPermission(sender, commandDefinition.permission())) {
             SpigotCommandResultRenderer.noPermission(sender);
             return true;
         }
 
-        return execute(sender, args);
+        if (commandDefinition.playerOnly() && !(sender instanceof Player)) {
+            SpigotCommandResultRenderer.playersOnly(sender);
+            return true;
+        }
+
+        SpigotCommandResultRenderer.render(sender, registry.execute(context(sender, resolvedCommand)));
+        return true;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
-        return handleTabComplete(sender, args);
-    }
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (isAlias(alias, "friends")) {
+            return List.of();
+        }
 
-    public List<String> handleTabComplete(CommandSender sender, String[] args) {
-
-        if (args.length == 1 && !subCommands.isEmpty()) {
-            return subCommands.entrySet().stream()
-                    .filter(entry -> {
-                        String cmdName = entry.getKey();
-                        AbstractCommand cmd = entry.getValue();
-
-                        boolean cmdNamePredicate = cmdName.toLowerCase().startsWith(args[0].toLowerCase());
-                        boolean cmdPredicate = cmd.hasPermission(sender);
-
-                        return cmdNamePredicate && cmdPredicate;
-                    })
-                    .map(Map.Entry::getKey)
+        if (args.length == 1) {
+            String prefix = args[0].toLowerCase(Locale.ROOT);
+            return registry.definitions().stream()
+                    .filter(definition -> definition.path().startsWith(primaryPath))
+                    .filter(definition -> definition.path().segments().size() == primaryPath.segments().size() + 1)
+                    .filter(definition -> hasPermission(sender, definition.permission()))
+                    .map(definition -> definition.path().commandName())
+                    .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
+                    .sorted(String.CASE_INSENSITIVE_ORDER)
                     .toList();
         }
 
-        AbstractCommand sub = subCommands.get(args[0].toLowerCase());
-        if (sub != null) {
-            return sub.handleTabComplete(sender, Arrays.copyOfRange(args, 1, args.length));
+        ResolvedCommand resolvedCommand = resolve(alias, args);
+        TabCompletionHandler handler = tabCompletionHandlers.get(resolvedCommand.path());
+        if (handler == null) {
+            return List.of();
         }
 
-        return tabComplete(sender, args);
+        return handler.complete(sender, resolvedCommand.args());
     }
 
-    private boolean hasPermission(CommandSender sender) {
-        // console always has permission to do something
-        if (sender instanceof ConsoleCommandSender) return true;
-
-        Player player = sender instanceof Player p ? p : null;
-
-        SpigotPlayer spigotPlayer = new SpigotPlayer(player);
-        return permission.has(spigotPlayer);
+    protected List<String> completeKnownNames(Collection<String> names, String prefix) {
+        String normalizedPrefix = prefix == null ? "" : prefix.toLowerCase(Locale.ROOT);
+        return names.stream()
+                .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(normalizedPrefix))
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .toList();
     }
 
-    private String getEffectivePermission() {
-        if (permission != null && !permission.getPermission().isEmpty()) return permission.getPermissionPrefixed();
-        if (parent != null) return parent.getEffectivePermission();
-        return null;
-    }
-
-    protected String getUsageMessage(CommandSender sender) {
-        if (getSubCommands().isEmpty()) {
-            return getUsage() != null ? getUsage() : "/" + getName();
+    private ResolvedCommand resolve(String label, String[] args) {
+        if (isAlias(label, "friends")) {
+            return new ResolvedCommand(CommandPath.of("friends"), List.of(args));
         }
 
-        StringBuilder sb = new StringBuilder("/").append(getName()).append(" <");
-
-        List<String> subNames = new ArrayList<>();
-        for (AbstractCommand sub : getSubCommands()) {
-            if (sender != null && sub.hasPermission(sender)) {
-                subNames.add(sub.getName());
-            }
+        if (args.length == 0) {
+            return new ResolvedCommand(primaryPath, List.of());
         }
 
-        subNames.sort(String.CASE_INSENSITIVE_ORDER);
+        CommandPath subcommandPath = primaryPath.append(args[0]);
+        if (registry.definition(subcommandPath).isPresent()) {
+            return new ResolvedCommand(subcommandPath, Arrays.asList(Arrays.copyOfRange(args, 1, args.length)));
+        }
 
-        sb.append(String.join(" | ", subNames)).append(">");
-        return sb.toString();
+        return new ResolvedCommand(primaryPath, Arrays.asList(args));
     }
 
-    protected String getUsageMessage() {
-        return getUsageMessage(null);
+    private CommandExecutionContext context(CommandSender sender, ResolvedCommand resolvedCommand) {
+        UUID senderId = sender instanceof Player player ? player.getUniqueId() : null;
+        return new CommandExecutionContext(
+                senderId,
+                sender.getName(),
+                sender instanceof Player,
+                resolvedCommand.path(),
+                resolvedCommand.args()
+        );
     }
 
-    @Override
-    public String toString() {
-        return  getClass().getName() + "{" +
-                "name='" + name + '\'' +
-                ", permission='" + permission + '\'' +
-                ", description='" + description + '\'' +
-                ", usage='" + getUsageMessage() + '\'' +
-                '}';
+    private boolean hasPermission(CommandSender sender, PermissionNode permission) {
+        if (permission == null) {
+            return true;
+        }
+        if (sender instanceof ConsoleCommandSender) {
+            return true;
+        }
+        if (!(sender instanceof Player player)) {
+            return false;
+        }
+
+        return permission.has(new SpigotPlayer(player));
+    }
+
+    private String primaryUsage(CommandSender sender) {
+        return registry.definitions().stream()
+                .filter(definition -> definition.path().startsWith(primaryPath))
+                .filter(definition -> definition.path().segments().size() == primaryPath.segments().size() + 1)
+                .filter(definition -> hasPermission(sender, definition.permission()))
+                .map(definition -> definition.path().commandName())
+                .sorted(Comparator.naturalOrder())
+                .reduce((left, right) -> left + " | " + right)
+                .map(names -> "/" + primaryPath.commandName() + " <" + names + ">")
+                .orElse("/" + primaryPath.commandName());
+    }
+
+    private boolean isAlias(String value, String expected) {
+        return value != null && value.equalsIgnoreCase(expected);
+    }
+
+    protected record ResolvedCommand(CommandPath path, List<String> args) {
+    }
+
+    @FunctionalInterface
+    protected interface TabCompletionHandler {
+        List<String> complete(CommandSender sender, List<String> args);
     }
 }
