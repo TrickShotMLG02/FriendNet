@@ -67,6 +67,11 @@ public class VelocityFriendCommand implements SimpleCommand {
             return;
         }
 
+        if (resolvedCommand.path().equals(FriendCommandDefinitions.FRIEND) && resolvedCommand.args().isEmpty()) {
+            VelocityCommandResultRenderer.render(plugin, invocation.source(), CommandFeedbackUseCases.usage(primaryUsage(invocation.source())));
+            return;
+        }
+
         VelocityCommandResultRenderer.render(plugin, invocation.source(), registry.execute(context(invocation.source(), resolvedCommand)));
     }
 
@@ -77,16 +82,9 @@ public class VelocityFriendCommand implements SimpleCommand {
         }
 
         String[] arguments = invocation.arguments();
-        if (arguments.length == 1) {
-            String prefix = arguments[0].toLowerCase(Locale.ROOT);
-            return registry.definitions().stream()
-                    .filter(definition -> definition.path().startsWith(FriendCommandDefinitions.FRIEND))
-                    .filter(definition -> definition.path().segments().size() == FriendCommandDefinitions.FRIEND.segments().size() + 1)
-                    .filter(definition -> hasPermission(invocation.source(), definition.permission()))
-                    .map(definition -> definition.path().commandName())
-                    .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .toList();
+        if (arguments.length <= 1) {
+            String prefix = arguments.length == 0 ? "" : arguments[0].toLowerCase(Locale.ROOT);
+            return completeSubcommands(invocation.source(), prefix);
         }
 
         ResolvedCommand resolvedCommand = resolve(invocation.alias(), arguments);
@@ -341,6 +339,17 @@ public class VelocityFriendCommand implements SimpleCommand {
             return true;
         }
         return permission.anyParentGranted(source::hasPermission);
+    }
+
+    private List<String> completeSubcommands(CommandSource source, String prefix) {
+        return registry.definitions().stream()
+                .filter(definition -> definition.path().startsWith(FriendCommandDefinitions.FRIEND))
+                .filter(definition -> definition.path().segments().size() == FriendCommandDefinitions.FRIEND.segments().size() + 1)
+                .filter(definition -> hasPermission(source, definition.permission()))
+                .map(definition -> definition.path().commandName())
+                .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .toList();
     }
 
     private String primaryUsage(CommandSource source) {
