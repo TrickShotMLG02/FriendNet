@@ -38,18 +38,18 @@ public class MySQLDatabase implements Database {
      * @throws SQLException
      */
     @Override
-    public void connect() throws SQLException {
-        String protocol = databaseType == DatabaseType.MariaDB ? "mariadb" : "mysql";
-        String url = "jdbc:" + protocol + "://" + host + "/" + database + "?useSSL=false";
-        connection = new SimpleDatabaseConnection(DriverManager.getConnection(url, username, password));
+    public synchronized void connect() throws SQLException {
+        loadDriver();
+        connection = new SimpleDatabaseConnection(DriverManager.getConnection(buildJdbcUrl(host, database, databaseType), username, password));
     }
 
     /**
      * @throws SQLException
      */
     @Override
-    public void disconnect() throws SQLException {
+    public synchronized void disconnect() throws SQLException {
         if (connection != null && !connection.isClosed()) connection.close();
+        connection = null;
     }
 
     /**
@@ -57,11 +57,73 @@ public class MySQLDatabase implements Database {
      * @throws SQLException
      */
     @Override
-    public DatabaseConnection getConnection() throws SQLException {
-        if (connection != null && !connection.isClosed()) return connection;
+    public synchronized DatabaseConnection getConnection() throws SQLException {
+        try {
+            if (isConnectionUsable()) return connection;
+        } catch (SQLException e) {
+            closeQuietly();
+        }
 
         // no active connection - connect and return new connection
+        closeQuietly();
         connect();
         return connection;
+    }
+
+    private boolean isConnectionUsable() throws SQLException {
+        return connection != null
+                && !connection.isClosed()
+                && connection.getConnection().isValid(2);
+    }
+
+    private void closeQuietly() {
+        if (connection == null) {
+            return;
+        }
+
+        try {
+            if (!connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException ignored) {
+            // Reconnect path: stale connections should not prevent opening a new one.
+        } finally {
+            connection = null;
+        }
+    }
+
+    private void loadDriver() throws SQLException {
+        String driverClass = getDriverClass();
+        try {
+            Class.forName(driverClass);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("JDBC driver was not found for " + databaseType + ". Missing class: " + driverClass, e);
+        }
+    }
+
+    private String getDriverClass() throws SQLException {
+        if (databaseType == DatabaseType.MySQL) {
+            return "com.mysql.cj.jdbc.Driver";
+        }
+
+        if (databaseType == DatabaseType.MariaDB) {
+            return "org.mariadb.jdbc.Driver";
+        }
+
+        throw new SQLException("Unsupported SQL database type for MySQLDatabase: " + databaseType);
+    }
+
+    static String buildJdbcUrl(String host, String database, DatabaseType databaseType) throws SQLException {
+        if (databaseType == DatabaseType.MySQL) {
+            return "jdbc:mysql://" + host + "/" + database +
+                    "?useSSL=false&connectTimeout=10000&socketTimeout=30000&tcpKeepAlive=true";
+        }
+
+        if (databaseType == DatabaseType.MariaDB) {
+            return "jdbc:mariadb://" + host + "/" + database +
+                    "?useSsl=false&connectTimeout=10000&socketTimeout=30000&tcpKeepAlive=true";
+        }
+
+        throw new SQLException("Unsupported SQL database type for MySQLDatabase: " + databaseType);
     }
 }

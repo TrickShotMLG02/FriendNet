@@ -28,6 +28,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.util.Locale;
 
 public final class FriendNetPlugin extends JavaPlugin {
     private static boolean DEBUG = true;
@@ -49,14 +50,20 @@ public final class FriendNetPlugin extends JavaPlugin {
         Logger.enableDebug(DEBUG);
         Logger.setLogger(new SpigotLogger(this));
 
-        MessageManager.init(this);
+        try {
+            MessageManager.init(this);
 
-        initializePlatform();
-        initializeServices();
-        registerListeners();
-        registerCommands();
-        registerEvents();
-        Logger.info("FriendNet enabled!");
+            initializePlatform();
+            initializeServices();
+            registerListeners();
+            registerCommands();
+            registerEvents();
+            Logger.info("FriendNet enabled!");
+        } catch (PluginStartupException e) {
+            disableAfterStartupFailure(e.getMessage(), e);
+        } catch (RuntimeException e) {
+            disableAfterStartupFailure("Unexpected startup error: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -109,12 +116,29 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private DatabaseType parseDatabaseType(String value) {
-        try {
-            return DatabaseType.valueOf(value);
-        } catch (IllegalArgumentException | NullPointerException e) {
-            Logger.warn("Unknown DatabaseType '" + value + "', falling back to SQLite");
-            return DatabaseType.SQLite;
+        if (value == null || value.isBlank()) {
+            throw new PluginStartupException("DatabaseType is missing in config.yml. Supported values: SQLite, MySQL, MariaDB.");
         }
+
+        String normalized = value.trim().replace("-", "").replace("_", "").toLowerCase(Locale.ROOT);
+        switch (normalized) {
+            case "sqlite":
+                return DatabaseType.SQLite;
+            case "mysql":
+                return DatabaseType.MySQL;
+            case "mariadb":
+                return DatabaseType.MariaDB;
+            default:
+                throw new PluginStartupException("Unknown DatabaseType '" + value + "' in config.yml. Supported values: SQLite, MySQL, MariaDB.");
+        }
+    }
+
+    private void disableAfterStartupFailure(String message, Throwable throwable) {
+        Logger.error("FriendNet startup failed: " + message, throwable);
+        getLogger().severe("FriendNet startup failed. The plugin will be disabled.");
+        getLogger().severe(message);
+        getLogger().severe("Check config.yml, especially DatabaseType and the matching database connection settings.");
+        getServer().getPluginManager().disablePlugin(this);
     }
 
     private void registerListeners() {
@@ -192,6 +216,16 @@ public final class FriendNetPlugin extends JavaPlugin {
         } catch (Exception e) {
             e.printStackTrace();
             return false;
+        }
+    }
+
+    private static final class PluginStartupException extends RuntimeException {
+        private PluginStartupException(String message) {
+            super(message);
+        }
+
+        private PluginStartupException(String message, Throwable cause) {
+            super(message, cause);
         }
     }
 }

@@ -401,22 +401,11 @@ public class DatabaseServiceImpl implements DatabaseService {
         try {
             DatabaseConnection conn = database.getConnection();
 
-            // create default tables
-            PreparedStatement ps = conn.prepareStatement(SQLTables.TABLE_CREATE_PLAYERDATA);
-            ps.execute();
-            ps.close();
-
-            ps = conn.prepareStatement(SQLTables.TABLE_CREATE_FRIENDSHIPS);
-            ps.execute();
-            ps.close();
-
-            ps = conn.prepareStatement(SQLTables.TABLE_CREATE_BLOCKLIST);
-            ps.execute();
-            ps.close();
+            new DatabaseMigrationRunner(DatabaseMigrations.all()).migrate(conn);
 
         } catch (SQLException e) {
             state = ServiceState.FAILED;
-            Logger.error("Error while creating initial database tables!", e);
+            throw new IllegalStateException("Could not migrate database schema: " + e.getMessage(), e);
         }
     }
 
@@ -425,6 +414,9 @@ public class DatabaseServiceImpl implements DatabaseService {
      */
     @Override
     public void start() {
+        if (state == ServiceState.FAILED) {
+            throw new IllegalStateException("Database service cannot start because initialization failed.");
+        }
         state = ServiceState.STARTED;
     }
 
