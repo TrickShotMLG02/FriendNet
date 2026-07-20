@@ -224,6 +224,10 @@ public final class FriendNetVelocityPlugin {
         return applicationServices;
     }
 
+    public VelocityProxyMessagingService getProxyMessagingService() {
+        return proxyMessagingService;
+    }
+
     public VelocityConfig getConfig() {
         return config;
     }

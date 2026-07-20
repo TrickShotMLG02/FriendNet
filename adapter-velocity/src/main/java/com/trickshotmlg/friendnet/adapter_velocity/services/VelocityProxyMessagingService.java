@@ -17,24 +17,32 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPaylo
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessagePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessageRecipient;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyOpenBackendGuiPayloadCodec;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.connection.PluginMessageEvent;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+import com.velocitypowered.api.scheduler.ScheduledTask;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class VelocityProxyMessagingService {
 
     public static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(FriendNetProxyProtocol.CHANNEL);
+    private static final long BACKEND_GUI_TIMEOUT_MILLIS = 1500L;
 
     private final FriendNetVelocityPlugin plugin;
+    private final Map<UUID, PendingBackendGuiRequest> pendingBackendGuiRequests = new ConcurrentHashMap<>();
 
     public VelocityProxyMessagingService(FriendNetVelocityPlugin plugin) {
         this.plugin = plugin;
@@ -47,6 +55,41 @@ public class VelocityProxyMessagingService {
 
     public void unregister() {
         plugin.getServer().getChannelRegistrar().unregister(CHANNEL);
+        pendingBackendGuiRequests.values().forEach(request -> request.timeoutTask().cancel());
+        pendingBackendGuiRequests.clear();
+    }
+
+    public boolean openBackendGui(Player player, ProxyBackendGuiType guiType, Runnable fallback) {
+        ServerConnection connection = player.getCurrentServer().orElse(null);
+        if (connection == null) {
+            return false;
+        }
+
+        ProxyProtocolMessage request = ProxyProtocolCodec.request(
+                ProxyRequestType.OPEN_BACKEND_GUI,
+                player.getUniqueId(),
+                "velocity",
+                ProxyOpenBackendGuiPayloadCodec.encode(guiType)
+        );
+        ScheduledTask timeoutTask = plugin.getServer().getScheduler().buildTask(plugin, () -> {
+            PendingBackendGuiRequest removed = pendingBackendGuiRequests.remove(request.correlationId());
+            if (removed != null) {
+                Logger.debug("Backend GUI request timed out; rendering Velocity text fallback: " + request.correlationId());
+                removed.fallback().run();
+            }
+        }).delay(BACKEND_GUI_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS).schedule();
+
+        pendingBackendGuiRequests.put(request.correlationId(), new PendingBackendGuiRequest(player.getUniqueId(), fallback, timeoutTask));
+        boolean sent = connection.sendPluginMessage(CHANNEL, ProxyProtocolCodec.encodeSigned(request, plugin.getConnectionToken()));
+        if (!sent) {
+            PendingBackendGuiRequest removed = pendingBackendGuiRequests.remove(request.correlationId());
+            if (removed != null) {
+                removed.timeoutTask().cancel();
+            }
+            return false;
+        }
+
+        return true;
     }
 
     @Subscribe
@@ -61,28 +104,33 @@ public class VelocityProxyMessagingService {
             return;
         }
 
-        ProxyProtocolMessage request;
+        ProxyProtocolMessage message;
         try {
-            request = ProxyProtocolCodec.decode(event.getData());
+            message = ProxyProtocolCodec.decode(event.getData());
+            ProxyProtocolCodec.verify(message, plugin.getConnectionToken(), System.currentTimeMillis());
         } catch (ProxyProtocolException e) {
             Logger.warn("Rejected malformed FriendNet proxy message from " + connection.getServerInfo().getName() + ": " + e.getMessage());
             return;
         }
 
         try {
-            Player player = validate(request, event, connection);
-            send(connection, handleRequest(request, player));
+            if (message.kind() == ProxyMessageKind.RESPONSE) {
+                handleBackendGuiResponse(message);
+                return;
+            }
+
+            Player player = validateRequest(message, event, connection);
+            send(connection, handleRequest(message, player));
         } catch (ProxyProtocolException e) {
-            Logger.warn("Rejected FriendNet proxy request " + request.correlationId() + ": " + e.getMessage());
-            send(connection, ProxyProtocolCodec.response(request, ProxyResponseStatus.ERROR, e.getErrorCode(), new byte[0]));
+            Logger.warn("Rejected FriendNet proxy request " + message.correlationId() + ": " + e.getMessage());
+            send(connection, ProxyProtocolCodec.response(message, ProxyResponseStatus.ERROR, e.getErrorCode(), new byte[0]));
         } catch (RuntimeException e) {
-            Logger.error("Could not handle FriendNet proxy request " + request.correlationId(), e);
-            send(connection, ProxyProtocolCodec.response(request, ProxyResponseStatus.ERROR, ProxyErrorCode.INTERNAL_ERROR, new byte[0]));
+            Logger.error("Could not handle FriendNet proxy request " + message.correlationId(), e);
+            send(connection, ProxyProtocolCodec.response(message, ProxyResponseStatus.ERROR, ProxyErrorCode.INTERNAL_ERROR, new byte[0]));
         }
     }
 
-    private Player validate(ProxyProtocolMessage request, PluginMessageEvent event, ServerConnection connection) {
-        ProxyProtocolCodec.verify(request, plugin.getConnectionToken(), System.currentTimeMillis());
+    private Player validateRequest(ProxyProtocolMessage request, PluginMessageEvent event, ServerConnection connection) {
         if (request.kind() != ProxyMessageKind.REQUEST) {
             throw new ProxyProtocolException(ProxyErrorCode.BAD_REQUEST, "Expected request message.");
         }
@@ -101,6 +149,27 @@ public class VelocityProxyMessagingService {
         }
 
         return player;
+    }
+
+    private void handleBackendGuiResponse(ProxyProtocolMessage response) {
+        PendingBackendGuiRequest pendingRequest = pendingBackendGuiRequests.remove(response.correlationId());
+        if (pendingRequest == null) {
+            Logger.debug("Received backend GUI response without pending request: " + response.correlationId());
+            return;
+        }
+
+        pendingRequest.timeoutTask().cancel();
+        if (!pendingRequest.playerId().equals(response.playerId())) {
+            Logger.warn("Rejected backend GUI response for mismatched player: " + response.correlationId());
+            pendingRequest.fallback().run();
+            return;
+        }
+
+        if (response.responseStatus() == ProxyResponseStatus.ERROR) {
+            Logger.debug("Backend GUI request failed; rendering Velocity text fallback: "
+                    + response.correlationId() + " (" + response.errorCode() + ")");
+            pendingRequest.fallback().run();
+        }
     }
 
     private ProxyProtocolMessage handleRequest(ProxyProtocolMessage request, Player player) {
@@ -185,5 +254,12 @@ public class VelocityProxyMessagingService {
 
     private void send(ServerConnection connection, ProxyProtocolMessage response) {
         connection.sendPluginMessage(CHANNEL, ProxyProtocolCodec.encodeSigned(response, plugin.getConnectionToken()));
+    }
+
+    private record PendingBackendGuiRequest(
+            UUID playerId,
+            Runnable fallback,
+            ScheduledTask timeoutTask
+    ) {
     }
 }

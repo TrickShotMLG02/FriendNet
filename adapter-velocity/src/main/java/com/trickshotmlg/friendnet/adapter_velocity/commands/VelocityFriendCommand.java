@@ -17,15 +17,10 @@ import com.trickshotmlg.friendnet.core_api.interfaces.PermissionNode;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
-import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolCodec;
-import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolMessage;
-import com.trickshotmlg.friendnet.core_api.proxy.ProxyRequestType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
-import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyOpenBackendGuiPayloadCodec;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
-import com.velocitypowered.api.proxy.ServerConnection;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -228,10 +223,14 @@ public class VelocityFriendCommand implements SimpleCommand {
             return CommandFeedbackUseCases.usage(FriendCommandDefinitions.LIST.usage());
         }
 
-        if (requestBackendGui(plugin, senderId, ProxyBackendGuiType.FRIENDS)) {
+        if (requestBackendGui(plugin, senderId, ProxyBackendGuiType.FRIENDS, () -> renderFriendsText(plugin, senderId))) {
             return CommandUseCaseResult.builder(true).build();
         }
 
+        return friendsText(plugin, senderId);
+    }
+
+    private static CommandUseCaseResult friendsText(FriendNetVelocityPlugin plugin, UUID senderId) {
         FriendListViewData viewData = plugin.getApplicationServices().friendCommandUseCases().listViewData(senderId);
         if (viewData.friends().isEmpty()) {
             return CommandUseCaseResult.builder(false)
@@ -256,10 +255,14 @@ public class VelocityFriendCommand implements SimpleCommand {
             return CommandFeedbackUseCases.usage(FriendCommandDefinitions.REQUESTS.usage());
         }
 
-        if (requestBackendGui(plugin, senderId, ProxyBackendGuiType.REQUESTS)) {
+        if (requestBackendGui(plugin, senderId, ProxyBackendGuiType.REQUESTS, () -> renderRequestsText(plugin, senderId))) {
             return CommandUseCaseResult.builder(true).build();
         }
 
+        return requestsText(plugin, senderId);
+    }
+
+    private static CommandUseCaseResult requestsText(FriendNetVelocityPlugin plugin, UUID senderId) {
         FriendListViewData viewData = plugin.getApplicationServices().friendCommandUseCases().listViewData(senderId);
         if (viewData.pendingRequests().isEmpty()) {
             return CommandUseCaseResult.builder(false)
@@ -279,7 +282,19 @@ public class VelocityFriendCommand implements SimpleCommand {
         return result.build();
     }
 
-    private static boolean requestBackendGui(FriendNetVelocityPlugin plugin, UUID senderId, ProxyBackendGuiType guiType) {
+    private static void renderFriendsText(FriendNetVelocityPlugin plugin, UUID senderId) {
+        plugin.getServer().getPlayer(senderId).ifPresent(player ->
+                VelocityCommandResultRenderer.render(plugin, player, friendsText(plugin, senderId))
+        );
+    }
+
+    private static void renderRequestsText(FriendNetVelocityPlugin plugin, UUID senderId) {
+        plugin.getServer().getPlayer(senderId).ifPresent(player ->
+                VelocityCommandResultRenderer.render(plugin, player, requestsText(plugin, senderId))
+        );
+    }
+
+    private static boolean requestBackendGui(FriendNetVelocityPlugin plugin, UUID senderId, ProxyBackendGuiType guiType, Runnable fallback) {
         if (senderId == null) {
             return false;
         }
@@ -289,21 +304,7 @@ public class VelocityFriendCommand implements SimpleCommand {
             return false;
         }
 
-        ServerConnection connection = player.getCurrentServer().orElse(null);
-        if (connection == null) {
-            return false;
-        }
-
-        ProxyProtocolMessage request = ProxyProtocolCodec.request(
-                ProxyRequestType.OPEN_BACKEND_GUI,
-                senderId,
-                "velocity",
-                ProxyOpenBackendGuiPayloadCodec.encode(guiType)
-        );
-        return connection.sendPluginMessage(
-                VelocityProxyMessagingService.CHANNEL,
-                ProxyProtocolCodec.encodeSigned(request, plugin.getConnectionToken())
-        );
+        return plugin.getProxyMessagingService().openBackendGui(player, guiType, fallback);
     }
 
     private ResolvedCommand resolve(String label, String[] args) {

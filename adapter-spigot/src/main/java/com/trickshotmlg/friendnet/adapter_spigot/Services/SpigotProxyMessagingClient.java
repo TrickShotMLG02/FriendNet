@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
+import com.trickshotmlg.friendnet.core_api.proxy.ProxyErrorCode;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyMessageKind;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyProtocolException;
@@ -144,6 +145,7 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                     if (throwable != null) {
                         Logger.warn("Could not open backend GUI from proxy request: " + throwable.getMessage());
+                        sendProxyResponse(player, request, ProxyResponseStatus.ERROR, ProxyErrorCode.INTERNAL_ERROR);
                         return;
                     }
 
@@ -151,8 +153,14 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
                         case FRIENDS -> new FriendsGUI(plugin, player, viewData).open();
                         case REQUESTS -> new RequestsGUI(plugin, player, viewData).openWithParent(new FriendsGUI(plugin, player, viewData));
                     }
+                    sendProxyResponse(player, request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE);
                 })
         );
+    }
+
+    private void sendProxyResponse(Player player, ProxyProtocolMessage request, ProxyResponseStatus status, ProxyErrorCode errorCode) {
+        ProxyProtocolMessage response = ProxyProtocolCodec.response(request, status, errorCode, new byte[0]);
+        player.sendPluginMessage(plugin, FriendNetProxyProtocol.CHANNEL, ProxyProtocolCodec.encodeSigned(response, plugin.getConnectionToken()));
     }
 
     private record PendingRequest(
