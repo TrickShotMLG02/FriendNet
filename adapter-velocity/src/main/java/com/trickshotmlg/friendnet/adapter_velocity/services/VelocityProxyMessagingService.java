@@ -129,7 +129,7 @@ public class VelocityProxyMessagingService {
     }
 
     private void ensurePermission(Player player, CommandDefinition definition) {
-        if (!player.hasPermission(definition.permission().getPermissionPrefixed())) {
+        if (!definition.permission().anyParentGranted(player::hasPermission)) {
             throw new ProxyProtocolException(ProxyErrorCode.PERMISSION_DENIED, "Player lacks permission: " + definition.permission().getPermissionPrefixed());
         }
     }

@@ -60,4 +60,16 @@ public interface PermissionNode {
         PermissionNode parent = getParent();
         return parent != null && parent.matches(permission);
     }
+
+    /**
+     * Checks this node and every parent node using the supplied platform permission check.
+     */
+    default boolean anyParentGranted(java.util.function.Predicate<String> permissionCheck) {
+        if (permissionCheck.test(getPermissionPrefixed())) {
+            return true;
+        }
+
+        PermissionNode parent = getParent();
+        return parent != null && parent.anyParentGranted(permissionCheck);
+    }
 }

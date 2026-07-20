@@ -2,7 +2,10 @@ package com.trickshotmlg.friendnet.core.permissions;
 
 import junit.framework.TestCase;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class PermissionTest extends TestCase {
 
@@ -66,6 +69,53 @@ public class PermissionTest extends TestCase {
     }
 
     public void testHas() {
-        //assertEquals("", PermissionHolder.FRIEND_REQUESTS_DENY.getPermissionPrefixed());
+        TestPlayer player = new TestPlayer(PermissionHolder.FRIENDS_BASIC.getPermissionPrefixed());
+
+        assertTrue(PermissionHolder.FRIEND_LIST.has(player));
+        assertTrue(PermissionHolder.FRIEND_REQUESTS_ACCEPT.has(player));
+        assertFalse(PermissionHolder.FRIENDS_RELOAD.has(player));
+    }
+
+    public void testAdminParentGrantsReload() {
+        TestPlayer player = new TestPlayer(PermissionHolder.FRIENDS_ADMIN.getPermissionPrefixed());
+
+        assertTrue(PermissionHolder.FRIENDS_RELOAD.has(player));
+    }
+
+    private static final class TestPlayer implements com.trickshotmlg.friendnet.core_api.interfaces.PlatformPlayer {
+        private final Set<String> permissions = new HashSet<>();
+
+        private TestPlayer(String... permissions) {
+            this.permissions.addAll(List.of(permissions));
+        }
+
+        @Override
+        public UUID getUniqueId() {
+            return UUID.randomUUID();
+        }
+
+        @Override
+        public String getName() {
+            return "TestPlayer";
+        }
+
+        @Override
+        public String getDisplayName() {
+            return getName();
+        }
+
+        @Override
+        public boolean isOnline() {
+            return true;
+        }
+
+        @Override
+        public boolean hasPermission(String permission) {
+            return permissions.contains(permission);
+        }
+
+        @Override
+        public void sendMessage(String message) {
+        }
     }
 }

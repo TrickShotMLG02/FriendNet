@@ -298,7 +298,7 @@ public class VelocityFriendCommand implements SimpleCommand {
         if (permission == null) {
             return true;
         }
-        return source.hasPermission(permission.getPermissionPrefixed());
+        return permission.anyParentGranted(source::hasPermission);
     }
 
     private String primaryUsage(CommandSource source) {
