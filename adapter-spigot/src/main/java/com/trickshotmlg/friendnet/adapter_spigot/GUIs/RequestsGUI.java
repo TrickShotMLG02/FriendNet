@@ -5,9 +5,14 @@ import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -27,7 +32,7 @@ public class RequestsGUI extends AbstractGUI {
 
     private int currentPage = 0;
     private final int requestsPerPage = friendRows * 9;
-    private final FriendGuiViewData viewData;
+    private FriendGuiViewData viewData;
     private FriendGuiViewData currentViewData;
 
     public RequestsGUI(JavaPlugin plugin, Player player) {
@@ -80,7 +85,7 @@ public class RequestsGUI extends AbstractGUI {
             setInteractableItem(i, new ActionItemStack(
                     createFriendItem(request),
                     player,
-                    () -> openChild(new FriendRequestDetailGUI(plugin, player, requesterId)),
+                    () -> openChild(new FriendRequestDetailGUI(plugin, player, requesterId, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
@@ -158,10 +163,7 @@ public class RequestsGUI extends AbstractGUI {
                                     Map.of(),
                                     confirmed -> {
                                         if (confirmed) {
-                                            new FriendRequestActions((FriendNetPlugin) plugin)
-                                                    .denyAllRequests(player);
-
-                                            buildInventory();
+                                            denyAllRequests();
                                         }
                                     }
                             )
@@ -216,12 +218,7 @@ public class RequestsGUI extends AbstractGUI {
                     new ActionItemStack(
                             acceptAllItem,
                             player,
-                            () -> {
-                                new FriendRequestActions((FriendNetPlugin) plugin)
-                                        .acceptAllRequests(player);
-
-                                buildInventory();
-                            }
+                            this::acceptAllRequests
                     )
             );
         }
@@ -303,5 +300,44 @@ public class RequestsGUI extends AbstractGUI {
         }
 
         return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, playerId);
+    }
+
+    private void acceptAllRequests() {
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            executeProxyAction(ProxyActionType.ACCEPT_ALL_REQUESTS);
+            return;
+        }
+
+        new FriendRequestActions((FriendNetPlugin) plugin).acceptAllRequests(player);
+        buildInventory();
+    }
+
+    private void denyAllRequests() {
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            executeProxyAction(ProxyActionType.DENY_ALL_REQUESTS);
+            return;
+        }
+
+        new FriendRequestActions((FriendNetPlugin) plugin).denyAllRequests(player);
+        buildInventory();
+    }
+
+    private void executeProxyAction(ProxyActionType actionType) {
+        ProxyActionRequestPayload request = new ProxyActionRequestPayload(actionType, null, "", true);
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        friendNetPlugin.getFriendGuiService().executeAction(player, request).whenComplete((response, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        MessageManager.send(player, "commandFeedback.proxyBackendGuiUnavailable");
+                        return;
+                    }
+
+                    ProxyActionResponseRenderer.render(player, response);
+                    if (response.friendListView() != null) {
+                        viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                    }
+                    buildInventory();
+                })
+        );
     }
 }

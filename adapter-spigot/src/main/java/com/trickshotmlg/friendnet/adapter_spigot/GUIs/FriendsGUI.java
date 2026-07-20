@@ -79,7 +79,7 @@ public class FriendsGUI extends AbstractGUI {
             setInteractableItem(i, new ActionItemStack(
                     friendItem,
                     player,
-                    () -> openChild(new FriendDetailGUI(plugin, player, friendId)),
+                    () -> openChild(new FriendDetailGUI(plugin, player, friendId, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
@@ -176,9 +176,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.requests.lore"
                     ),
                     player,
-                    () -> {
-                        this.openChild(new RequestsGUI(plugin, player));
-                    },
+                    () -> this.openChild(new RequestsGUI(plugin, player, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             );
 
