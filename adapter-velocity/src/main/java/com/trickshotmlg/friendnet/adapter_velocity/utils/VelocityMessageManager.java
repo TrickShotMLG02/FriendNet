@@ -9,18 +9,21 @@ import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.DumperOptions;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +49,7 @@ public class VelocityMessageManager {
         loadLocaleRegistry();
         messages.clear();
         loadBundledLocaleFiles();
-        copyBundledLocaleFiles();
+        syncBundledLocaleFiles();
         loadLocaleFiles();
     }
 
@@ -156,22 +159,72 @@ public class VelocityMessageManager {
         LocaleKey.setDefaultLocale(registeredDefault.orElse(LocaleKey.values().stream().findFirst().orElse(configuredDefault)));
     }
 
-    private void copyBundledLocaleFiles() {
+    private void syncBundledLocaleFiles() {
         Path localesDirectory = plugin.getDataDirectory().resolve("Locales");
         try {
             Files.createDirectories(localesDirectory);
             for (String resourceName : getBundledLocaleResourceNames()) {
                 Path target = plugin.getDataDirectory().resolve(resourceName);
-                if (Files.notExists(target)) {
-                    try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourceName)) {
-                        if (inputStream != null) {
-                            Files.copy(inputStream, target, StandardCopyOption.REPLACE_EXISTING);
-                        }
-                    }
+                Files.createDirectories(target.getParent());
+
+                Map<String, Object> bundledValues = loadYamlMapFromResource(resourceName);
+                if (bundledValues.isEmpty()) {
+                    continue;
                 }
+
+                Map<String, Object> localValues = loadYamlMapFromFile(target);
+                Map<String, Object> mergedValues = mergeMaps(bundledValues, localValues);
+                writeYamlMap(target, mergedValues);
+                Logger.debug("Synchronized Velocity locale file " + target.getFileName());
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Could not copy bundled Velocity locale files", e);
+            throw new IllegalStateException("Could not synchronize bundled Velocity locale files", e);
+        }
+    }
+
+    private Map<String, Object> loadYamlMapFromResource(String resourceName) throws IOException {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourceName)) {
+            return loadYamlMap(inputStream);
+        }
+    }
+
+    private Map<String, Object> loadYamlMapFromFile(Path file) throws IOException {
+        if (Files.notExists(file)) {
+            return Map.of();
+        }
+
+        try (InputStream inputStream = Files.newInputStream(file)) {
+            return loadYamlMap(inputStream);
+        }
+    }
+
+    private Map<String, Object> loadYamlMap(InputStream inputStream) {
+        if (inputStream == null) {
+            return Map.of();
+        }
+
+        Object loaded = new Yaml().load(inputStream);
+        if (!(loaded instanceof Map<?, ?> loadedMap)) {
+            return Map.of();
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : loadedMap.entrySet()) {
+            if (entry.getKey() != null) {
+                result.put(entry.getKey().toString(), entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    private void writeYamlMap(Path file, Map<String, Object> values) throws IOException {
+        DumperOptions options = new DumperOptions();
+        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+        options.setPrettyFlow(true);
+        options.setIndent(2);
+
+        try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
+            new Yaml(options).dump(values, writer);
         }
     }
 
@@ -256,7 +309,7 @@ public class VelocityMessageManager {
     }
 
     private Map<String, Object> mergeMaps(Map<String, Object> base, Map<String, Object> overrides) {
-        Map<String, Object> merged = new HashMap<>(base);
+        Map<String, Object> merged = new LinkedHashMap<>(base);
         for (Map.Entry<String, Object> entry : overrides.entrySet()) {
             Object current = merged.get(entry.getKey());
             Object override = entry.getValue();
