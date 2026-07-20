@@ -18,8 +18,10 @@ public class VelocityPlayerDataSaveQueue {
     private final PlayerService playerService;
     private final DatabaseService databaseService;
     private final Set<UUID> dirtyPlayers = ConcurrentHashMap.newKeySet();
+    private final ConcurrentHashMap<UUID, PlayerData> dirtySnapshots = new ConcurrentHashMap<>();
 
     private ScheduledTask flushTask;
+    private volatile boolean stopped;
 
     public VelocityPlayerDataSaveQueue(FriendNetVelocityPlugin plugin, PlayerService playerService, DatabaseService databaseService) {
         this.plugin = plugin;
@@ -32,6 +34,7 @@ public class VelocityPlayerDataSaveQueue {
             return;
         }
 
+        stopped = false;
         flushTask = plugin.getServer().getScheduler()
                 .buildTask(plugin, this::flushDirtyPlayers)
                 .repeat(intervalSeconds, TimeUnit.SECONDS)
@@ -39,6 +42,7 @@ public class VelocityPlayerDataSaveQueue {
     }
 
     public void stopAndFlush() {
+        stopped = true;
         if (flushTask != null) {
             flushTask.cancel();
             flushTask = null;
@@ -48,19 +52,31 @@ public class VelocityPlayerDataSaveQueue {
     }
 
     public void markDirty(UUID playerId) {
-        if (playerId != null) {
-            dirtyPlayers.add(playerId);
+        if (stopped || playerId == null) {
+            return;
         }
+
+        dirtyPlayers.add(playerId);
+    }
+
+    public void markDirty(PlayerData playerData) {
+        if (stopped || playerData == null) {
+            return;
+        }
+
+        dirtySnapshots.put(playerData.getPlayerId(), playerData);
+        dirtyPlayers.add(playerData.getPlayerId());
     }
 
     public void clearDirty(UUID playerId) {
         if (playerId != null) {
             dirtyPlayers.remove(playerId);
+            dirtySnapshots.remove(playerId);
         }
     }
 
     public void saveNow(PlayerData playerData) {
-        if (playerData == null) {
+        if (stopped || playerData == null) {
             return;
         }
 
@@ -68,20 +84,20 @@ public class VelocityPlayerDataSaveQueue {
         clearDirty(playerData.getPlayerId());
     }
 
-    public void flushDirtyPlayers() {
+    public synchronized void flushDirtyPlayers() {
         if (dirtyPlayers.isEmpty()) {
             return;
         }
 
         for (UUID playerId : Set.copyOf(dirtyPlayers)) {
-            PlayerData playerData = playerService.getPlayerData(playerId);
+            PlayerData playerData = dirtySnapshots.getOrDefault(playerId, playerService.getPlayerData(playerId));
             if (playerData == null) {
-                dirtyPlayers.remove(playerId);
+                clearDirty(playerId);
                 continue;
             }
 
             databaseService.save(playerData);
-            dirtyPlayers.remove(playerId);
+            clearDirty(playerId);
         }
 
         Logger.debug("Flushed dirty player data queue");
