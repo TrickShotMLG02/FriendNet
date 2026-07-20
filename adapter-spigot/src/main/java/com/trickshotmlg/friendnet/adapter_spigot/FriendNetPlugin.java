@@ -3,9 +3,12 @@ package com.trickshotmlg.friendnet.adapter_spigot;
 import com.trickshotmlg.friendnet.adapter_spigot.Commands.FriendCommand;
 import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.GUIListener;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiService;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.ProxyBackendFriendGuiService;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.ProxyBackendDatabaseService;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.SpigotProxyMessagingClient;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.StandaloneFriendGuiService;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotLogger;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
@@ -49,6 +52,7 @@ public final class FriendNetPlugin extends JavaPlugin {
     private SpigotApplicationServices applicationServices;
     private NetworkAuthorityService networkAuthorityService;
     private SpigotProxyMessagingClient proxyMessagingClient;
+    private FriendGuiService friendGuiService;
 
     public FileConfiguration config = this.getConfig();
     File defaultConfigFile;
@@ -115,9 +119,11 @@ public final class FriendNetPlugin extends JavaPlugin {
             this.databaseService.init();
             this.databaseService.postInit();
             this.databaseService.start();
+            this.friendGuiService = new StandaloneFriendGuiService(this);
         } else {
             this.proxyMessagingClient = new SpigotProxyMessagingClient(this);
             this.proxyMessagingClient.register();
+            this.friendGuiService = new ProxyBackendFriendGuiService(this);
         }
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalTicks());
         Logger.info("FriendNet Spigot running as " + networkAuthorityService.getNetworkRole());
@@ -211,6 +217,10 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     public SpigotProxyMessagingClient getProxyMessagingClient() {
         return proxyMessagingClient;
+    }
+
+    public FriendGuiService getFriendGuiService() {
+        return friendGuiService;
     }
 
     public boolean isProxyBackendMode() {

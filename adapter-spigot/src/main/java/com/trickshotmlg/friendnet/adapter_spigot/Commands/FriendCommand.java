@@ -3,13 +3,13 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
 import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core.application.command.CommandFeedbackUseCases;
 import com.trickshotmlg.friendnet.core.application.command.CommandRegistry;
 import com.trickshotmlg.friendnet.core.application.command.CommandUseCaseResult;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
-import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
@@ -160,11 +160,17 @@ public class FriendCommand extends AbstractCommand {
     private static void registerProxyBackendHandlers(FriendNetPlugin plugin, CommandRegistry registry) {
         FriendCommandDefinitions.all().stream()
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.RELOAD.path()))
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.LIST.path()))
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.FRIENDS_ALIAS.path()))
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.REQUESTS.path()))
                 .forEach(definition -> registry.override(definition.path(), (context, next) ->
                         definition.platformSpecific()
                                 ? CommandFeedbackUseCases.proxyBackendGuiUnavailable()
                                 : CommandFeedbackUseCases.proxyBackendCommandDisabled()
                 ));
+        registry.override(FriendCommandDefinitions.LIST.path(), (context, next) -> openFriendsGui(plugin, context.senderId(), context.args()));
+        registry.override(FriendCommandDefinitions.FRIENDS_ALIAS.path(), (context, next) -> openFriendsGui(plugin, context.senderId(), context.args()));
+        registry.override(FriendCommandDefinitions.REQUESTS.path(), (context, next) -> openRequestsGui(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) ->
                 CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
         );
@@ -184,10 +190,16 @@ public class FriendCommand extends AbstractCommand {
             return CommandFeedbackUseCases.playersOnly();
         }
 
-        FriendListViewData viewData = plugin.getApplicationServices()
-                .friendCommandUseCases()
-                .listViewData(senderId);
-        new FriendsGUI(plugin, player, viewData.friends(), viewData.pendingRequests()).open();
+        plugin.getFriendGuiService().friendListView(player).whenComplete((viewData, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        SpigotCommandResultRenderer.render(player, CommandFeedbackUseCases.proxyBackendGuiUnavailable());
+                        return;
+                    }
+
+                    new FriendsGUI(plugin, player, viewData).open();
+                })
+        );
         return CommandUseCaseResult.builder(true).build();
     }
 
@@ -201,11 +213,15 @@ public class FriendCommand extends AbstractCommand {
             return CommandFeedbackUseCases.playersOnly();
         }
 
-        FriendListViewData viewData = plugin.getApplicationServices()
-                .friendCommandUseCases()
-                .listViewData(senderId);
-        new RequestsGUI(plugin, player).openWithParent(
-                new FriendsGUI(plugin, player, viewData.friends(), viewData.pendingRequests())
+        plugin.getFriendGuiService().friendListView(player).whenComplete((viewData, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        SpigotCommandResultRenderer.render(player, CommandFeedbackUseCases.proxyBackendGuiUnavailable());
+                        return;
+                    }
+
+                    new RequestsGUI(plugin, player, viewData).openWithParent(new FriendsGUI(plugin, player, viewData));
+                })
         );
         return CommandUseCaseResult.builder(true).build();
     }

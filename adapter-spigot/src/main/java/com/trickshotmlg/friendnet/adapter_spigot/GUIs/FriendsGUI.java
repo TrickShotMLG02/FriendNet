@@ -2,10 +2,12 @@ package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -30,10 +32,16 @@ public class FriendsGUI extends AbstractGUI {
 
     private int currentPage = 0;
     private final int friendsPerPage = friendRows * 9;
+    private final FriendGuiViewData viewData;
+    private FriendGuiViewData currentViewData;
 
     public FriendsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
-        //super(plugin, player, ((friends.size() - 1) / 9 + 1) * 9, "Your Friends");
+        this(plugin, player, FriendGuiViewData.local(friends, requests));
+    }
+
+    public FriendsGUI(JavaPlugin plugin, Player player, FriendGuiViewData viewData) {
         super(plugin, player, 9 * 6, "titles.friendsGUI");
+        this.viewData = viewData;
     }
 
     @Override
@@ -43,12 +51,18 @@ public class FriendsGUI extends AbstractGUI {
         inventory.clear();
 
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        currentViewData = friendNetPlugin.isProxyBackendMode()
+                ? viewData
+                : FriendGuiViewData.local(
+                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList()
+        );
         FriendFilterState filterState = FriendFilterGUI.getFilterState(player);
         List<FriendshipData> friends = applyFilters(
-                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
+                currentViewData.friends(),
                 filterState
         );
-        List<FriendshipData> requests = ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList();
+        List<FriendshipData> requests = currentViewData.pendingRequests();
 
 
         clampCurrentPage(friends.size());
@@ -258,7 +272,7 @@ public class FriendsGUI extends AbstractGUI {
     private ItemStack createFriendItem(FriendshipData friend) {
 
         UUID friendID = friend.getOtherPlayerId(this.player.getUniqueId());
-        String friendName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendID);
+        String friendName = getFriendDisplayName(friend);
         PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendID);
 
         return SpigotUtils.createPlayerHead(friendID, friendName, createFriendLore(friend, friendID, playerData));
@@ -357,7 +371,13 @@ public class FriendsGUI extends AbstractGUI {
     }
 
     private String getFriendDisplayName(FriendshipData friend) {
-        return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friend.getOtherPlayerId(player.getUniqueId()));
+        UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry != null && !proxyEntry.displayName().isBlank()) {
+            return proxyEntry.displayName();
+        }
+
+        return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendId);
     }
 
     private Timestamp getLastSeen(FriendshipData friend) {
@@ -367,6 +387,11 @@ public class FriendsGUI extends AbstractGUI {
 
     private boolean isFriendOnline(FriendshipData friend) {
         UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry != null) {
+            return proxyEntry.online();
+        }
+
         return Bukkit.getPlayer(friendId) != null && ((FriendNetPlugin) plugin).getPlayerService().isOnline(friendId);
     }
 
