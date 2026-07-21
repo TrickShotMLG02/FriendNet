@@ -88,6 +88,8 @@ public class SpigotLocaleManager implements LocaleManager {
         return resourceNames;
     }
 
+    // TODO: debug log "Logger.debug("Loaded Spigot locale file " + filename);"
+    // TODO: Similar to the velocity implementation
     @Override
     public void loadLocales() {
         // clear registry and re-create it from supported locals of config

@@ -43,6 +43,7 @@ public final class MessageManager {
     /**
      * Loads or reloads the messages_XX.yml file.
      */
+    // TODO: generalize this
     public static void loadMessages() {
         if (plugin == null) {
             throw new IllegalStateException("MessageManager not initialized! Call init() in onEnable().");
