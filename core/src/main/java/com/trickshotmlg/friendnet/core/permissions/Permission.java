@@ -62,8 +62,7 @@ public class Permission implements PermissionNode {
 
     @Override
     public boolean has(PlatformPlayer holder) {
-        if (holder.hasPermission(getPermissionPrefixed())) return true;
-        return false;
+        return anyParentGranted(holder::hasPermission);
     }
 
     @Override

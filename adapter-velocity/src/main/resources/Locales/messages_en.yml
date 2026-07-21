@@ -2,13 +2,121 @@
 prefix: "&7[&aFriends&7]"
 
 noPermission: "&4&lYou don't have enough Permissions to execute this command"
+commandNotFound: "&4&lThis command wasn't found"
 configReloadSuccess: "&bSuccessfully reloaded Plugin Configs"
 configReloadError: "&4Error while reloading Plugin Configs"
 
 commandFeedback:
+  playersOnlyCommand: "&cOnly Players can use this command!"
+  commandNotFound: "&cThis command wasn't found!"
+  playerNotFound: "&cThis player wasn't found!"
   usage: "&eUsage: %usage%"
+  proxyBackendCommandDisabled: "&cFriend commands are handled by the proxy on this network."
+  proxyBackendGuiUnavailable: "&cFriend GUIs need the proxy bridge before they can be used in proxy mode."
+
+chatButtons:
+  acceptRequest:
+    text: "&a[Accept]"
+    hover: "&bClick here to accept the request"
+  denyRequest:
+    text: "&c[Deny]"
+    hover: "&bClick here to deny the request"
+
+friendRequest:
+  send:
+    sender:
+      success: "&aYou sent a friend request to &e%target%"
+      autoAccepted: "&e%target% &aautomatically accepted your friend request"
+      cannotSelf: "&cYou can't send a friend request to yourself"
+      alreadyPending: "&cYou already sent a friend request to &e%target%"
+      disabled: "&e%target% &chas disabled friend requests"
+    target:
+      success: "&aYou received a friend request from &e%sender% %acceptRequest% %denyRequest%"
+      autoAccepted: "&aYou automatically accepted a friend request from &e%sender%"
+      alreadyPending: "&e%sender% &chas already sent you a friend request"
+
+  accept:
+    sender:
+      success: "&aYou accepted the friend request from &e%target%"
+      notFound: "&cNo pending friend request from &e%target%"
+      nonePending: "&cYou have no pending friend requests"
+    target:
+      success: "&e%sender% &aaccepted your friend request"
+      notFound: "&c%sender% tried to accept a request that doesn't exist"
+
+  deny:
+    sender:
+      success: "&aYou denied the friend request from &e%target%"
+      notFound: "&cNo pending friend request from &e%target%"
+      nonePending: "&cYou have no pending friend requests"
+    target:
+      success: "&e%sender% &adenied your friend request"
+      notFound: "&c%sender% tried to deny a request that doesn't exist"
+
+  cancel:
+    sender:
+      success: "&aYou cancelled the friend request to &e%target%"
+      notFound: "&cThe friend request to &e%target% &ccan no longer be cancelled"
+      nonePending: "&cYou have no sent friend requests"
+    target:
+      success: "&e%sender% &acancelled the friend request"
+      notFound: "&c%sender% tried to cancel a request that doesn't exist"
 
 friend:
   status:
-    online: "&a%player% is now online"
-    offline: "&c%player% is now offline"
+    online: "&e%player% &ais now online"
+    offline: "&e%player% &cis now offline"
+  remove:
+    sender:
+      success: "&e%target% &cis no longer your friend"
+      notFound: "&e%target% &cis not in your friend list"
+    target:
+      success: "&e%sender% &cremoved you from their friends list"
+      notFound: "&c%sender% tried to remove you but you are not their friend"
+  favourite:
+    enabled: "&e%target% &ais now a favourite"
+    disabled: "&e%target% &cis no longer a favourite"
+
+blocklist:
+  block:
+    success: "&e%target% &chas been blocked"
+    already: "&e%target% &cis already blocked"
+    self: "&cYou cannot block yourself"
+  unblock:
+    success: "&e%target% &ais no longer blocked"
+    notFound: "&e%target% &cis not blocked"
+  clear:
+    success: "&aRemoved &e%count% &aplayers from your blocklist"
+    empty: "&cYour blocklist is already empty"
+  friendRequest:
+    senderBlocked: "&cYou blocked &e%target%&c. Unblock them before sending a friend request."
+    targetBlocked: "&e%target% &cis not accepting friend requests from you."
+
+friendList:
+  header: "&aYour friends:"
+  entry: "&e%target%"
+  empty: "&cYour friend list is empty"
+
+requestList:
+  pendingSummary: "&aYou have &e%count% &apending friend requests"
+  header: "&aYou have pending friend requests from the following players:"
+  entry: "&e%target%"
+
+playerSettings:
+  allowFriendRequests:
+    enabled: "&aFriend requests are now enabled"
+    disabled: "&cFriend requests are now disabled"
+  showOnlineStatus:
+    enabled: "&aYour online status is now visible"
+    disabled: "&cYour online status is now hidden"
+  autoAcceptFriends:
+    enabled: "&aFriend requests will now be accepted automatically"
+    disabled: "&cFriend requests will no longer be accepted automatically"
+  friendRequestNotifications:
+    enabled: "&aFriend request notifications are now enabled"
+    disabled: "&cFriend request notifications are now disabled"
+  friendListPublic:
+    enabled: "&aYour friend list is now public"
+    disabled: "&cYour friend list is now private"
+  locale:
+    changed: "&aYour language has been updated"

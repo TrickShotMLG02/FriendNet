@@ -72,10 +72,10 @@ friend:
     offline: "&e%player% &cis now offline"
   remove:
     sender:
-      success: "&e%target% &bis no longer your friend"
+      success: "&e%target% &cis no longer your friend"
       notFound: "&e%target% &cis not in your friend list"
     target:
-      success: "&e%sender% &bremoved you from their friends list"
+      success: "&e%sender% &cremoved you from their friends list"
       notFound: "&c%sender% tried to remove you but you are not their friend"
   favourite:
     enabled: "&e%target% &ais now a favourite"
@@ -119,5 +119,6 @@ playerSettings:
 
 # Friend request list display
 requestList:
+  pendingSummary: "&aYou have &e%count% &apending friend requests"
   header: "&aYou have pending friend requests from the following players:"
   entry: "&e%target%"

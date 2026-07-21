@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -104,6 +105,16 @@ public abstract class AbstractGUI {
 
     public void onClose() {
 
+    }
+
+    protected void updateViewData(FriendGuiViewData viewData) {
+    }
+
+    protected void updateViewDataChain(FriendGuiViewData viewData) {
+        updateViewData(viewData);
+        if (parentGUI != null) {
+            parentGUI.updateViewDataChain(viewData);
+        }
     }
 
     public boolean ownsInventory(Inventory inventory) {

@@ -5,13 +5,19 @@ import com.trickshotmlg.friendnet.adapter_spigot.Actions.PlayerSettingsActions;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.InteractableItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.RadioItemStack;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.LocaleUtils;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.RadioGroup;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -29,15 +35,24 @@ public class LocaleSelectionGUI extends AbstractGUI{
     private final int localesStartIndexOffset = 1 * 9 + 2;
 
     private final PlayerService playerService;
+    private FriendGuiViewData viewData;
 
     public LocaleSelectionGUI(JavaPlugin plugin, Player player) {
+        this(plugin, player, null);
+    }
+
+    public LocaleSelectionGUI(JavaPlugin plugin, Player player, FriendGuiViewData viewData) {
         super(plugin, player, 9 * 4, "titles.localeSelectionGUI");
 
         playerService = ((FriendNetPlugin) plugin).getPlayerService();
+        this.viewData = viewData;
+        applyViewDataToLocalPlayer();
         PlayerData pd = playerService.getPlayerData(player.getUniqueId());
         LocaleKey selectedLocale;
-        if (pd != null) {
-            selectedLocale = pd.getLocale();
+        if (viewData != null) {
+            selectedLocale = LocaleKey.getOrFallback(viewData.localeCode());
+        } else if (pd != null && pd.getLocale() != null) {
+            selectedLocale = LocaleKey.getOrFallback(pd.getLocale().getCode());
         } else {
             selectedLocale = LocaleKey.getDefaultLocale();
         }
@@ -51,7 +66,12 @@ public class LocaleSelectionGUI extends AbstractGUI{
     }
 
     private LocaleSelectionGUI(JavaPlugin plugin, Player player, int currentPage) {
-        this(plugin, player);
+        this(plugin, player, null);
+        this.currentPage = currentPage;
+    }
+
+    private LocaleSelectionGUI(JavaPlugin plugin, Player player, FriendGuiViewData viewData, int currentPage) {
+        this(plugin, player, viewData);
         this.currentPage = currentPage;
     }
 
@@ -66,8 +86,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
 
         List<LocaleKey> visibleLocales = SpigotUtils.safeSubList(availableLocales, startIndex, endIndex);
 
-        PlayerData pd = playerService.getPlayerData(player.getUniqueId());
-        LocaleKey selectedLocale = getSelectedLocale(pd);
+        LocaleKey selectedLocale = getSelectedLocale();
 
         RadioGroup localeSelectionGroup = new RadioGroup(inventory);
         List<InteractableItemStack> localeToggles = new ArrayList<>();
@@ -79,7 +98,12 @@ public class LocaleSelectionGUI extends AbstractGUI{
                             locale.equals(selectedLocale),
                             player,
                             newState -> {
-                                new PlayerSettingsActions((FriendNetPlugin) plugin, player).setLocale(locale);
+                                if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+                                    setLocale(locale);
+                                    return;
+                                }
+
+                                setLocale(locale);
 
                                 // manually set all
                                 updateRadioSelection(visibleLocales.size(), localeToggles);
@@ -182,13 +206,18 @@ public class LocaleSelectionGUI extends AbstractGUI{
         }
     }
 
-    private LocaleKey getSelectedLocale(PlayerData playerData) {
+    private LocaleKey getSelectedLocale() {
+        if (viewData != null) {
+            return LocaleKey.getOrFallback(viewData.localeCode());
+        }
+
+        PlayerData playerData = playerService.getPlayerData(player.getUniqueId());
         LocaleKey defaultLocale = LocaleKey.getDefaultLocale();
         if (playerData == null || playerData.getLocale() == null) {
             return defaultLocale;
         }
 
-        return playerData.getLocale();
+        return LocaleKey.getOrFallback(playerData.getLocale().getCode());
     }
 
     private String getLocaleTexture(LocaleKey locale) {
@@ -197,8 +226,56 @@ public class LocaleSelectionGUI extends AbstractGUI{
     }
 
     private void reopenWithUpdatedTitle() {
-        LocaleSelectionGUI refreshedGUI = new LocaleSelectionGUI(plugin, player, currentPage);
+        LocaleSelectionGUI refreshedGUI = new LocaleSelectionGUI(plugin, player, viewData, currentPage);
         refreshedGUI.parentGUI = parentGUI;
         refreshedGUI.open();
+    }
+
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
+    private void setLocale(LocaleKey locale) {
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (!friendNetPlugin.isProxyBackendMode()) {
+            new PlayerSettingsActions(friendNetPlugin, player).setLocale(locale);
+            return;
+        }
+
+        ProxyActionRequestPayload request = new ProxyActionRequestPayload(
+                ProxyActionType.SET_LOCALE,
+                null,
+                locale.getCode(),
+                true
+        );
+        friendNetPlugin.getFriendGuiService().executeAction(player, request).whenComplete((response, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        MessageManager.send(player, "commandFeedback.proxyBackendGuiUnavailable");
+                        return;
+                    }
+
+                    if (response.friendListView() != null) {
+                        viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        applyViewDataToLocalPlayer();
+                        updateViewDataChain(viewData);
+                    }
+                    ProxyActionResponseRenderer.render(player, response);
+                    reopenWithUpdatedTitle();
+                })
+        );
+    }
+
+    private void applyViewDataToLocalPlayer() {
+        if (viewData == null) {
+            return;
+        }
+
+        PlayerData playerData = playerService.getPlayerData(player.getUniqueId());
+        if (playerData == null) {
+            playerData = playerService.initPlayer(player.getUniqueId());
+        }
+        viewData.applySettingsTo(playerData);
     }
 }

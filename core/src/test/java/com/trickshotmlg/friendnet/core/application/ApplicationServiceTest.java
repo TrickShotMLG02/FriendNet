@@ -10,6 +10,7 @@ import com.trickshotmlg.friendnet.core.application.command.CommandEventType;
 import com.trickshotmlg.friendnet.core.application.command.CommandMessageRecipient;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.models.FavouriteData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import junit.framework.TestCase;
@@ -194,6 +195,10 @@ public class ApplicationServiceTest extends TestCase {
         }
 
         @Override
+        public void save(FavouriteData entity) {
+        }
+
+        @Override
         public void save(PlayerData entity) {
         }
 
@@ -203,6 +208,10 @@ public class ApplicationServiceTest extends TestCase {
 
         @Override
         public void delete(BlocklistData entity) {
+        }
+
+        @Override
+        public void delete(FavouriteData entity) {
         }
 
         @Override

@@ -4,6 +4,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.FriendStatusNotifier;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.enums.EventSource;
 import com.trickshotmlg.friendnet.core.events.EventBus;
@@ -19,6 +20,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -53,6 +55,7 @@ public class PlayerStatusListener extends AbstractListener {
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, spigotPlayer));
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
+        initializedPlayerData.setLastServerName(null);
 
         if (plugin.isProxyBackendMode()) {
             playerService.putPlayerData(initializedPlayerData);
@@ -68,6 +71,7 @@ public class PlayerStatusListener extends AbstractListener {
             if (pld.isPresent()) {
                 playerData = pld.get();
                 playerData.setLastDisplayName(lastDisplayName);
+                playerData.setLastServerName(null);
                 Logger.debug("playerData: " + playerData);
             } else {
                 playerData = initializedPlayerData;
@@ -89,6 +93,7 @@ public class PlayerStatusListener extends AbstractListener {
             if (playerData.isShowOnlineStatus()) {
                 Bukkit.getScheduler().runTask(plugin, () -> FriendStatusNotifier.notifyOnline(plugin, playerId));
             }
+            notifyPendingRequests(playerId, playerData);
         });
 
         Logger.debug(spigotPlayer.getName() + " joined!");
@@ -109,6 +114,7 @@ public class PlayerStatusListener extends AbstractListener {
             playerData.setLastSeen();
         }
         playerData.setLastDisplayName(event.getPlayer().getDisplayName());
+        playerData.setLastServerName(null);
         playerService.setOnline(playerId, false);
 
         if (wasVisibleOnline && !plugin.isProxyBackendMode()) {
@@ -125,5 +131,20 @@ public class PlayerStatusListener extends AbstractListener {
 
 
         Logger.debug(spigotPlayer.getName() + " quit!");
+    }
+
+    private void notifyPendingRequests(UUID playerId, PlayerData playerData) {
+        if (playerData == null || !playerData.isFriendRequestNotifications()) {
+            return;
+        }
+
+        int pendingRequestCount = friendService.getPendingRequests(playerId).size();
+        if (pendingRequestCount <= 0) {
+            return;
+        }
+
+        Bukkit.getScheduler().runTask(plugin, () ->
+                MessageManager.send(playerId, "requestList.pendingSummary", Map.of("count", pendingRequestCount))
+        );
     }
 }

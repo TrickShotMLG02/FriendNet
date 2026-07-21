@@ -75,6 +75,8 @@ public class DatabaseMigrationIntegrationTest extends TestCase {
         String mariaDbUrl = MySQLDatabase.buildJdbcUrl("localhost:3306", "friendnet", DatabaseType.MariaDB);
 
         assertTrue(mysqlUrl.startsWith("jdbc:mysql://localhost:3306/friendnet?"));
+        assertTrue(mysqlUrl.contains("useSSL=false"));
+        assertTrue(mysqlUrl.contains("allowPublicKeyRetrieval=false"));
         assertTrue(mysqlUrl.contains("connectTimeout=10000"));
         assertTrue(mysqlUrl.contains("socketTimeout=30000"));
         assertTrue(mysqlUrl.contains("tcpKeepAlive=true"));
@@ -83,6 +85,15 @@ public class DatabaseMigrationIntegrationTest extends TestCase {
         assertTrue(mariaDbUrl.contains("connectTimeout=10000"));
         assertTrue(mariaDbUrl.contains("socketTimeout=30000"));
         assertTrue(mariaDbUrl.contains("tcpKeepAlive=true"));
+    }
+
+    public void testMySqlJdbcUrlUsesConfiguredSslAndPublicKeyRetrieval() throws Exception {
+        String mysqlUrl = MySQLDatabase.buildJdbcUrl("localhost:3306", "friendnet", DatabaseType.MySQL, true, true);
+        String mariaDbUrl = MySQLDatabase.buildJdbcUrl("localhost:3306", "friendnet", DatabaseType.MariaDB, true, true);
+
+        assertTrue(mysqlUrl.contains("useSSL=true"));
+        assertTrue(mysqlUrl.contains("allowPublicKeyRetrieval=true"));
+        assertTrue(mariaDbUrl.contains("useSsl=true"));
     }
 
     private boolean tableExists(String tableName) throws Exception {

@@ -2,10 +2,14 @@ package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
+import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -30,10 +34,21 @@ public class FriendsGUI extends AbstractGUI {
 
     private int currentPage = 0;
     private final int friendsPerPage = friendRows * 9;
+    private FriendGuiViewData viewData;
+    private FriendGuiViewData currentViewData;
 
     public FriendsGUI(JavaPlugin plugin, Player player, List<FriendshipData> friends, List<FriendshipData> requests) {
-        //super(plugin, player, ((friends.size() - 1) / 9 + 1) * 9, "Your Friends");
+        this(plugin, player, FriendGuiViewData.local(
+                friends.stream()
+                        .map(friendship -> new FriendEntry(friendship, friendship.getOtherPlayerId(player.getUniqueId()), false))
+                        .toList(),
+                requests
+        ));
+    }
+
+    public FriendsGUI(JavaPlugin plugin, Player player, FriendGuiViewData viewData) {
         super(plugin, player, 9 * 6, "titles.friendsGUI");
+        this.viewData = viewData;
     }
 
     @Override
@@ -43,29 +58,42 @@ public class FriendsGUI extends AbstractGUI {
         inventory.clear();
 
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (friendNetPlugin.isProxyBackendMode()) {
+            currentViewData = viewData;
+        } else {
+            FriendListViewData localViewData = friendNetPlugin.getApplicationServices()
+                    .friendCommandUseCases()
+                    .listViewData(player.getUniqueId());
+            currentViewData = FriendGuiViewData.local(
+                    localViewData.friends(),
+                    localViewData.pendingRequests(),
+                    friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                    friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
+            );
+        }
         FriendFilterState filterState = FriendFilterGUI.getFilterState(player);
-        List<FriendshipData> friends = applyFilters(
-                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
+        List<FriendEntry> friends = applyFilters(
+                currentViewData.friends(),
                 filterState
         );
-        List<FriendshipData> requests = ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList();
+        List<FriendshipData> requests = currentViewData.pendingRequests();
 
 
         clampCurrentPage(friends.size());
         int startIndex = currentPage * friendsPerPage;
         int endIndex = Math.min(startIndex + friendsPerPage, friends.size());
 
-        List<FriendshipData> visibleFriends = SpigotUtils.safeSubList(friends, startIndex, endIndex);
+        List<FriendEntry> visibleFriends = SpigotUtils.safeSubList(friends, startIndex, endIndex);
 
         // Populate friends for this page
         for (int i = 0; i < visibleFriends.size(); i++) {
-            FriendshipData friend = visibleFriends.get(i);
+            FriendEntry friend = visibleFriends.get(i);
             ItemStack friendItem = createFriendItem(friend);
-            UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+            UUID friendId = friend.friendId();
             setInteractableItem(i, new ActionItemStack(
                     friendItem,
                     player,
-                    () -> openChild(new FriendDetailGUI(plugin, player, friendId)),
+                    () -> openChild(new FriendDetailGUI(plugin, player, friendId, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
@@ -127,7 +155,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.blocklist.lore"
                     ),
                     player,
-                    () -> this.openChild(new BlocklistGUI(plugin, player)),
+                    () -> this.openChild(new BlocklistGUI(plugin, player, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             );
 
@@ -162,9 +190,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.requests.lore"
                     ),
                     player,
-                    () -> {
-                        this.openChild(new RequestsGUI(plugin, player));
-                    },
+                    () -> this.openChild(new RequestsGUI(plugin, player, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             );
 
@@ -182,7 +208,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.personalSettings.lore"
                     ),
                     player,
-                    () -> this.openChild(new PersonalSettingsGUI(plugin, player)),
+                    () -> this.openChild(new PersonalSettingsGUI(plugin, player, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             );
 
@@ -200,7 +226,7 @@ public class FriendsGUI extends AbstractGUI {
                             "friendsGUI.buttons.favorites.lore"
                     ),
                     player,
-                    () -> this.openChild(new FavoriteFriendsGUI(plugin, player)),
+                    () -> this.openChild(new FavoriteFriendsGUI(plugin, player, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             );
 
@@ -215,14 +241,17 @@ public class FriendsGUI extends AbstractGUI {
 
         // Filter Item
         {
+            ItemStack filterItem = SpigotUtils.createItem(
+                    Material.HOPPER,
+                    player,
+                    "gui",
+                    "friendsGUI.buttons.filter.displayName",
+                    "friendsGUI.buttons.filter.lore"
+            );
+            SpigotUtils.setGlint(filterItem, filterState.isActive());
+
             ActionItemStack actionItemStack = new ActionItemStack(
-                    SpigotUtils.createItem(
-                            Material.HOPPER,
-                            player,
-                            "gui",
-                            "friendsGUI.buttons.filter.displayName",
-                            "friendsGUI.buttons.filter.lore"
-                    ),
+                    filterItem,
                     player,
                     () -> this.openChild(new FriendFilterGUI(plugin, player)),
                     ActionItemStack.SoundProfile.NAVIGATION
@@ -255,20 +284,31 @@ public class FriendsGUI extends AbstractGUI {
         player.updateInventory();
     }
 
-    private ItemStack createFriendItem(FriendshipData friend) {
+    private ItemStack createFriendItem(FriendEntry friend) {
 
-        UUID friendID = friend.getOtherPlayerId(this.player.getUniqueId());
-        String friendName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendID);
-        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendID);
+        UUID friendID = friend.friendId();
+        String friendName = getFriendDisplayName(friend);
+        PlayerData playerData = ((FriendNetPlugin) plugin).isProxyBackendMode()
+                ? null
+                : SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendID);
 
         return SpigotUtils.createPlayerHead(friendID, friendName, createFriendLore(friend, friendID, playerData));
     }
 
-    private List<String> createFriendLore(FriendshipData friend, UUID friendId, PlayerData playerData) {
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
+    private List<String> createFriendLore(FriendEntry friend, UUID friendId, PlayerData playerData) {
         List<String> lore = new ArrayList<>();
 
         lore.add(locale("friendEntries.lore.status", Map.of("status", formatOnlineStatus(friend, friendId))));
-        lore.add(locale("friendEntries.lore.favourite", Map.of("value", formatBoolean(friend.isFavourite()))));
+        String serverName = formatCurrentServer(friendId);
+        if (serverName != null) {
+            lore.add(locale("friendEntries.lore.server", Map.of("server", ChatColor.YELLOW + serverName)));
+        }
+        lore.add(locale("friendEntries.lore.favourite", Map.of("value", formatBoolean(friend.favourite()))));
         lore.add("");
         lore.add(locale("friendEntries.lore.friendsSince", Map.of("date", ChatColor.YELLOW + formatTimestamp(friend.getFriendSince()))));
         lore.add(locale("friendEntries.lore.lastSeen", Map.of("date", formatLastSeen(friend, playerData))));
@@ -276,9 +316,13 @@ public class FriendsGUI extends AbstractGUI {
         return lore;
     }
 
-    private String formatOnlineStatus(FriendshipData friend, UUID friendId) {
+    private String formatOnlineStatus(FriendEntry friend, UUID friendId) {
         if (isFriendOnline(friend)) {
             return locale("friendEntries.status.online");
+        }
+
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            return locale("friendEntries.status.offline");
         }
 
         PlayerData playerData = ((FriendNetPlugin) plugin).getPlayerService().getPlayerData(friendId);
@@ -293,12 +337,14 @@ public class FriendsGUI extends AbstractGUI {
         return value ? locale("friendEntries.boolean.yes") : locale("friendEntries.boolean.no");
     }
 
-    private String formatLastSeen(FriendshipData friend, PlayerData playerData) {
+    private String formatLastSeen(FriendEntry friend, PlayerData playerData) {
         if (isFriendOnline(friend)) {
             return locale("friendEntries.lastSeen.now");
         }
 
-        return ChatColor.YELLOW + formatTimestamp(playerData != null ? playerData.getLastSeen() : null);
+        Timestamp proxyLastSeen = proxyLastSeen(friend.friendId());
+        Timestamp lastSeen = proxyLastSeen != null ? proxyLastSeen : playerData != null ? playerData.getLastSeen() : null;
+        return ChatColor.YELLOW + formatTimestamp(lastSeen);
     }
 
     private String formatTimestamp(Timestamp timestamp) {
@@ -330,12 +376,12 @@ public class FriendsGUI extends AbstractGUI {
         return FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), "gui", key, placeholders);
     }
 
-    private List<FriendshipData> applyFilters(List<FriendshipData> friends, FriendFilterState filterState) {
+    private List<FriendEntry> applyFilters(List<FriendEntry> friends, FriendFilterState filterState) {
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
-        Comparator<FriendshipData> comparator = Comparator
-                .comparing((FriendshipData friend) -> !isFriendOnline(friend))
+        Comparator<FriendEntry> comparator = Comparator
+                .comparing((FriendEntry friend) -> !isFriendOnline(friend))
                 .thenComparing(friend -> getFriendDisplayName(friend).toLowerCase())
-                .thenComparing(FriendshipData::getFriendSince, Comparator.nullsLast(Comparator.reverseOrder()));
+                .thenComparing(FriendEntry::getFriendSince, Comparator.nullsLast(Comparator.reverseOrder()));
 
         if (filterState.isSortByRecentlySeen()) {
             comparator = Comparator.comparing(friend -> getLastSeen(friend), Comparator.nullsLast(Comparator.reverseOrder()));
@@ -345,9 +391,9 @@ public class FriendsGUI extends AbstractGUI {
             comparator = comparator.reversed();
         }
 
-        Comparator<FriendshipData> finalComparator = comparator;
-        List<FriendshipData> filteredFriends = friends.stream()
-                .filter(friend -> !filterState.isFavoritesOnly() || friend.isFavourite())
+        Comparator<FriendEntry> finalComparator = comparator;
+        List<FriendEntry> filteredFriends = friends.stream()
+                .filter(friend -> !filterState.isFavoritesOnly() || friend.favourite())
                 .filter(friend -> !filterState.isOnlineOnly() || isFriendOnline(friend))
                 .filter(friend -> matchesNameSearch(friend, filterState.getNameSearchQuery()))
                 .sorted(finalComparator)
@@ -356,21 +402,68 @@ public class FriendsGUI extends AbstractGUI {
         return filteredFriends;
     }
 
-    private String getFriendDisplayName(FriendshipData friend) {
-        return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friend.getOtherPlayerId(player.getUniqueId()));
+    private String getFriendDisplayName(FriendEntry friend) {
+        UUID friendId = friend.friendId();
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry != null && !proxyEntry.displayName().isBlank()) {
+            return proxyEntry.displayName();
+        }
+
+        return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, friendId);
     }
 
-    private Timestamp getLastSeen(FriendshipData friend) {
-        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friend.getOtherPlayerId(player.getUniqueId()));
+    private String formatCurrentServer(UUID friendId) {
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (!friendNetPlugin.isProxyBackendMode()) {
+            return null;
+        }
+
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry == null || !proxyEntry.online() || proxyEntry.currentServerName().isBlank()) {
+            return null;
+        }
+
+        return proxyEntry.currentServerName();
+    }
+
+    private Timestamp getLastSeen(FriendEntry friend) {
+        Timestamp proxyLastSeen = proxyLastSeen(friend.friendId());
+        if (proxyLastSeen != null) {
+            return proxyLastSeen;
+        }
+
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            return null;
+        }
+
+        PlayerData playerData = SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friend.friendId());
         return playerData != null ? playerData.getLastSeen() : null;
     }
 
-    private boolean isFriendOnline(FriendshipData friend) {
-        UUID friendId = friend.getOtherPlayerId(player.getUniqueId());
+    private Timestamp proxyLastSeen(UUID friendId) {
+        if (currentViewData == null) {
+            return null;
+        }
+
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry == null || proxyEntry.lastSeenMillis() < 0) {
+            return null;
+        }
+
+        return new Timestamp(proxyEntry.lastSeenMillis());
+    }
+
+    private boolean isFriendOnline(FriendEntry friend) {
+        UUID friendId = friend.friendId();
+        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
+        if (proxyEntry != null) {
+            return proxyEntry.online();
+        }
+
         return Bukkit.getPlayer(friendId) != null && ((FriendNetPlugin) plugin).getPlayerService().isOnline(friendId);
     }
 
-    private boolean matchesNameSearch(FriendshipData friend, String query) {
+    private boolean matchesNameSearch(FriendEntry friend, String query) {
         if (query == null || query.isBlank()) {
             return true;
         }

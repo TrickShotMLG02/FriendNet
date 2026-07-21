@@ -4,8 +4,15 @@ import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -26,9 +33,16 @@ public class BlocklistGUI extends AbstractGUI {
     private final int blockedRows = 3;
     private final int blockedPerPage = blockedRows * 9;
     private int currentPage = 0;
+    private FriendGuiViewData viewData;
+    private FriendGuiViewData currentViewData;
 
     public BlocklistGUI(JavaPlugin plugin, Player player) {
+        this(plugin, player, null);
+    }
+
+    public BlocklistGUI(JavaPlugin plugin, Player player, FriendGuiViewData viewData) {
         super(plugin, player, 9 * 5, "titles.blocklistGUI");
+        this.viewData = viewData;
     }
 
     @Override
@@ -36,8 +50,22 @@ public class BlocklistGUI extends AbstractGUI {
         interactableSlots.clear();
         inventory.clear();
 
-        BlocklistActions actions = new BlocklistActions((FriendNetPlugin) plugin);
-        List<BlocklistData> blockedPlayers = actions.getBlockedPlayers(player.getUniqueId());
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        BlocklistActions actions = new BlocklistActions(friendNetPlugin);
+        if (friendNetPlugin.isProxyBackendMode() && viewData != null) {
+            currentViewData = viewData;
+        } else {
+            FriendListViewData localViewData = friendNetPlugin.getApplicationServices()
+                    .friendCommandUseCases()
+                    .listViewData(player.getUniqueId());
+            currentViewData = FriendGuiViewData.local(
+                    localViewData.friends(),
+                    localViewData.pendingRequests(),
+                    friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                    actions.getBlockedPlayers(player.getUniqueId())
+            );
+        }
+        List<BlocklistData> blockedPlayers = currentViewData.blockedPlayers();
         clampCurrentPage(blockedPlayers.size());
 
         int startIndex = currentPage * blockedPerPage;
@@ -56,8 +84,7 @@ public class BlocklistGUI extends AbstractGUI {
                             Map.of("target", getDisplayName(blockedPlayer.getBlockedId())),
                             confirmed -> {
                                 if (confirmed) {
-                                    actions.unblock(player, blockedPlayer.getBlockedId());
-                                    buildInventory();
+                                    unblock(actions, blockedPlayer.getBlockedId());
                                 }
                             }
                     )
@@ -132,9 +159,7 @@ public class BlocklistGUI extends AbstractGUI {
                         Map.of(),
                         confirmed -> {
                             if (confirmed) {
-                                actions.clear(player);
-                                currentPage = 0;
-                                buildInventory();
+                                clear(actions);
                             }
                         }
                 )
@@ -156,8 +181,18 @@ public class BlocklistGUI extends AbstractGUI {
     }
 
     private String getDisplayName(UUID playerId) {
+        ProxyFriendEntry proxyEntry = currentViewData != null ? currentViewData.proxyEntry(playerId) : null;
+        if (proxyEntry != null && !proxyEntry.displayName().isBlank()) {
+            return proxyEntry.displayName();
+        }
+
         String displayName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, playerId);
         return displayName.isBlank() ? playerId.toString() : displayName;
+    }
+
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
     }
 
     private List<String> createBlockedPlayerLore(BlocklistData blockedPlayer) {
@@ -170,8 +205,53 @@ public class BlocklistGUI extends AbstractGUI {
     }
 
     private String formatOnlineStatus(UUID playerId) {
+        ProxyFriendEntry proxyEntry = currentViewData != null ? currentViewData.proxyEntry(playerId) : null;
+        if (proxyEntry != null) {
+            return proxyEntry.online() ? locale("friendEntries.status.online") : locale("friendEntries.status.offline");
+        }
+
         boolean online = Bukkit.getPlayer(playerId) != null && ((FriendNetPlugin) plugin).getPlayerService().isOnline(playerId);
         return online ? locale("friendEntries.status.online") : locale("friendEntries.status.offline");
+    }
+
+    private void unblock(BlocklistActions actions, UUID blockedId) {
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            executeProxyAction(new ProxyActionRequestPayload(ProxyActionType.UNBLOCK_PLAYER, blockedId, getDisplayName(blockedId), true));
+            return;
+        }
+
+        actions.unblock(player, blockedId);
+        buildInventory();
+    }
+
+    private void clear(BlocklistActions actions) {
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            executeProxyAction(new ProxyActionRequestPayload(ProxyActionType.CLEAR_BLOCKLIST, null, "", true));
+            return;
+        }
+
+        actions.clear(player);
+        currentPage = 0;
+        buildInventory();
+    }
+
+    private void executeProxyAction(ProxyActionRequestPayload request) {
+        ((FriendNetPlugin) plugin).getFriendGuiService().executeAction(player, request).whenComplete((response, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        MessageManager.send(player, "commandFeedback.proxyBackendGuiUnavailable");
+                        return;
+                    }
+
+                    ProxyActionResponseRenderer.render(player, response);
+                    if (response.friendListView() != null) {
+                        viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        updateViewDataChain(viewData);
+                    }
+                    currentPage = 0;
+                    buildInventory();
+                })
+        );
     }
 
     private String formatTimestamp(Timestamp timestamp) {

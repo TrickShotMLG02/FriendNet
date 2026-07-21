@@ -75,7 +75,8 @@ public class SpigotApplicationServices {
                 plugin.getFriendService(),
                 friendRequestService,
                 blocklistService,
-                knownPlayerLookup
+                knownPlayerLookup,
+                plugin.getDatabaseService()
         );
     }
 

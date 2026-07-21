@@ -2,9 +2,11 @@ package com.trickshotmlg.friendnet.adapter_velocity;
 
 import com.google.inject.Inject;
 import com.trickshotmlg.friendnet.adapter_velocity.commands.FriendNetVelocityCommand;
+import com.trickshotmlg.friendnet.adapter_velocity.commands.VelocityFriendCommand;
 import com.trickshotmlg.friendnet.adapter_velocity.config.VelocityConfig;
 import com.trickshotmlg.friendnet.adapter_velocity.listeners.VelocityPlayerStatusListener;
 import com.trickshotmlg.friendnet.adapter_velocity.services.VelocityPlayerDataSaveQueue;
+import com.trickshotmlg.friendnet.adapter_velocity.services.VelocityProxyMessagingService;
 import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityLogger;
 import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityMessageManager;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
@@ -23,6 +25,7 @@ import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.NetworkAuthorityService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
+import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
 import com.velocitypowered.api.event.Subscribe;
@@ -57,6 +60,12 @@ public final class FriendNetVelocityPlugin {
     private NetworkAuthorityService networkAuthorityService;
     private VelocityPlayerDataSaveQueue playerDataSaveQueue;
     private Platform platform;
+    private VelocityApplicationServices applicationServices;
+    private VelocityProxyMessagingService proxyMessagingService;
+    private CommandMeta friendNetCommandMeta;
+    private CommandMeta friendCommandMeta;
+    private boolean enabled;
+    private boolean disabledDueToStartupFailure;
 
     @Inject
     public FriendNetVelocityPlugin(ProxyServer server, org.slf4j.Logger logger, @DataDirectory Path dataDirectory) {
@@ -74,25 +83,35 @@ public final class FriendNetVelocityPlugin {
             initializeServices();
             registerListeners();
             registerCommands();
+            enabled = true;
             Logger.info("FriendNet Velocity adapter enabled!");
         } catch (PluginStartupException e) {
-            Logger.error("FriendNet Velocity startup failed: " + e.getMessage(), e);
+            disableAfterStartupFailure(e.getMessage(), e);
         } catch (RuntimeException e) {
-            Logger.error("Unexpected FriendNet Velocity startup error: " + e.getMessage(), e);
+            disableAfterStartupFailure("Unexpected startup error: " + e.getMessage(), e);
         }
     }
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        shutdownServices();
+        Logger.info("FriendNet Velocity adapter disabled!");
+    }
+
+    private void shutdownServices() {
         EventBus.clear();
         if (playerDataSaveQueue != null) {
             playerDataSaveQueue.stopAndFlush();
+            playerDataSaveQueue = null;
         }
         if (databaseService != null) {
             databaseService.stop();
+            databaseService = null;
         }
-
-        Logger.info("FriendNet Velocity adapter disabled!");
+        if (proxyMessagingService != null) {
+            proxyMessagingService.unregister();
+            proxyMessagingService = null;
+        }
     }
 
     private void initializePlatform() {
@@ -109,11 +128,15 @@ public final class FriendNetVelocityPlugin {
         this.friendService = new FriendServiceImpl(databaseService, playerService);
         this.networkAuthorityService = new NetworkAuthorityServiceImpl(NetworkRole.PROXY_AUTHORITY);
         this.playerDataSaveQueue = new VelocityPlayerDataSaveQueue(this, playerService, databaseService);
+        this.applicationServices = new VelocityApplicationServices(this);
+        this.proxyMessagingService = new VelocityProxyMessagingService(this);
 
         this.databaseService.init();
         this.databaseService.postInit();
         this.databaseService.start();
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalSeconds());
+        this.proxyMessagingService.register();
+        warnIfConnectionTokenUnsafe();
     }
 
     private void registerListeners() {
@@ -122,11 +145,46 @@ public final class FriendNetVelocityPlugin {
 
     private void registerCommands() {
         CommandManager commandManager = server.getCommandManager();
-        CommandMeta commandMeta = commandManager.metaBuilder("friendnet")
+        friendNetCommandMeta = commandManager.metaBuilder("friendnet")
                 .aliases("fn")
                 .plugin(this)
                 .build();
-        commandManager.register(commandMeta, new FriendNetVelocityCommand(this));
+        commandManager.register(friendNetCommandMeta, new FriendNetVelocityCommand(this));
+
+        friendCommandMeta = commandManager.metaBuilder("friend")
+                .aliases("friends")
+                .plugin(this)
+                .build();
+        commandManager.register(friendCommandMeta, new VelocityFriendCommand(this));
+    }
+
+    private void disableAfterStartupFailure(String message, Throwable throwable) {
+        disabledDueToStartupFailure = true;
+        enabled = false;
+
+        Logger.error("FriendNet Velocity startup failed: " + message, throwable);
+        velocityLogger.error("FriendNet Velocity startup failed. FriendNet will be disabled.");
+        velocityLogger.error(message);
+        velocityLogger.error("Check config.yml, especially DatabaseType and the matching database connection settings.");
+
+        unregisterVelocityEntrypoints();
+        shutdownServices();
+
+        Logger.info("FriendNet Velocity adapter disabled due to startup failure.");
+    }
+
+    private void unregisterVelocityEntrypoints() {
+        CommandManager commandManager = server.getCommandManager();
+        if (friendNetCommandMeta != null) {
+            commandManager.unregister(friendNetCommandMeta);
+            friendNetCommandMeta = null;
+        }
+        if (friendCommandMeta != null) {
+            commandManager.unregister(friendCommandMeta);
+            friendCommandMeta = null;
+        }
+
+        server.getEventManager().unregisterListeners(this);
     }
 
     private Database createDatabaseFromConfig() {
@@ -141,7 +199,9 @@ public final class FriendNetVelocityPlugin {
         String dbName = config.getString("MySQL.dbName", "friendnet");
         String username = config.getString("MySQL.username", "friendnet");
         String password = config.getString("MySQL.password", "friendnet");
-        return new MySQLDatabase(host, dbName, username, password, databaseType);
+        boolean useSsl = config.getBoolean("MySQL.useSSL", false);
+        boolean allowPublicKeyRetrieval = config.getBoolean("MySQL.allowPublicKeyRetrieval", false);
+        return new MySQLDatabase(host, dbName, username, password, databaseType, useSsl, allowPublicKeyRetrieval);
     }
 
     private DatabaseType parseDatabaseType(String value) {
@@ -202,8 +262,20 @@ public final class FriendNetVelocityPlugin {
         return platform;
     }
 
+    public VelocityApplicationServices getApplicationServices() {
+        return applicationServices;
+    }
+
+    public VelocityProxyMessagingService getProxyMessagingService() {
+        return proxyMessagingService;
+    }
+
     public VelocityConfig getConfig() {
         return config;
+    }
+
+    public String getConnectionToken() {
+        return config.getString("ConnectionToken", FriendNetProxyProtocol.DEFAULT_CONNECTION_TOKEN);
     }
 
     public VelocityMessageManager getMessageManager() {
@@ -212,6 +284,20 @@ public final class FriendNetVelocityPlugin {
 
     public Path getDataDirectory() {
         return dataDirectory;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public boolean isDisabledDueToStartupFailure() {
+        return disabledDueToStartupFailure;
+    }
+
+    private void warnIfConnectionTokenUnsafe() {
+        if (FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
+            Logger.warn("FriendNet Velocity is using the default or blank ConnectionToken. Set a shared secret in Spigot and Velocity configs.");
+        }
     }
 
     private static final class PluginStartupException extends RuntimeException {

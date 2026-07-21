@@ -3,8 +3,12 @@ package com.trickshotmlg.friendnet.adapter_spigot;
 import com.trickshotmlg.friendnet.adapter_spigot.Commands.FriendCommand;
 import com.trickshotmlg.friendnet.adapter_spigot.Configs.SpigotLocaleManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Listeners.GUIListener;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiService;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.ProxyBackendFriendGuiService;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.ProxyBackendDatabaseService;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.SpigotProxyMessagingClient;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.StandaloneFriendGuiService;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotLogger;
 import com.trickshotmlg.friendnet.core.FriendServiceImpl;
@@ -25,13 +29,15 @@ import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.NetworkAuthorityService;
+import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.Locale;
 
 public final class FriendNetPlugin extends JavaPlugin {
@@ -46,6 +52,8 @@ public final class FriendNetPlugin extends JavaPlugin {
     private Platform platform;
     private SpigotApplicationServices applicationServices;
     private NetworkAuthorityService networkAuthorityService;
+    private SpigotProxyMessagingClient proxyMessagingClient;
+    private FriendGuiService friendGuiService;
 
     public FileConfiguration config = this.getConfig();
     File defaultConfigFile;
@@ -81,6 +89,9 @@ public final class FriendNetPlugin extends JavaPlugin {
         if (databaseService != null) {
             databaseService.stop();
         }
+        if (proxyMessagingClient != null) {
+            proxyMessagingClient.unregister();
+        }
 
         Logger.info("FriendNet disabled!");
     }
@@ -109,9 +120,15 @@ public final class FriendNetPlugin extends JavaPlugin {
             this.databaseService.init();
             this.databaseService.postInit();
             this.databaseService.start();
+            this.friendGuiService = new StandaloneFriendGuiService(this);
+        } else {
+            this.proxyMessagingClient = new SpigotProxyMessagingClient(this);
+            this.proxyMessagingClient.register();
+            this.friendGuiService = new ProxyBackendFriendGuiService(this);
         }
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalTicks());
         Logger.info("FriendNet Spigot running as " + networkAuthorityService.getNetworkRole());
+        warnIfProxyTokenUnsafe();
     }
 
     private Database createDatabaseFromConfig() {
@@ -126,7 +143,9 @@ public final class FriendNetPlugin extends JavaPlugin {
         String dbName = config.getString("MySQL.dbName", "friendnet");
         String username = config.getString("MySQL.username", "friendnet");
         String password = config.getString("MySQL.password", "friendnet");
-        return new MySQLDatabase(host, dbName, username, password, databaseType);
+        boolean useSsl = config.getBoolean("MySQL.useSSL", false);
+        boolean allowPublicKeyRetrieval = config.getBoolean("MySQL.allowPublicKeyRetrieval", false);
+        return new MySQLDatabase(host, dbName, username, password, databaseType, useSsl, allowPublicKeyRetrieval);
     }
 
     private DatabaseType parseDatabaseType(String value) {
@@ -199,8 +218,26 @@ public final class FriendNetPlugin extends JavaPlugin {
         return networkAuthorityService;
     }
 
+    public SpigotProxyMessagingClient getProxyMessagingClient() {
+        return proxyMessagingClient;
+    }
+
+    public FriendGuiService getFriendGuiService() {
+        return friendGuiService;
+    }
+
     public boolean isProxyBackendMode() {
         return networkAuthorityService != null && networkAuthorityService.delegatesPersistentState();
+    }
+
+    public String getConnectionToken() {
+        return config.getString("ConnectionToken", FriendNetProxyProtocol.DEFAULT_CONNECTION_TOKEN);
+    }
+
+    private void warnIfProxyTokenUnsafe() {
+        if (isProxyBackendMode() && FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
+            Logger.warn("FriendNet proxy mode is using the default or blank ConnectionToken. Set a shared secret in Spigot and Velocity configs.");
+        }
     }
 
     private NetworkRole parseSpigotNetworkRole(String value) {
@@ -225,9 +262,12 @@ public final class FriendNetPlugin extends JavaPlugin {
         config.options().copyDefaults(true);
         defaultConfigFile = new File(getDataFolder(), "config.yml");
 
-        InputStreamReader defConfigStream;
-        try {
-            defConfigStream = new InputStreamReader(this.getResource("config.yml"), "UTF8");
+        try (InputStream configResource = this.getResource("config.yml")) {
+            if (configResource == null) {
+                throw new PluginStartupException("Default config.yml resource is missing.");
+            }
+
+            InputStreamReader defConfigStream = new InputStreamReader(configResource, "UTF8");
             YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
             config.setDefaults(defConfig);
             saveConfig();
@@ -235,8 +275,8 @@ public final class FriendNetPlugin extends JavaPlugin {
             reloadConfig();
             config = this.getConfig();
 
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            throw new PluginStartupException("Could not load default config.yml", e);
         }
     }
 

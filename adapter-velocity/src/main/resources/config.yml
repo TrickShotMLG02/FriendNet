@@ -5,9 +5,14 @@ PlayerDataFlushIntervalSeconds: 30
 
 Debug: true
 
+# Shared secret for Spigot <-> proxy plugin messaging.
+# Set the same value on every Spigot backend adapter. Change this before production use.
+ConnectionToken: change-me
+
 SupportedLocales:
   - en_US
   - de
+  - gsw_CH
 
 DefaultLocale: "en_US"
 
@@ -17,6 +22,8 @@ MySQL:
   dbName: friendnet
   username: friendnet
   password: friendnet
+  useSSL: false
+  allowPublicKeyRetrieval: false
 
 # The settings for SQLite Connection
 SQLite:

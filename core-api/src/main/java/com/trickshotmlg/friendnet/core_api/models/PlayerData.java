@@ -11,6 +11,7 @@ public class PlayerData {
     /// The UUID of the player this data belongs to.
     private final UUID playerId;
     private String lastDisplayName = null;
+    private String lastServerName = null;
 
 
     // --- Settings --- //
@@ -18,7 +19,7 @@ public class PlayerData {
     private boolean showOnlineStatus = true;
     private boolean autoAcceptFriends = false;
     private boolean friendRequestNotifications = true;
-    private boolean friendListPublic = true;
+    private boolean friendListPublic = false;
     private LocaleKey locale = new LocaleKey("en");
 
     public String getLastDisplayName() {
@@ -27,6 +28,14 @@ public class PlayerData {
 
     public void setLastDisplayName(String lastDisplayName) {
         this.lastDisplayName = lastDisplayName;
+    }
+
+    public String getLastServerName() {
+        return lastServerName;
+    }
+
+    public void setLastServerName(String lastServerName) {
+        this.lastServerName = lastServerName;
     }
 
     public boolean isAllowFriendRequests() {
@@ -129,11 +138,14 @@ public class PlayerData {
     public String toString() {
         return "PlayerData{" +
                 "playerId=" + playerId +
+                ", lastDisplayName='" + lastDisplayName + '\'' +
+                ", lastServerName='" + lastServerName + '\'' +
                 ", allow_friend_requests=" + allowFriendRequests +
                 ", show_online_status=" + showOnlineStatus +
                 ", auto_accept_friends=" + autoAcceptFriends +
                 ", friend_request_notifications=" + friendRequestNotifications +
                 ", friend_list_public=" + friendListPublic +
+                ", locale=" + (locale != null ? locale.getCode() : null) +
                 ", firstSeen=" + firstSeen +
                 ", lastSeen=" + lastSeen +
                 '}';

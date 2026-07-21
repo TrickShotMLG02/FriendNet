@@ -4,11 +4,16 @@ import com.trickshotmlg.friendnet.adapter_spigot.Actions.BlocklistActions;
 import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -30,10 +35,16 @@ public class SentRequestDetailGUI extends AbstractGUI {
     private static final String DEFAULT_TIMESTAMP_FORMAT = "yyyy-MM-dd HH:mm";
 
     private final UUID targetId;
+    private FriendGuiViewData viewData;
 
     public SentRequestDetailGUI(JavaPlugin plugin, Player player, UUID targetId) {
+        this(plugin, player, targetId, null);
+    }
+
+    public SentRequestDetailGUI(JavaPlugin plugin, Player player, UUID targetId, FriendGuiViewData viewData) {
         super(plugin, player, 9 * 5, "titles.sentRequestDetailGUI");
         this.targetId = targetId;
+        this.viewData = viewData;
     }
 
     @Override
@@ -127,16 +138,37 @@ public class SentRequestDetailGUI extends AbstractGUI {
     }
 
     private void cancelRequest() {
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            executeProxyAction(ProxyActionType.CANCEL_REQUEST);
+            return;
+        }
+
         new FriendRequestActions((FriendNetPlugin) plugin).cancelRequest(player, getTarget());
         goBack();
     }
 
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
     private void blockTarget() {
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            executeProxyAction(ProxyActionType.BLOCK_PLAYER);
+            return;
+        }
+
         new BlocklistActions((FriendNetPlugin) plugin).block(player, targetId);
         goBack();
     }
 
     private Optional<FriendshipData> getSentRequest() {
+        if (((FriendNetPlugin) plugin).isProxyBackendMode() && viewData != null) {
+            return viewData.sentRequests().stream()
+                    .filter(request -> targetId.equals(request.getOtherPlayerId(player.getUniqueId())))
+                    .findFirst();
+        }
+
         return ((FriendNetPlugin) plugin)
                 .getFriendService()
                 .getFriendshipData(player.getUniqueId(), targetId)
@@ -149,8 +181,44 @@ public class SentRequestDetailGUI extends AbstractGUI {
     }
 
     private String getTargetDisplayName() {
+        if (viewData != null) {
+            ProxyFriendEntry proxyEntry = viewData.proxyEntry(targetId);
+            if (proxyEntry != null && !proxyEntry.displayName().isBlank()) {
+                return proxyEntry.displayName();
+            }
+        }
+
         String displayName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, targetId);
         return displayName.isBlank() ? targetId.toString() : displayName;
+    }
+
+    private void executeProxyAction(ProxyActionType actionType) {
+        ProxyActionRequestPayload request = new ProxyActionRequestPayload(
+                actionType,
+                targetId,
+                getTargetDisplayName(),
+                true
+        );
+        ((FriendNetPlugin) plugin).getFriendGuiService().executeAction(player, request).whenComplete((response, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        MessageManager.send(player, "commandFeedback.proxyBackendGuiUnavailable");
+                        return;
+                    }
+
+                    ProxyActionResponseRenderer.render(player, response);
+                    if (response.friendListView() != null) {
+                        viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        updateViewDataChain(viewData);
+                    }
+                    if (response.success()) {
+                        new SentRequestsGUI(plugin, player, viewData)
+                                .openWithParent(new RequestsGUI(plugin, player, viewData));
+                    } else {
+                        buildInventory();
+                    }
+                })
+        );
     }
 
     private String formatTimestamp(Timestamp timestamp) {

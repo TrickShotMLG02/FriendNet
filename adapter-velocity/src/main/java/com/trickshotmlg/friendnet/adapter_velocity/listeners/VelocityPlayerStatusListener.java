@@ -20,6 +20,7 @@ import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.player.ServerConnectedEvent;
 
 import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -56,6 +57,7 @@ public class VelocityPlayerStatusListener {
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, velocityPlayer));
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
+        initializedPlayerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
 
         plugin.getPlatform().runAsync(() -> {
             Optional<PlayerData> storedPlayerData = databaseService.find(playerId, PlayerData.class);
@@ -63,10 +65,11 @@ public class VelocityPlayerStatusListener {
             if (storedPlayerData.isPresent()) {
                 playerData = storedPlayerData.get();
                 playerData.setLastDisplayName(lastDisplayName);
-                Logger.debug("playerData: " + playerData);
+                playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
             } else {
                 playerData = initializedPlayerData;
             }
+            Logger.debug("Loaded player data on proxy join: " + playerData);
 
             playerService.putPlayerData(playerData);
             playerService.setOnline(playerId, playerData.isShowOnlineStatus());
@@ -85,6 +88,7 @@ public class VelocityPlayerStatusListener {
             if (playerData.isShowOnlineStatus()) {
                 VelocityFriendStatusNotifier.notifyOnline(plugin, playerId);
             }
+            notifyPendingRequests(playerId, playerData);
         });
 
         Logger.debug(velocityPlayer.getName() + " joined the proxy!");
@@ -99,6 +103,8 @@ public class VelocityPlayerStatusListener {
             return;
         }
 
+        playerData.setLastServerName(event.getServer().getServerInfo().getName());
+        playerDataSaveQueue.markDirty(playerData);
         networkAuthorityService.setPresence(new NetworkPlayerPresence(
                 playerId,
                 velocityPlayer.getName(),
@@ -125,6 +131,7 @@ public class VelocityPlayerStatusListener {
             playerData.setLastSeen();
         }
         playerData.setLastDisplayName(velocityPlayer.getDisplayName());
+        playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(playerData.getLastServerName()));
         networkAuthorityService.setPresence(toPresence(velocityPlayer, playerData, false));
         playerService.setOnline(playerId, false);
 
@@ -132,8 +139,7 @@ public class VelocityPlayerStatusListener {
             VelocityFriendStatusNotifier.notifyOffline(plugin, playerId);
         }
 
-        PlayerData playerDataToSave = playerData;
-        plugin.getPlatform().runAsync(() -> playerDataSaveQueue.saveNow(playerDataToSave));
+        playerDataSaveQueue.saveNow(playerData);
         networkAuthorityService.removePresence(playerId);
         playerService.removePlayerData(playerId);
 
@@ -149,6 +155,21 @@ public class VelocityPlayerStatusListener {
                 online,
                 playerData.isShowOnlineStatus(),
                 playerData.getLastSeen()
+        );
+    }
+
+    private void notifyPendingRequests(UUID playerId, PlayerData playerData) {
+        if (playerData == null || !playerData.isFriendRequestNotifications()) {
+            return;
+        }
+
+        int pendingRequestCount = friendService.getPendingRequests(playerId).size();
+        if (pendingRequestCount <= 0) {
+            return;
+        }
+
+        plugin.getServer().getPlayer(playerId).ifPresent(player ->
+                plugin.getMessageManager().send(player, "requestList.pendingSummary", Map.of("count", pendingRequestCount))
         );
     }
 }

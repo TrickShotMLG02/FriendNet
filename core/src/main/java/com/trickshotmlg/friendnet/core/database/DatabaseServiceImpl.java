@@ -7,6 +7,7 @@ import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.DatabaseConnection;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.models.FavouriteData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
@@ -73,7 +74,6 @@ public class DatabaseServiceImpl implements DatabaseService {
                             FriendshipStatus friendshipType = FriendshipStatus.valueOf(rs.getString("status"));
                             Timestamp requestSentTime = rs.getTimestamp("request_sent_time");
                             Timestamp friendSince = rs.getTimestamp("friend_since");
-                            boolean favourite = rs.getBoolean("is_favourite");
 
                             // Create FriendshipData instance
                             FriendshipData friendshipData = new FriendshipData(
@@ -81,8 +81,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                                     requesterId.equals(player1Id) ? player2Id : player1Id,
                                     friendshipType,
                                     requestSentTime,
-                                    friendSince,
-                                    favourite
+                                    friendSince
                             );
 
                             // Cast to T to satisfy the generic method signature
@@ -161,6 +160,7 @@ public class DatabaseServiceImpl implements DatabaseService {
 
         PlayerData playerData = new PlayerData(playerId, firstSeen, lastSeen);
         playerData.setLastDisplayName(rs.getString("last_display_name"));
+        playerData.setLastServerName(rs.getString("last_server_name"));
         playerData.setAllowFriendRequests(rs.getBoolean("allow_friend_requests"));
         playerData.setShowOnlineStatus(rs.getBoolean("show_online_status"));
         playerData.setAutoAcceptFriends(rs.getBoolean("auto_accept_friends"));
@@ -198,7 +198,6 @@ public class DatabaseServiceImpl implements DatabaseService {
                             FriendshipStatus friendshipType = FriendshipStatus.valueOf(rs.getString("status"));
                             Timestamp requestSentTime = rs.getTimestamp("request_sent_time");
                             Timestamp friendSince = rs.getTimestamp("friend_since");
-                            boolean favourite = rs.getBoolean("is_favourite");
 
                             // Create FriendshipData instance
                             FriendshipData friendshipData = new FriendshipData(
@@ -206,8 +205,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                                     requesterId.equals(player1Id) ? player2Id : player1Id,
                                     friendshipType,
                                     requestSentTime,
-                                    friendSince,
-                                    favourite
+                                    friendSince
                             );
 
                             friendships.add((FriendshipData) clazz.cast(friendshipData));
@@ -252,6 +250,34 @@ public class DatabaseServiceImpl implements DatabaseService {
             }
         }
 
+        if (clazz.equals(FavouriteData.class)) {
+            Set<FavouriteData> favouritePlayers = new HashSet<>();
+
+            try {
+                DatabaseConnection conn = getDatabase().getConnection();
+
+                try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM favourites WHERE favouriter_id = ?")) {
+                    ps.setString(1, playerId.toString());
+
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            favouritePlayers.add(new FavouriteData(
+                                    UUID.fromString(rs.getString("favouriter_id")),
+                                    UUID.fromString(rs.getString("favourite_id")),
+                                    rs.getTimestamp("created_at")
+                            ));
+                        }
+
+                        return Optional.of((Set<T>) favouritePlayers);
+                    }
+                } catch (SQLException e) {
+                    Logger.error("Failed to fetch favourite data for player: " + playerId, e);
+                }
+            } catch (SQLException e) {
+                Logger.error("Could not establish database connection", e);
+            }
+        }
+
         return Optional.empty();
     }
 
@@ -271,7 +297,6 @@ public class DatabaseServiceImpl implements DatabaseService {
                 ps.setString(4, entity.getFriendshipStatus().name());
                 ps.setTimestamp(5, entity.getRequestSentTime());
                 ps.setTimestamp(6, entity.getFriendSince());
-                ps.setBoolean(7, entity.isFavourite());
 
                 ps.executeUpdate();
             }
@@ -292,14 +317,21 @@ public class DatabaseServiceImpl implements DatabaseService {
             try (PreparedStatement ps = conn.prepareStatement(SQLQueries.playersUpsert(getDatabase().getDatabaseType()))){
                 ps.setString(1, entity.getPlayerId().toString());
                 ps.setString(2, entity.getLastDisplayName());
-                ps.setBoolean(3, entity.isAllowFriendRequests());
-                ps.setBoolean(4, entity.isShowOnlineStatus());
-                ps.setBoolean(5, entity.isAutoAcceptFriends());
-                ps.setBoolean(6, entity.isFriendRequestNotifications());
-                ps.setBoolean(7, entity.isFriendListPublic());
-                ps.setString(8, entity.getLocale().getCode());
-                ps.setTimestamp(9, entity.getFirstSeen());
-                ps.setTimestamp(10, entity.getLastSeen());
+                ps.setTimestamp(3, entity.getFirstSeen());
+                ps.setTimestamp(4, entity.getLastSeen());
+                ps.setString(5, entity.getLastServerName());
+
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.playerSettingsUpsert(getDatabase().getDatabaseType()))){
+                ps.setString(1, entity.getPlayerId().toString());
+                ps.setBoolean(2, entity.isAllowFriendRequests());
+                ps.setBoolean(3, entity.isShowOnlineStatus());
+                ps.setBoolean(4, entity.isAutoAcceptFriends());
+                ps.setBoolean(5, entity.isFriendRequestNotifications());
+                ps.setBoolean(6, entity.isFriendListPublic());
+                ps.setString(7, entity.getLocale().getCode());
 
                 ps.executeUpdate();
             }
@@ -327,6 +359,24 @@ public class DatabaseServiceImpl implements DatabaseService {
         }
     }
 
+    @Override
+    public void save(FavouriteData entity) {
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
+
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.favouritesUpsert(getDatabase().getDatabaseType()))){
+                ps.setString(1, entity.getFavouriterId().toString());
+                ps.setString(2, entity.getFavouriteId().toString());
+                ps.setTimestamp(3, entity.getCreatedAt());
+
+                ps.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            Logger.error("Could not save FavouriteData: " + entity, e);
+        }
+    }
+
     /**
      * @param entity
      */
@@ -340,6 +390,14 @@ public class DatabaseServiceImpl implements DatabaseService {
                 ps.setString(2, entity.getPlayer2Id().toString());
                 ps.setString(3, entity.getPlayer1Id().toString());
                 ps.setString(4, entity.getPlayer2Id().toString());
+                ps.executeUpdate();
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FAVOURITES_DELETE_PAIR)){
+                ps.setString(1, entity.getPlayer1Id().toString());
+                ps.setString(2, entity.getPlayer2Id().toString());
+                ps.setString(3, entity.getPlayer2Id().toString());
+                ps.setString(4, entity.getPlayer1Id().toString());
                 ps.executeUpdate();
             }
 
@@ -379,6 +437,22 @@ public class DatabaseServiceImpl implements DatabaseService {
 
         } catch (SQLException e) {
             Logger.error("Could not delete BlocklistData: " + entity, e);
+        }
+    }
+
+    @Override
+    public void delete(FavouriteData entity) {
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
+
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FAVOURITES_DELETE)){
+                ps.setString(1, entity.getFavouriterId().toString());
+                ps.setString(2, entity.getFavouriteId().toString());
+                ps.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            Logger.error("Could not delete FavouriteData: " + entity, e);
         }
     }
 

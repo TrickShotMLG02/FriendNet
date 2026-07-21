@@ -35,6 +35,18 @@ public class FriendFilterState {
         return !nameSearchQuery.isBlank();
     }
 
+    public boolean isActive() {
+        return isActive(true);
+    }
+
+    public boolean isActive(boolean includeFavoritesOnly) {
+        return (includeFavoritesOnly && favoritesOnly)
+                || onlineOnly
+                || hasNameSearchQuery()
+                || sortByRecentlySeen
+                || reverseSort;
+    }
+
     public void clearNameSearchQuery() {
         nameSearchQuery = "";
     }

@@ -72,30 +72,24 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (resolvedCommand.path().equals(primaryPath) && resolvedCommand.args().isEmpty()) {
+            SpigotCommandResultRenderer.render(sender, CommandFeedbackUseCases.usage(primaryUsage(sender)));
+            return true;
+        }
+
         SpigotCommandResultRenderer.render(sender, registry.execute(context(sender, resolvedCommand)));
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (plugin.isProxyBackendMode()) {
-            return List.of();
-        }
-
         if (isAlias(alias, "friends")) {
             return List.of();
         }
 
-        if (args.length == 1) {
-            String prefix = args[0].toLowerCase(Locale.ROOT);
-            return registry.definitions().stream()
-                    .filter(definition -> definition.path().startsWith(primaryPath))
-                    .filter(definition -> definition.path().segments().size() == primaryPath.segments().size() + 1)
-                    .filter(definition -> hasPermission(sender, definition.permission()))
-                    .map(definition -> definition.path().commandName())
-                    .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
-                    .sorted(String.CASE_INSENSITIVE_ORDER)
-                    .toList();
+        if (args.length <= 1) {
+            String prefix = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
+            return completeSubcommands(sender, prefix);
         }
 
         ResolvedCommand resolvedCommand = resolve(alias, args);
@@ -111,6 +105,17 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
         String normalizedPrefix = prefix == null ? "" : prefix.toLowerCase(Locale.ROOT);
         return names.stream()
                 .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(normalizedPrefix))
+                .sorted(String.CASE_INSENSITIVE_ORDER)
+                .toList();
+    }
+
+    private List<String> completeSubcommands(CommandSender sender, String prefix) {
+        return registry.definitions().stream()
+                .filter(definition -> definition.path().startsWith(primaryPath))
+                .filter(definition -> definition.path().segments().size() == primaryPath.segments().size() + 1)
+                .filter(definition -> hasPermission(sender, definition.permission()))
+                .map(definition -> definition.path().commandName())
+                .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }

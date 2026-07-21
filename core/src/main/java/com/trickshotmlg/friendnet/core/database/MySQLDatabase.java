@@ -11,6 +11,8 @@ public class MySQLDatabase implements Database {
 
     private final String host, database, username, password;
     private final DatabaseType databaseType;
+    private final boolean useSsl;
+    private final boolean allowPublicKeyRetrieval;
     private DatabaseConnection connection;
 
 
@@ -19,11 +21,25 @@ public class MySQLDatabase implements Database {
     }
 
     public MySQLDatabase(String host, String database, String username, String password, DatabaseType databaseType) {
+        this(host, database, username, password, databaseType, false, false);
+    }
+
+    public MySQLDatabase(
+            String host,
+            String database,
+            String username,
+            String password,
+            DatabaseType databaseType,
+            boolean useSsl,
+            boolean allowPublicKeyRetrieval
+    ) {
         this.host = host;
         this.database = database;
         this.username = username;
         this.password = password;
         this.databaseType = databaseType;
+        this.useSsl = useSsl;
+        this.allowPublicKeyRetrieval = allowPublicKeyRetrieval;
     }
 
     /**
@@ -40,7 +56,13 @@ public class MySQLDatabase implements Database {
     @Override
     public synchronized void connect() throws SQLException {
         loadDriver();
-        connection = new SimpleDatabaseConnection(DriverManager.getConnection(buildJdbcUrl(host, database, databaseType), username, password));
+        connection = new SimpleDatabaseConnection(DriverManager.getConnection(buildJdbcUrl(
+                host,
+                database,
+                databaseType,
+                useSsl,
+                allowPublicKeyRetrieval
+        ), username, password));
     }
 
     /**
@@ -114,14 +136,27 @@ public class MySQLDatabase implements Database {
     }
 
     static String buildJdbcUrl(String host, String database, DatabaseType databaseType) throws SQLException {
+        return buildJdbcUrl(host, database, databaseType, false, false);
+    }
+
+    static String buildJdbcUrl(
+            String host,
+            String database,
+            DatabaseType databaseType,
+            boolean useSsl,
+            boolean allowPublicKeyRetrieval
+    ) throws SQLException {
         if (databaseType == DatabaseType.MySQL) {
             return "jdbc:mysql://" + host + "/" + database +
-                    "?useSSL=false&connectTimeout=10000&socketTimeout=30000&tcpKeepAlive=true";
+                    "?useSSL=" + useSsl +
+                    "&allowPublicKeyRetrieval=" + allowPublicKeyRetrieval +
+                    "&connectTimeout=10000&socketTimeout=30000&tcpKeepAlive=true";
         }
 
         if (databaseType == DatabaseType.MariaDB) {
             return "jdbc:mariadb://" + host + "/" + database +
-                    "?useSsl=false&connectTimeout=10000&socketTimeout=30000&tcpKeepAlive=true";
+                    "?useSsl=" + useSsl +
+                    "&connectTimeout=10000&socketTimeout=30000&tcpKeepAlive=true";
         }
 
         throw new SQLException("Unsupported SQL database type for MySQLDatabase: " + databaseType);

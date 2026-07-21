@@ -1,0 +1,140 @@
+package com.trickshotmlg.friendnet.adapter_spigot.Services;
+
+import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
+import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
+import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
+
+import java.sql.Timestamp;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public record FriendGuiViewData(
+        List<FriendEntry> friends,
+        List<FriendshipData> pendingRequests,
+        List<FriendshipData> sentRequests,
+        List<BlocklistData> blockedPlayers,
+        Map<UUID, ProxyFriendEntry> proxyEntries,
+        boolean allowFriendRequests,
+        boolean showOnlineStatus,
+        boolean autoAcceptFriends,
+        boolean friendRequestNotifications,
+        boolean friendListPublic,
+        String localeCode
+) {
+    public FriendGuiViewData {
+        friends = friends == null ? List.of() : List.copyOf(friends);
+        pendingRequests = pendingRequests == null ? List.of() : List.copyOf(pendingRequests);
+        sentRequests = sentRequests == null ? List.of() : List.copyOf(sentRequests);
+        blockedPlayers = blockedPlayers == null ? List.of() : List.copyOf(blockedPlayers);
+        proxyEntries = proxyEntries == null ? Map.of() : Map.copyOf(proxyEntries);
+        localeCode = localeCode == null || localeCode.isBlank() ? defaultLocaleCode() : localeCode;
+    }
+
+    public static FriendGuiViewData local(List<FriendEntry> friends, List<FriendshipData> pendingRequests) {
+        return local(friends, pendingRequests, List.of(), List.of());
+    }
+
+    public static FriendGuiViewData local(
+            List<FriendEntry> friends,
+            List<FriendshipData> pendingRequests,
+            List<FriendshipData> sentRequests,
+            List<BlocklistData> blockedPlayers
+    ) {
+        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, Map.of(), true, true, false, true, false, defaultLocaleCode());
+    }
+
+    public static FriendGuiViewData fromProxyPayload(UUID viewerId, ProxyFriendListViewPayload payload) {
+        List<FriendEntry> friends = payload.friends().stream()
+                .map(entry -> {
+                    FriendshipData friendship = new FriendshipData(
+                            viewerId,
+                            entry.playerId(),
+                            FriendshipStatus.Accepted,
+                            timestamp(entry.requestSentTimeMillis()),
+                            timestamp(entry.friendSinceMillis())
+                    );
+                    return new FriendEntry(friendship, entry.playerId(), entry.favourite());
+                })
+                .toList();
+        List<FriendshipData> pendingRequests = payload.pendingRequests().stream()
+                .map(entry -> new FriendshipData(
+                        entry.playerId(),
+                        viewerId,
+                        FriendshipStatus.Pending,
+                        timestamp(entry.requestSentTimeMillis()),
+                        null
+                ))
+                .toList();
+        List<FriendshipData> sentRequests = payload.sentRequests().stream()
+                .map(entry -> new FriendshipData(
+                        viewerId,
+                        entry.playerId(),
+                        FriendshipStatus.Pending,
+                        timestamp(entry.requestSentTimeMillis()),
+                        null
+                ))
+                .toList();
+        List<BlocklistData> blockedPlayers = payload.blockedPlayers().stream()
+                .map(entry -> new BlocklistData(viewerId, entry.playerId(), timestamp(entry.blockedAtMillis())))
+                .toList();
+        Map<UUID, ProxyFriendEntry> entries = Stream.of(
+                        payload.friends().stream(),
+                        payload.pendingRequests().stream(),
+                        payload.sentRequests().stream(),
+                        payload.blockedPlayers().stream()
+                )
+                .flatMap(stream -> stream)
+                .collect(Collectors.toMap(ProxyFriendEntry::playerId, entry -> entry, (left, right) -> left));
+        return new FriendGuiViewData(
+                friends,
+                pendingRequests,
+                sentRequests,
+                blockedPlayers,
+                entries,
+                payload.allowFriendRequests(),
+                payload.showOnlineStatus(),
+                payload.autoAcceptFriends(),
+                payload.friendRequestNotifications(),
+                payload.friendListPublic(),
+                payload.localeCode()
+        );
+    }
+
+    private static Timestamp timestamp(long millis) {
+        return millis < 0 ? null : new Timestamp(millis);
+    }
+
+    private static String defaultLocaleCode() {
+        LocaleKey defaultLocale = LocaleKey.getDefaultLocale();
+        return defaultLocale != null ? defaultLocale.getCode() : "en_US";
+    }
+
+    public boolean hasProxyEntry(UUID playerId) {
+        return proxyEntries.containsKey(playerId);
+    }
+
+    public ProxyFriendEntry proxyEntry(UUID playerId) {
+        return proxyEntries.get(playerId);
+    }
+
+    public void applySettingsTo(PlayerData playerData) {
+        if (playerData == null) {
+            return;
+        }
+
+        playerData.setAllowFriendRequests(allowFriendRequests);
+        playerData.setShowOnlineStatus(showOnlineStatus);
+        playerData.setAutoAcceptFriends(autoAcceptFriends);
+        playerData.setFriendRequestNotifications(friendRequestNotifications);
+        playerData.setFriendListPublic(friendListPublic);
+        playerData.setLocale(LocaleKey.getOrFallback(localeCode));
+    }
+}

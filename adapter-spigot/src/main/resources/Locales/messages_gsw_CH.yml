@@ -1,0 +1,131 @@
+# Global settings
+
+prefix: '&7[&aFründe&7]'
+
+noPermission: '&4&lDu hesch kei gnüegendi Rächt, um de Befehl uszfüehre'
+commandNotFound: '&4&lDe Befehl isch nöd gfunde worde'
+configReloadSuccess: '&bPlugin-Konfiguratione sind erfolgriich neu glade worde'
+configReloadError: '&4Fehler bim Neulade vo de Plugin-Konfiguratione'
+
+# General command feedback
+
+commandFeedback:
+  playersOnlyCommand: '&cNume Spieler chönd de Befehl bruuche!'
+  commandNotFound: '&cDe Befehl isch nöd gfunde worde!'
+  playerNotFound: '&cDe Spieler isch nöd gfunde worde!'
+  usage: '&eBruuch: %usage%'
+  proxyBackendCommandDisabled: '&cFründe-Befehl werded i dem Netzwerk vom Proxy verarbeit.'
+  proxyBackendGuiUnavailable: '&cFründe-GUIs bruched d Proxy-Verbindig, bevor sie im Proxy-Modus chönd bruuchet werde.'
+
+# Chat button text / hover messages (reusable)
+
+chatButtons:
+  acceptRequest:
+    text: '&a[Aanäh]'
+    hover: '&bKlick da, zum d Afraag aaznäh'
+  denyRequest:
+    text: '&c[Ablehne]'
+    hover: '&bKlick da, zum d Afraag abzlehne'
+
+# Friend request events
+
+friendRequest:
+  send:
+    sender:
+      success: '&aDu hesch &e%target% &ae Fründschaftsafraag gschickt'
+      autoAccepted: '&e%target% &ahat dini Fründschaftsafraag automatisch aagnoh'
+      cannotSelf: '&cDu chasch dir sälber kei Fründschaftsafraag schicke'
+      alreadyPending: '&cDu hesch &e%target% &cscho e Fründschaftsafraag gschickt'
+      disabled: '&e%target% &chat Fründschaftsafrage deaktiviert'
+    target:
+      success: '&aDu hesch e Fründschaftsafraag vo &e%sender% &abecho %acceptRequest% %denyRequest%'
+      autoAccepted: '&aDu hesch e Fründschaftsafraag vo &e%sender% &aautomatisch aagnoh'
+      alreadyPending: '&e%sender% &chat dir scho e Fründschaftsafraag gschickt'
+
+  accept:
+    sender:
+      success: '&aDu hesch d Fründschaftsafraag vo &e%target% &aagnoh'
+      notFound: '&cKei offeni Fründschaftsafraag vo &e%target%'
+      nonePending: '&cDu hesch kei offeni Fründschaftsafrage'
+    target:
+      success: '&e%sender% &ahat dini Fründschaftsafraag aagnoh'
+      notFound: '&c%sender% het versuecht, e Afraag aaznäh, wo nöd existiert'
+
+  deny:
+    sender:
+      success: '&aDu hesch d Fründschaftsafraag vo &e%target% &aabglehnt'
+      notFound: '&cKei offeni Fründschaftsafraag vo &e%target%'
+      nonePending: '&cDu hesch kei offeni Fründschaftsafrage'
+    target:
+      success: '&e%sender% &ahat dini Fründschaftsafraag abglehnt'
+      notFound: '&c%sender% het versuecht, e Afraag abzlehne, wo nöd existiert'
+
+  cancel:
+    sender:
+      success: '&aDu hesch d Fründschaftsafraag a &e%target% &aabbroche'
+      notFound: '&cD Fründschaftsafraag a &e%target% &ckan nümme abbroche werde'
+      nonePending: '&cDu hesch kei gschickte Fründschaftsafrage'
+    target:
+      success: '&e%sender% &ahat d Fründschaftsafraag abbroche'
+      notFound: '&c%sender% het versuecht, e Afraag abzbräche, wo nöd existiert'
+
+# Friend management events
+
+friend:
+  status:
+    online: '&e%player% &aisch jetzt online'
+    offline: '&e%player% &cisch jetzt offline'
+  remove:
+    sender:
+      success: '&e%target% &cisch nümme din Fründ'
+      notFound: '&e%target% &cisch nöd uf dinere Fründesliste'
+    target:
+      success: '&e%sender% &chat di us sinere Fründesliste entfernt'
+      notFound: '&c%sender% het versuecht, di z entferne, aber du bisch nöd uf sinere Fründesliste'
+  favourite:
+    enabled: '&e%target% &aisch jetzt en Favorit'
+    disabled: '&e%target% &cisch kei Favorit meh'
+
+# Blocklist events
+blocklist:
+  block:
+    success: '&e%target% &cwurde blockiert'
+    already: '&e%target% &cisch scho blockiert'
+    self: '&cDu chasch di nöd sälber blockiere'
+  unblock:
+    success: '&e%target% &aisch nümme blockiert'
+    notFound: '&e%target% &cisch nöd blockiert'
+  clear:
+    success: '&e%count% &aSpieler sind vo dinere Blockliste entfernt worde'
+    empty: '&cDini Blockliste isch scho leer'
+  friendRequest:
+    senderBlocked: '&cDu hesch &e%target% &cblockiert. Entblock de Spieler, bevor du e Afraag schicksch.'
+    targetBlocked: '&e%target% &cnimmt kei Fründschaftsafrage vo dir aa.'
+
+# Player settings feedback
+
+playerSettings:
+  allowFriendRequests:
+    enabled: '&aFründschaftsafrage sind jetzt aktiviert'
+    disabled: '&cFründschaftsafrage sind jetzt deaktiviert'
+  showOnlineStatus:
+    enabled: '&aDin Online-Status isch jetzt sichtbar'
+    disabled: '&cDin Online-Status isch jetzt verborgen'
+  autoAcceptFriends:
+    enabled: '&aFründschaftsafrage werded jetzt automatisch aagnoh'
+    disabled: '&cFründschaftsafrage werded nümme automatisch aagnoh'
+  friendRequestNotifications:
+    enabled: '&aBenachrichtigunge für Fründschaftsafrage sind jetzt aktiviert'
+    disabled: '&cBenachrichtigunge für Fründschaftsafrage sind jetzt deaktiviert'
+  friendListPublic:
+    enabled: '&aDini Fründesliste isch jetzt öffentlich'
+    disabled: '&cDini Fründesliste isch jetzt privat'
+  locale:
+    changed: '&aDini Sprach isch aktualisiert worde'
+
+# Friend request list display
+
+requestList:
+  pendingSummary: '&aDu hesch &e%count% &aoffeni Fründschaftsafrage'
+  header: '&aDu hesch offeni Fründschaftsafrage vo dene Spieler:'
+  entry: '&e%target%'

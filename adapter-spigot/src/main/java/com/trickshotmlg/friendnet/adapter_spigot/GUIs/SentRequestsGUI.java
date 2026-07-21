@@ -3,9 +3,17 @@ package com.trickshotmlg.friendnet.adapter_spigot.GUIs;
 import com.trickshotmlg.friendnet.adapter_spigot.Actions.FriendRequestActions;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -25,9 +33,16 @@ public class SentRequestsGUI extends AbstractGUI {
     private final int requestRows = 4;
     private final int requestsPerPage = requestRows * 9;
     private int currentPage = 0;
+    private FriendGuiViewData viewData;
+    private FriendGuiViewData currentViewData;
 
     public SentRequestsGUI(JavaPlugin plugin, Player player) {
+        this(plugin, player, null);
+    }
+
+    public SentRequestsGUI(JavaPlugin plugin, Player player, FriendGuiViewData viewData) {
         super(plugin, player, 9 * 6, "titles.sentRequestsGUI");
+        this.viewData = viewData;
     }
 
     @Override
@@ -35,11 +50,11 @@ public class SentRequestsGUI extends AbstractGUI {
         interactableSlots.clear();
         inventory.clear();
 
-        List<FriendshipData> requests = ((FriendNetPlugin) plugin)
-                .getFriendService()
-                .getSentRequests(player.getUniqueId())
-                .stream()
-                .toList();
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        currentViewData = friendNetPlugin.isProxyBackendMode() && viewData != null
+                ? viewData
+                : localViewData(friendNetPlugin, player.getUniqueId());
+        List<FriendshipData> requests = currentViewData.sentRequests();
         clampCurrentPage(requests.size());
 
         int startIndex = currentPage * requestsPerPage;
@@ -52,7 +67,7 @@ public class SentRequestsGUI extends AbstractGUI {
             setInteractableItem(i, new ActionItemStack(
                     createRequestItem(request, targetId),
                     player,
-                    () -> openChild(new SentRequestDetailGUI(plugin, player, targetId)),
+                    () -> openChild(new SentRequestDetailGUI(plugin, player, targetId, currentViewData)),
                     ActionItemStack.SoundProfile.NAVIGATION
             ));
         }
@@ -106,9 +121,7 @@ public class SentRequestsGUI extends AbstractGUI {
                         Map.of(),
                         confirmed -> {
                             if (confirmed) {
-                                new FriendRequestActions((FriendNetPlugin) plugin).cancelAllRequests(player);
-                                currentPage = 0;
-                                buildInventory();
+                                cancelAllRequests();
                             }
                         }
                 )
@@ -131,7 +144,7 @@ public class SentRequestsGUI extends AbstractGUI {
     }
 
     private ItemStack createRequestItem(FriendshipData request, UUID targetId) {
-        String displayName = SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, targetId);
+        String displayName = getDisplayName(targetId);
         if (displayName.isBlank()) {
             displayName = targetId.toString();
         }
@@ -182,6 +195,62 @@ public class SentRequestsGUI extends AbstractGUI {
 
     private String locale(String key, Map<String, Object> placeholders) {
         return FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), "gui", key, placeholders);
+    }
+
+    private static FriendGuiViewData localViewData(FriendNetPlugin plugin, UUID playerId) {
+        FriendListViewData viewData = plugin.getApplicationServices()
+                .friendCommandUseCases()
+                .listViewData(playerId);
+        return FriendGuiViewData.local(
+                viewData.friends(),
+                viewData.pendingRequests(),
+                plugin.getFriendService().getSentRequests(playerId).stream().toList(),
+                plugin.getApplicationServices().blocklistService().getBlockedPlayers(playerId)
+        );
+    }
+
+    @Override
+    protected void updateViewData(FriendGuiViewData viewData) {
+        this.viewData = viewData;
+    }
+
+    private String getDisplayName(UUID playerId) {
+        ProxyFriendEntry proxyEntry = currentViewData != null ? currentViewData.proxyEntry(playerId) : null;
+        if (proxyEntry != null && !proxyEntry.displayName().isBlank()) {
+            return proxyEntry.displayName();
+        }
+
+        return SpigotUtils.getPlayerDisplayName((FriendNetPlugin) plugin, playerId);
+    }
+
+    private void cancelAllRequests() {
+        if (((FriendNetPlugin) plugin).isProxyBackendMode()) {
+            executeProxyAction(new ProxyActionRequestPayload(ProxyActionType.CANCEL_ALL_REQUESTS, null, "", true));
+            return;
+        }
+
+        new FriendRequestActions((FriendNetPlugin) plugin).cancelAllRequests(player);
+        currentPage = 0;
+        buildInventory();
+    }
+
+    private void executeProxyAction(ProxyActionRequestPayload request) {
+        ((FriendNetPlugin) plugin).getFriendGuiService().executeAction(player, request).whenComplete((response, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        MessageManager.send(player, "commandFeedback.proxyBackendGuiUnavailable");
+                        return;
+                    }
+
+                    ProxyActionResponseRenderer.render(player, response);
+                    if (response.friendListView() != null) {
+                        viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), response.friendListView());
+                        updateViewDataChain(viewData);
+                    }
+                    currentPage = 0;
+                    buildInventory();
+                })
+        );
     }
 
     private void fillEmptySlots() {

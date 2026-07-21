@@ -77,10 +77,10 @@ friend:
     offline: '&e%player% &cist jetzt offline'
   remove:
     sender:
-      success: '&e%target% &bist nicht mehr dein Freund'
+      success: '&e%target% &cist nicht mehr dein Freund'
       notFound: '&e%target% &cist nicht in deiner Freundesliste'
     target:
-      success: '&e%sender% &bhat dich aus seiner Freundesliste entfernt'
+      success: '&e%sender% &chat dich aus seiner Freundesliste entfernt'
       notFound: '&c%sender% hat versucht, dich zu entfernen, aber du bist nicht in seiner Freundesliste'
   favourite:
     enabled: '&e%target% &aist jetzt ein Favorit'
@@ -126,5 +126,6 @@ playerSettings:
 # Friend request list display
 
 requestList:
+  pendingSummary: '&aDu hast &e%count% &aausstehende Freundschaftsanfragen'
   header: '&aDu hast ausstehende Freundschaftsanfragen von folgenden Spielern:'
   entry: '&e%target%'

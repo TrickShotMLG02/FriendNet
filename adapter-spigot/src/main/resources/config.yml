@@ -3,6 +3,10 @@
 # Proxy: this backend delegates persistent FriendNet state to the proxy and acts as a GUI/client adapter.
 Mode: Standalone
 
+# Shared secret for Spigot <-> proxy plugin messaging in Proxy mode.
+# Set the same value on the Velocity adapter. Change this before using proxy mode.
+ConnectionToken: change-me
+
 # The backend to use: SQLite, MySQL, MariaDB (case-insensitive)
 DatabaseType: SQLite
 
@@ -13,6 +17,7 @@ PlayerDataFlushIntervalSeconds: 30
 SupportedLocales:
   - en_US
   - de
+  - gsw_CH
 
 DefaultLocale: "en_US"
 
@@ -22,6 +27,8 @@ MySQL:
   dbName: friendnet
   username: friendnet
   password: friendnet
+  useSSL: false
+  allowPublicKeyRetrieval: false
 
 # The settings for SQLite Connection
 SQLite:

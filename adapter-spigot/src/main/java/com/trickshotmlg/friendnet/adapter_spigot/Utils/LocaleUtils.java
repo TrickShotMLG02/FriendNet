@@ -23,13 +23,11 @@ public class LocaleUtils {
         return getLocalizedLanguageName(targetCode.getCode(), sourceCode.getCode());
     }
 
-    private static Locale parseLocale(String code) {
-        if (code == null || code.isEmpty()) return Locale.getDefault();
-        String[] parts = code.split("_");
-        if (parts.length == 2) {
-            return new Locale(parts[0], parts[1]);
-        } else {
-            return new Locale(parts[0]);
+    public static Locale parseLocale(String code) {
+        if (code == null || code.isBlank()) {
+            return Locale.getDefault();
         }
+
+        return Locale.forLanguageTag(new LocaleKey(code).toLanguageTag());
     }
 }

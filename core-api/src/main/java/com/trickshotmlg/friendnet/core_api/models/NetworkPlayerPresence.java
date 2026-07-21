@@ -32,4 +32,12 @@ public record NetworkPlayerPresence(
     public NetworkPlayerPresence withOnline(boolean online) {
         return new NetworkPlayerPresence(playerId, playerName, displayName, serverName, online, visibleOnline, lastSeen);
     }
+
+    public NetworkPlayerPresence withVisibleOnline(boolean visibleOnline) {
+        return new NetworkPlayerPresence(playerId, playerName, displayName, serverName, online, visibleOnline, lastSeen);
+    }
+
+    public NetworkPlayerPresence withLastSeen(Timestamp lastSeen) {
+        return new NetworkPlayerPresence(playerId, playerName, displayName, serverName, online, visibleOnline, lastSeen);
+    }
 }
