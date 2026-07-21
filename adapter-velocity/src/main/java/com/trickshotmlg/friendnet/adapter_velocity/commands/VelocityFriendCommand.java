@@ -15,6 +15,7 @@ import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases
 import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.interfaces.PermissionNode;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
@@ -240,8 +241,8 @@ public class VelocityFriendCommand implements SimpleCommand {
 
         CommandUseCaseResult.Builder result = CommandUseCaseResult.builder(true)
                 .message(com.trickshotmlg.friendnet.core.application.command.CommandMessage.sender("friendList.header"));
-        for (FriendshipData friendship : viewData.friends()) {
-            UUID friendId = friendship.getOtherPlayerId(senderId);
+        for (FriendEntry friend : viewData.friends()) {
+            UUID friendId = friend.friendId();
             result.message(com.trickshotmlg.friendnet.core.application.command.CommandMessage.sender(
                     "friendList.entry",
                     java.util.Map.of("target", plugin.getApplicationServices().knownPlayerLookup().displayName(friendId))

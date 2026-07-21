@@ -79,7 +79,6 @@ public class VelocityPlayerStatusListener {
             Optional<Set<FriendshipData>> friendships = databaseService.findAll(playerId, FriendshipData.class);
             friendships.ifPresent(friendshipDataSet -> {
                 for (FriendshipData friendshipData : friendshipDataSet) {
-                    friendshipData.setFavourite(false);
                     friendService.putFriendshipData(friendshipData);
                     UUID otherPlayerId = friendshipData.getOtherPlayerId(playerId);
                     databaseService.find(otherPlayerId, PlayerData.class).ifPresent(playerService::putPlayerData);

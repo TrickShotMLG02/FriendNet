@@ -3,6 +3,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Services;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public record FriendGuiViewData(
-        List<FriendshipData> friends,
+        List<FriendEntry> friends,
         List<FriendshipData> pendingRequests,
         List<FriendshipData> sentRequests,
         List<BlocklistData> blockedPlayers,
@@ -37,12 +38,12 @@ public record FriendGuiViewData(
         localeCode = localeCode == null || localeCode.isBlank() ? defaultLocaleCode() : localeCode;
     }
 
-    public static FriendGuiViewData local(List<FriendshipData> friends, List<FriendshipData> pendingRequests) {
+    public static FriendGuiViewData local(List<FriendEntry> friends, List<FriendshipData> pendingRequests) {
         return local(friends, pendingRequests, List.of(), List.of());
     }
 
     public static FriendGuiViewData local(
-            List<FriendshipData> friends,
+            List<FriendEntry> friends,
             List<FriendshipData> pendingRequests,
             List<FriendshipData> sentRequests,
             List<BlocklistData> blockedPlayers
@@ -51,15 +52,17 @@ public record FriendGuiViewData(
     }
 
     public static FriendGuiViewData fromProxyPayload(UUID viewerId, ProxyFriendListViewPayload payload) {
-        List<FriendshipData> friends = payload.friends().stream()
-                .map(entry -> new FriendshipData(
-                        viewerId,
-                        entry.playerId(),
-                        FriendshipStatus.Accepted,
-                        timestamp(entry.requestSentTimeMillis()),
-                        timestamp(entry.friendSinceMillis()),
-                        entry.favourite()
-                ))
+        List<FriendEntry> friends = payload.friends().stream()
+                .map(entry -> {
+                    FriendshipData friendship = new FriendshipData(
+                            viewerId,
+                            entry.playerId(),
+                            FriendshipStatus.Accepted,
+                            timestamp(entry.requestSentTimeMillis()),
+                            timestamp(entry.friendSinceMillis())
+                    );
+                    return new FriendEntry(friendship, entry.playerId(), entry.favourite());
+                })
                 .toList();
         List<FriendshipData> pendingRequests = payload.pendingRequests().stream()
                 .map(entry -> new FriendshipData(
@@ -67,8 +70,7 @@ public record FriendGuiViewData(
                         viewerId,
                         FriendshipStatus.Pending,
                         timestamp(entry.requestSentTimeMillis()),
-                        null,
-                        false
+                        null
                 ))
                 .toList();
         List<FriendshipData> sentRequests = payload.sentRequests().stream()
@@ -77,8 +79,7 @@ public record FriendGuiViewData(
                         entry.playerId(),
                         FriendshipStatus.Pending,
                         timestamp(entry.requestSentTimeMillis()),
-                        null,
-                        false
+                        null
                 ))
                 .toList();
         List<BlocklistData> blockedPlayers = payload.blockedPlayers().stream()

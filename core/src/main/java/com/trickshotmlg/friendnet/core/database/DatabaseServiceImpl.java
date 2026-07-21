@@ -64,8 +64,6 @@ public class DatabaseServiceImpl implements DatabaseService {
                 try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FRIENDSHIPS_SELECT)) {
                     ps.setString(1, playerId.toString());
                     ps.setString(2, playerId.toString());
-                    ps.setString(3, playerId.toString());
-                    ps.setString(4, playerId.toString());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         if (rs.next()) {
@@ -76,7 +74,6 @@ public class DatabaseServiceImpl implements DatabaseService {
                             FriendshipStatus friendshipType = FriendshipStatus.valueOf(rs.getString("status"));
                             Timestamp requestSentTime = rs.getTimestamp("request_sent_time");
                             Timestamp friendSince = rs.getTimestamp("friend_since");
-                            boolean favourite = rs.getBoolean("is_favourite");
 
                             // Create FriendshipData instance
                             FriendshipData friendshipData = new FriendshipData(
@@ -84,8 +81,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                                     requesterId.equals(player1Id) ? player2Id : player1Id,
                                     friendshipType,
                                     requestSentTime,
-                                    friendSince,
-                                    favourite
+                                    friendSince
                             );
 
                             // Cast to T to satisfy the generic method signature
@@ -192,8 +188,6 @@ public class DatabaseServiceImpl implements DatabaseService {
                 try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_FRIENDSHIPS_SELECT)) {
                     ps.setString(1, playerId.toString());
                     ps.setString(2, playerId.toString());
-                    ps.setString(3, playerId.toString());
-                    ps.setString(4, playerId.toString());
 
                     try (ResultSet rs = ps.executeQuery()) {
                         while (rs.next()) {
@@ -204,7 +198,6 @@ public class DatabaseServiceImpl implements DatabaseService {
                             FriendshipStatus friendshipType = FriendshipStatus.valueOf(rs.getString("status"));
                             Timestamp requestSentTime = rs.getTimestamp("request_sent_time");
                             Timestamp friendSince = rs.getTimestamp("friend_since");
-                            boolean favourite = rs.getBoolean("is_favourite");
 
                             // Create FriendshipData instance
                             FriendshipData friendshipData = new FriendshipData(
@@ -212,8 +205,7 @@ public class DatabaseServiceImpl implements DatabaseService {
                                     requesterId.equals(player1Id) ? player2Id : player1Id,
                                     friendshipType,
                                     requestSentTime,
-                                    friendSince,
-                                    favourite
+                                    friendSince
                             );
 
                             friendships.add((FriendshipData) clazz.cast(friendshipData));

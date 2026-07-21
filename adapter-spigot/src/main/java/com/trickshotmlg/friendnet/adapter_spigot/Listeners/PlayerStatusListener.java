@@ -84,7 +84,6 @@ public class PlayerStatusListener extends AbstractListener {
             Optional<Set<FriendshipData>> friendships = databaseService.findAll(playerId, FriendshipData.class);
             if (friendships.isPresent()) {
                 for (FriendshipData friendshipData : friendships.get()) {
-                    friendshipData.setFavourite(false);
                     friendService.putFriendshipData(friendshipData);
                     UUID otherPlayerId = friendshipData.getOtherPlayerId(playerId);
                     databaseService.find(otherPlayerId, PlayerData.class).ifPresent(playerService::putPlayerData);

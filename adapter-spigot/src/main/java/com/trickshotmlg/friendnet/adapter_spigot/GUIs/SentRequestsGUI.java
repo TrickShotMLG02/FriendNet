@@ -8,6 +8,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
@@ -52,12 +53,7 @@ public class SentRequestsGUI extends AbstractGUI {
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
         currentViewData = friendNetPlugin.isProxyBackendMode() && viewData != null
                 ? viewData
-                : FriendGuiViewData.local(
-                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
-        );
+                : localViewData(friendNetPlugin, player.getUniqueId());
         List<FriendshipData> requests = currentViewData.sentRequests();
         clampCurrentPage(requests.size());
 
@@ -199,6 +195,18 @@ public class SentRequestsGUI extends AbstractGUI {
 
     private String locale(String key, Map<String, Object> placeholders) {
         return FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), "gui", key, placeholders);
+    }
+
+    private static FriendGuiViewData localViewData(FriendNetPlugin plugin, UUID playerId) {
+        FriendListViewData viewData = plugin.getApplicationServices()
+                .friendCommandUseCases()
+                .listViewData(playerId);
+        return FriendGuiViewData.local(
+                viewData.friends(),
+                viewData.pendingRequests(),
+                plugin.getFriendService().getSentRequests(playerId).stream().toList(),
+                plugin.getApplicationServices().blocklistService().getBlockedPlayers(playerId)
+        );
     }
 
     @Override

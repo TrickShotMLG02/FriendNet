@@ -8,6 +8,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
@@ -39,12 +40,7 @@ public class RequestsGUI extends AbstractGUI {
         this(
                 plugin,
                 player,
-                FriendGuiViewData.local(
-                        ((FriendNetPlugin) plugin).getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                        ((FriendNetPlugin) plugin).getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
-                        ((FriendNetPlugin) plugin).getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
-                        ((FriendNetPlugin) plugin).getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
-                )
+                localViewData((FriendNetPlugin) plugin, player.getUniqueId())
         );
     }
 
@@ -67,12 +63,7 @@ public class RequestsGUI extends AbstractGUI {
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
         currentViewData = friendNetPlugin.isProxyBackendMode()
                 ? viewData
-                : FriendGuiViewData.local(
-                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
-        );
+                : localViewData(friendNetPlugin, player.getUniqueId());
         List<FriendshipData> requests = currentViewData.pendingRequests();
         clampCurrentPage(requests.size());
 
@@ -295,6 +286,18 @@ public class RequestsGUI extends AbstractGUI {
 
     private String locale(String key, Map<String, Object> placeholders) {
         return FriendNetPlugin.LocaleManager.getMessage(player.getUniqueId(), "gui", key, placeholders);
+    }
+
+    private static FriendGuiViewData localViewData(FriendNetPlugin plugin, UUID playerId) {
+        FriendListViewData viewData = plugin.getApplicationServices()
+                .friendCommandUseCases()
+                .listViewData(playerId);
+        return FriendGuiViewData.local(
+                viewData.friends(),
+                viewData.pendingRequests(),
+                plugin.getFriendService().getSentRequests(playerId).stream().toList(),
+                plugin.getApplicationServices().blocklistService().getBlockedPlayers(playerId)
+        );
     }
 
     @Override

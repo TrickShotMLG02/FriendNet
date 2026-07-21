@@ -15,7 +15,6 @@ public class FriendshipData {
     private FriendshipStatus friendshipStatus;
     private Timestamp requestSentTime;
     private Timestamp friendSince;
-    private boolean isFavourite;
 
     /**
      * Use this constructor to create a friend request that is pending
@@ -31,10 +30,9 @@ public class FriendshipData {
         this.friendshipStatus = FriendshipStatus.Pending;
         this.requestSentTime = new Timestamp(System.currentTimeMillis());
         this.friendSince = null;
-        this.isFavourite = false;
     }
 
-    public FriendshipData(UUID requesterId, UUID targetId, FriendshipStatus friendshipType, Timestamp requestSentTime, Timestamp friendSince, boolean isFavourite) {
+    public FriendshipData(UUID requesterId, UUID targetId, FriendshipStatus friendshipType, Timestamp requestSentTime, Timestamp friendSince) {
         List<UUID> uuids = List.of(requesterId, targetId).stream().sorted().collect(Collectors.toList());
         this.player1Id = uuids.get(0);
         this.player2Id = uuids.get(1);
@@ -43,7 +41,6 @@ public class FriendshipData {
         this.friendshipStatus = friendshipType;
         this.requestSentTime = requestSentTime;
         this.friendSince = friendSince;
-        this.isFavourite = isFavourite;
     }
 
     public UUID getPlayer1Id() {
@@ -102,14 +99,6 @@ public class FriendshipData {
         this.friendSince = friendSince;
     }
 
-    public boolean isFavourite() {
-        return isFavourite;
-    }
-
-    public void setFavourite(boolean favourite) {
-        isFavourite = favourite;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -137,7 +126,6 @@ public class FriendshipData {
                 ", friendshipType=" + friendshipStatus +
                 ", requestSentTime=" + requestSentTime +
                 ", friendSince=" + friendSince +
-                ", isFavourite=" + isFavourite +
                 '}';
     }
 }

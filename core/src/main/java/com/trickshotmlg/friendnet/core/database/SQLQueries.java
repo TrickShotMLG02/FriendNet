@@ -106,11 +106,7 @@ public class SQLQueries {
                     "friend_since = VALUES(friend_since);";
 
     public static final String TABLE_FRIENDSHIPS_SELECT =
-            "SELECT f.*, CASE WHEN fav.favouriter_id IS NULL THEN FALSE ELSE TRUE END AS is_favourite " +
-                    "FROM friendships f " +
-                    "LEFT JOIN favourites fav ON fav.favouriter_id = ? " +
-                    "AND fav.favourite_id = CASE WHEN f.player1_id = ? THEN f.player2_id ELSE f.player1_id END " +
-                    "WHERE f.player1_id = ? OR f.player2_id = ?";
+            "SELECT * FROM friendships WHERE player1_id = ? OR player2_id = ?";
 
     public static final String TABLE_FRIENDSHIPS_DELETE =
             "DELETE FROM friendships WHERE (player1_id = ? AND player2_id = ?) OR (player2_id = ? AND player1_id = ?)";

@@ -7,6 +7,7 @@ import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
 import com.trickshotmlg.friendnet.core_api.models.FavouriteData;
+import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
@@ -282,7 +283,7 @@ public class FriendCommandUseCases {
         );
     }
 
-    private java.util.List<FriendshipData> withViewerFavourites(UUID viewerId, Set<FriendshipData> friendships) {
+    private java.util.List<FriendEntry> withViewerFavourites(UUID viewerId, Set<FriendshipData> friendships) {
         Set<UUID> favourites = databaseService == null
                 ? Set.of()
                 : databaseService.findAll(viewerId, FavouriteData.class)
@@ -292,23 +293,11 @@ public class FriendCommandUseCases {
                 .collect(Collectors.toSet());
 
         return friendships.stream()
-                .map(friendship -> copyWithFavourite(
-                        friendship,
-                        viewerId,
-                        favourites.contains(friendship.getOtherPlayerId(viewerId))
-                ))
+                .map(friendship -> {
+                    UUID friendId = friendship.getOtherPlayerId(viewerId);
+                    return new FriendEntry(friendship, friendId, favourites.contains(friendId));
+                })
                 .toList();
-    }
-
-    private FriendshipData copyWithFavourite(FriendshipData friendship, UUID viewerId, boolean favourite) {
-        return new FriendshipData(
-                friendship.getRequesterId(),
-                friendship.getOtherPlayerId(friendship.getRequesterId()),
-                friendship.getFriendshipStatus(),
-                friendship.getRequestSentTime(),
-                friendship.getFriendSince(),
-                favourite
-        );
     }
 
     public CommandUseCaseResult setFavourite(UUID senderId, UUID targetId, String targetName, boolean favourite) {

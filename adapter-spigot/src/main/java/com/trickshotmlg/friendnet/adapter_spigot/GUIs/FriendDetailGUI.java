@@ -9,7 +9,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
-import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
 import com.trickshotmlg.friendnet.core_api.models.FavouriteData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
@@ -62,8 +62,8 @@ public class FriendDetailGUI extends AbstractGUI {
         interactableSlots.clear();
         inventory.clear();
 
-        Optional<FriendshipData> friendship = getFriendship();
-        if (friendship.isEmpty()) {
+        Optional<FriendEntry> friend = getFriend();
+        if (friend.isEmpty()) {
             MessageManager.send(player, "friend.remove.sender.notFound", Map.of("target", getFriendDisplayName()));
             setInteractableItem(40, new ActionItemStack(
                     GUIUtils.CreateBackItem(player),
@@ -75,17 +75,17 @@ public class FriendDetailGUI extends AbstractGUI {
             return;
         }
 
-        FriendshipData friendshipData = friendship.get();
+        FriendEntry friendEntry = friend.get();
         PlayerData playerData = ((FriendNetPlugin) plugin).isProxyBackendMode()
                 ? null
                 : SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
 
-        inventory.setItem(13, SpigotUtils.createPlayerHead(friendId, getFriendDisplayName(), createFriendLore(friendshipData, playerData)));
+        inventory.setItem(13, SpigotUtils.createPlayerHead(friendId, getFriendDisplayName(), createFriendLore(friendEntry, playerData)));
 
         setInteractableItem(28, new ActionItemStack(
-                createFavouriteItem(friendshipData.isFavourite()),
+                createFavouriteItem(friendEntry.favourite()),
                 player,
-                () -> toggleFavourite(friendshipData)
+                () -> toggleFavourite(friendEntry)
         ));
 
         setInteractableItem(30, new ActionItemStack(
@@ -168,7 +168,7 @@ public class FriendDetailGUI extends AbstractGUI {
         );
     }
 
-    private List<String> createFriendLore(FriendshipData friendshipData, PlayerData playerData) {
+    private List<String> createFriendLore(FriendEntry friendEntry, PlayerData playerData) {
         List<String> lore = new ArrayList<>();
 
         lore.add(locale("friendEntries.lore.status", Map.of("status", formatOnlineStatus())));
@@ -176,23 +176,22 @@ public class FriendDetailGUI extends AbstractGUI {
         if (serverName != null) {
             lore.add(locale("friendEntries.lore.server", Map.of("server", ChatColor.YELLOW + serverName)));
         }
-        lore.add(locale("friendEntries.lore.favourite", Map.of("value", formatBoolean(friendshipData.isFavourite()))));
+        lore.add(locale("friendEntries.lore.favourite", Map.of("value", formatBoolean(friendEntry.favourite()))));
         lore.add("");
-        lore.add(locale("friendEntries.lore.friendsSince", Map.of("date", ChatColor.YELLOW + formatTimestamp(friendshipData.getFriendSince()))));
+        lore.add(locale("friendEntries.lore.friendsSince", Map.of("date", ChatColor.YELLOW + formatTimestamp(friendEntry.getFriendSince()))));
         lore.add(locale("friendEntries.lore.lastSeen", Map.of("date", formatLastSeen(playerData))));
 
         return lore;
     }
 
-    private void toggleFavourite(FriendshipData friendshipData) {
-        boolean newState = !friendshipData.isFavourite();
+    private void toggleFavourite(FriendEntry friendEntry) {
+        boolean newState = !friendEntry.favourite();
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
         if (friendNetPlugin.isProxyBackendMode()) {
             executeProxyAction(ProxyActionType.SET_FAVOURITE, true, false, newState);
             return;
         }
 
-        friendshipData.setFavourite(newState);
         FavouriteData favouriteData = new FavouriteData(player.getUniqueId(), friendId);
         if (newState) {
             friendNetPlugin.getDatabaseService().save(favouriteData);
@@ -250,11 +249,11 @@ public class FriendDetailGUI extends AbstractGUI {
         player.spigot().sendMessage(message);
     }
 
-    private Optional<FriendshipData> getFriendship() {
+    private Optional<FriendEntry> getFriend() {
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
         if (viewData != null) {
             return viewData.friends().stream()
-                    .filter(friendship -> friendId.equals(friendship.getOtherPlayerId(player.getUniqueId())))
+                    .filter(entry -> friendId.equals(entry.friendId()))
                     .findFirst();
         }
 
@@ -268,7 +267,7 @@ public class FriendDetailGUI extends AbstractGUI {
                 friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
         );
         return viewData.friends().stream()
-                .filter(friendship -> friendId.equals(friendship.getOtherPlayerId(player.getUniqueId())))
+                .filter(entry -> friendId.equals(entry.friendId()))
                 .findFirst();
     }
 

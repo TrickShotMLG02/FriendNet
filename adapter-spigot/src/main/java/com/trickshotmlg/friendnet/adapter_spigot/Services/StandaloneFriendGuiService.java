@@ -4,6 +4,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core.application.proxy.ProxyActionDispatcher;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
@@ -58,8 +59,8 @@ public class StandaloneFriendGuiService implements FriendGuiService {
         PlayerData viewerData = plugin.getPlayerService().getPlayerData(playerId);
         return new ProxyFriendListViewPayload(
                 toFriendEntries(playerId, viewData.friends()),
-                toFriendEntries(playerId, viewData.pendingRequests()),
-                toFriendEntries(playerId, plugin.getFriendService().getSentRequests(playerId).stream().toList()),
+                toRequestEntries(playerId, viewData.pendingRequests()),
+                toRequestEntries(playerId, plugin.getFriendService().getSentRequests(playerId).stream().toList()),
                 plugin.getApplicationServices().blocklistService().getBlockedPlayers(playerId).stream()
                         .map(this::toBlockedEntry)
                         .toList(),
@@ -79,11 +80,23 @@ public class StandaloneFriendGuiService implements FriendGuiService {
         return defaultLocale != null ? defaultLocale.getCode() : "en_US";
     }
 
-    private List<ProxyFriendEntry> toFriendEntries(UUID viewerId, List<FriendshipData> friendships) {
+    private List<ProxyFriendEntry> toFriendEntries(UUID viewerId, List<FriendEntry> friends) {
+        return friends.stream()
+                .map(friend -> toEntry(
+                        friend.friendId(),
+                        friend.favourite(),
+                        toMillis(friend.getRequestSentTime()),
+                        toMillis(friend.getFriendSince()),
+                        -1L
+                ))
+                .toList();
+    }
+
+    private List<ProxyFriendEntry> toRequestEntries(UUID viewerId, List<FriendshipData> friendships) {
         return friendships.stream()
                 .map(friendship -> toEntry(
                         friendship.getOtherPlayerId(viewerId),
-                        friendship.isFavourite(),
+                        false,
                         toMillis(friendship.getRequestSentTime()),
                         toMillis(friendship.getFriendSince()),
                         -1L
