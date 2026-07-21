@@ -44,6 +44,10 @@ public class FriendCommand extends AbstractCommand {
     }
 
     private static CommandRegistry createRegistry(FriendNetPlugin plugin) {
+        if (plugin.isRestrictedToReloadOnly()) {
+            return reloadOnlyRegistry(plugin);
+        }
+
         CommandRegistry registry = FriendCommandDefinitions.registryWithUsageHandlers();
         if (plugin.isProxyBackendMode()) {
             registerProxyBackendHandlers(plugin, registry);
@@ -170,6 +174,17 @@ public class FriendCommand extends AbstractCommand {
                 CommandFeedbackUseCases.proxyReloadUnavailable()
         );
 
+        return registry;
+    }
+
+    private static CommandRegistry reloadOnlyRegistry(FriendNetPlugin plugin) {
+        CommandRegistry registry = FriendCommandDefinitions.registryWithUsageHandlers(List.of(
+                FriendCommandDefinitions.ROOT,
+                FriendCommandDefinitions.RELOAD
+        ));
+        registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) ->
+                CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
+        );
         return registry;
     }
 

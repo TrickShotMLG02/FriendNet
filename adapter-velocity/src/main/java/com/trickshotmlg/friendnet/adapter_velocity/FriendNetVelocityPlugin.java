@@ -27,11 +27,13 @@ import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import com.velocitypowered.api.command.CommandManager;
 import com.velocitypowered.api.command.CommandMeta;
+import com.velocitypowered.api.event.command.CommandExecuteEvent;
 import com.velocitypowered.api.event.Subscribe;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
 import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
+import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
 import org.slf4j.LoggerFactory;
 
@@ -61,9 +63,12 @@ public final class FriendNetVelocityPlugin {
     private Platform platform;
     private VelocityApplicationServices applicationServices;
     private VelocityProxyMessagingService proxyMessagingService;
+    private VelocityPlayerStatusListener playerStatusListener;
     private CommandMeta friendCommandMeta;
     private boolean enabled;
     private boolean disabledDueToStartupFailure;
+    private boolean restrictedToReloadOnly;
+    private boolean listenersRegistered;
 
     @Inject
     public FriendNetVelocityPlugin(ProxyServer server, org.slf4j.Logger logger, @DataDirectory Path dataDirectory) {
@@ -79,7 +84,9 @@ public final class FriendNetVelocityPlugin {
         try {
             initializePlatform();
             initializeServices();
-            registerListeners();
+            if (!restrictedToReloadOnly) {
+                registerListeners();
+            }
             registerCommands();
             enabled = true;
             Logger.info("FriendNet Velocity adapter enabled!");
@@ -96,6 +103,20 @@ public final class FriendNetVelocityPlugin {
         Logger.info("FriendNet Velocity adapter disabled!");
     }
 
+    @Subscribe
+    public void onCommandExecute(CommandExecuteEvent event) {
+        if (!restrictedToReloadOnly || !(event.getCommandSource() instanceof Player)) {
+            return;
+        }
+
+        String[] parts = event.getCommand().trim().split("\\s+");
+        if (parts.length == 2
+                && ("friend".equalsIgnoreCase(parts[0]) || "friends".equalsIgnoreCase(parts[0]))
+                && "reload".equalsIgnoreCase(parts[1])) {
+            event.setResult(CommandExecuteEvent.CommandResult.forwardToServer(String.join(" ", parts)));
+        }
+    }
+
     private void shutdownServices() {
         EventBus.clear();
         if (playerDataSaveQueue != null) {
@@ -110,6 +131,10 @@ public final class FriendNetVelocityPlugin {
             proxyMessagingService.unregister();
             proxyMessagingService = null;
         }
+        unregisterRuntimeListeners();
+        friendService = null;
+        playerService = null;
+        applicationServices = null;
     }
 
     private void initializePlatform() {
@@ -121,10 +146,13 @@ public final class FriendNetVelocityPlugin {
     }
 
     private void initializeServices() {
-        this.databaseService = new DatabaseServiceImpl(createDatabaseFromConfig());
         if (FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
-            throw new PluginStartupException("Velocity proxy mode requires a non-default, non-blank ConnectionToken.");
+            enterReloadOnlyMode("Velocity proxy mode requires a non-default, non-blank ConnectionToken.");
+            return;
         }
+
+        restrictedToReloadOnly = false;
+        this.databaseService = new DatabaseServiceImpl(createDatabaseFromConfig());
         this.playerService = new PlayerServiceImpl();
         this.friendService = new FriendServiceImpl(databaseService, playerService);
         this.networkAuthorityService = new NetworkAuthorityServiceImpl(NetworkRole.PROXY_AUTHORITY);
@@ -140,16 +168,45 @@ public final class FriendNetVelocityPlugin {
     }
 
     private void registerListeners() {
-        server.getEventManager().register(this, new VelocityPlayerStatusListener(this, friendService, playerService, databaseService, networkAuthorityService));
+        if (listenersRegistered) {
+            return;
+        }
+        playerStatusListener = new VelocityPlayerStatusListener(this, friendService, playerService, databaseService, networkAuthorityService);
+        server.getEventManager().register(this, playerStatusListener);
+        listenersRegistered = true;
+    }
+
+    private void unregisterRuntimeListeners() {
+        if (playerStatusListener != null) {
+            server.getEventManager().unregisterListener(this, playerStatusListener);
+            playerStatusListener = null;
+        }
+        listenersRegistered = false;
     }
 
     private void registerCommands() {
         CommandManager commandManager = server.getCommandManager();
+        if (friendCommandMeta != null) {
+            commandManager.unregister(friendCommandMeta);
+            friendCommandMeta = null;
+        }
         friendCommandMeta = commandManager.metaBuilder("friend")
                 .aliases("friends")
                 .plugin(this)
                 .build();
         commandManager.register(friendCommandMeta, new VelocityFriendCommand(this));
+    }
+
+    private void enterReloadOnlyMode(String message) {
+        if (restrictedToReloadOnly) {
+            return;
+        }
+
+        shutdownServices();
+        restrictedToReloadOnly = true;
+        this.networkAuthorityService = new NetworkAuthorityServiceImpl(NetworkRole.PROXY_AUTHORITY);
+        Logger.error(message, null);
+        Logger.error("FriendNet Velocity will only expose reload commands until the token is fixed and configs are reloaded.", null);
     }
 
     private void disableAfterStartupFailure(String message, Throwable throwable) {
@@ -174,7 +231,7 @@ public final class FriendNetVelocityPlugin {
             friendCommandMeta = null;
         }
 
-        server.getEventManager().unregisterListeners(this);
+        unregisterRuntimeListeners();
     }
 
     private Database createDatabaseFromConfig() {
@@ -213,6 +270,7 @@ public final class FriendNetVelocityPlugin {
             this.config = VelocityConfig.load(dataDirectory);
             Logger.enableDebug(config.getBoolean("Debug", false));
             messageManager.loadMessages();
+            reloadRuntimeState();
             return true;
         } catch (RuntimeException e) {
             Logger.error("Could not reload Velocity config", e);
@@ -282,6 +340,24 @@ public final class FriendNetVelocityPlugin {
 
     public boolean isDisabledDueToStartupFailure() {
         return disabledDueToStartupFailure;
+    }
+
+    public boolean isRestrictedToReloadOnly() {
+        return restrictedToReloadOnly;
+    }
+
+    private void reloadRuntimeState() {
+        if (FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
+            enterReloadOnlyMode("Velocity proxy mode requires a non-default, non-blank ConnectionToken.");
+            registerCommands();
+            return;
+        }
+
+        if (restrictedToReloadOnly) {
+            initializeServices();
+            registerListeners();
+            registerCommands();
+        }
     }
 
     private static final class PluginStartupException extends RuntimeException {

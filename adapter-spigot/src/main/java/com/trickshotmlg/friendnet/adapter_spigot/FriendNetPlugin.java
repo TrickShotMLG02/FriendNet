@@ -33,6 +33,7 @@ import com.trickshotmlg.friendnet.core_api.interfaces.services.NetworkAuthorityS
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -54,6 +55,9 @@ public final class FriendNetPlugin extends JavaPlugin {
     private NetworkAuthorityService networkAuthorityService;
     private SpigotProxyMessagingClient proxyMessagingClient;
     private FriendGuiService friendGuiService;
+    private boolean restrictedToReloadOnly;
+    private boolean listenersRegistered;
+    private boolean eventsRegistered;
 
     public FileConfiguration config = this.getConfig();
     File defaultConfigFile;
@@ -68,9 +72,11 @@ public final class FriendNetPlugin extends JavaPlugin {
 
             initializePlatform();
             initializeServices();
-            registerListeners();
+            if (!restrictedToReloadOnly) {
+                registerListeners();
+                registerEvents();
+            }
             registerCommands();
-            registerEvents();
             Logger.info("FriendNet enabled!");
         } catch (PluginStartupException e) {
             disableAfterStartupFailure(e.getMessage(), e);
@@ -91,6 +97,7 @@ public final class FriendNetPlugin extends JavaPlugin {
         if (proxyMessagingClient != null) {
             proxyMessagingClient.unregister();
         }
+        HandlerList.unregisterAll(this);
 
         Logger.info("FriendNet disabled!");
     }
@@ -107,8 +114,11 @@ public final class FriendNetPlugin extends JavaPlugin {
     private void initializeServices() {
         NetworkRole networkRole = parseSpigotNetworkRole(config.getString("Mode", "Standalone"));
         if (networkRole.delegatesPersistentState() && FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
-            throw new PluginStartupException("Proxy mode requires a non-default, non-blank ConnectionToken.");
+            enterReloadOnlyMode("Proxy mode requires a non-default, non-blank ConnectionToken.");
+            return;
         }
+
+        restrictedToReloadOnly = false;
         this.networkAuthorityService = new NetworkAuthorityServiceImpl(networkRole);
         this.databaseService = networkAuthorityService.ownsPersistentState()
                 ? new DatabaseServiceImpl(createDatabaseFromConfig())
@@ -130,6 +140,41 @@ public final class FriendNetPlugin extends JavaPlugin {
         }
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalTicks());
         Logger.info("FriendNet Spigot running as " + networkAuthorityService.getNetworkRole());
+    }
+
+    private void enterReloadOnlyMode(String message) {
+        if (restrictedToReloadOnly) {
+            return;
+        }
+
+        shutdownRuntimeServices();
+        restrictedToReloadOnly = true;
+        this.networkAuthorityService = new NetworkAuthorityServiceImpl(NetworkRole.PROXY_BACKEND);
+        Logger.error(message, null);
+        Logger.error("FriendNet Spigot will only expose reload commands until the token is fixed and configs are reloaded.", null);
+    }
+
+    private void shutdownRuntimeServices() {
+        EventBus.clear();
+        if (playerDataSaveQueue != null) {
+            playerDataSaveQueue.stopAndFlush();
+            playerDataSaveQueue = null;
+        }
+        if (databaseService != null) {
+            databaseService.stop();
+            databaseService = null;
+        }
+        if (proxyMessagingClient != null) {
+            proxyMessagingClient.unregister();
+            proxyMessagingClient = null;
+        }
+        HandlerList.unregisterAll(this);
+        listenersRegistered = false;
+        eventsRegistered = false;
+        friendService = null;
+        playerService = null;
+        applicationServices = null;
+        friendGuiService = null;
     }
 
     private Database createDatabaseFromConfig() {
@@ -176,8 +221,12 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private void registerListeners() {
+        if (listenersRegistered) {
+            return;
+        }
         new PlayerStatusListener(this, friendService, playerService, databaseService);
         new GUIListener(this);
+        listenersRegistered = true;
     }
 
     private void registerCommands() {
@@ -185,10 +234,14 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     private void registerEvents() {
+        if (eventsRegistered) {
+            return;
+        }
         // TODO: Remove this as it is only for testing purposes
         EventBus.subscribe(PlayerJoinEvent.class, playerJoinEvent -> {
             Logger.info("Player joined event received: " + playerJoinEvent);
         });
+        eventsRegistered = true;
     }
 
     public FriendService getFriendService() {
@@ -229,6 +282,10 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     public boolean isProxyBackendMode() {
         return networkAuthorityService != null && networkAuthorityService.delegatesPersistentState();
+    }
+
+    public boolean isRestrictedToReloadOnly() {
+        return restrictedToReloadOnly;
     }
 
     public String getConnectionToken() {
@@ -320,6 +377,7 @@ public final class FriendNetPlugin extends JavaPlugin {
             LocaleManager.loadLocales();
             MessageManager.loadMessages();
 
+            reloadRuntimeState();
             Logger.info("FriendNet Spigot configs reloaded.");
             return true;
         } catch (Exception e) {
@@ -328,11 +386,25 @@ public final class FriendNetPlugin extends JavaPlugin {
         }
     }
 
-    public void disableForProxyAuthenticationFailure(String message, Throwable throwable) {
-        Logger.error(message, throwable);
-        getLogger().severe(message);
-        getLogger().severe("FriendNet will be disabled. Check that ConnectionToken matches the Velocity adapter.");
-        getServer().getPluginManager().disablePlugin(this);
+    public void disableForProxyAuthenticationFailure(String message) {
+        enterReloadOnlyMode(message);
+        registerCommands();
+    }
+
+    private void reloadRuntimeState() {
+        NetworkRole networkRole = parseSpigotNetworkRole(config.getString("Mode", "Standalone"));
+        if (networkRole.delegatesPersistentState() && FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
+            enterReloadOnlyMode("Proxy mode requires a non-default, non-blank ConnectionToken.");
+            registerCommands();
+            return;
+        }
+
+        if (restrictedToReloadOnly) {
+            initializeServices();
+            registerListeners();
+            registerEvents();
+            registerCommands();
+        }
     }
 
     private void applyDebugConfig() {

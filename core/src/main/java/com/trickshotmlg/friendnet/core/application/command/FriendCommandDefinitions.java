@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.core.application.command;
 
 import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 
+import java.util.Collection;
 import java.util.List;
 
 public final class FriendCommandDefinitions {
@@ -166,10 +167,14 @@ public final class FriendCommandDefinitions {
     }
 
     public static CommandRegistry registryWithUsageHandlers() {
+        return registryWithUsageHandlers(all());
+    }
+
+    public static CommandRegistry registryWithUsageHandlers(Collection<CommandDefinition> definitions) {
         CommandRegistry registry = new CommandRegistry();
-        for (CommandDefinition definition : all()) {
+        for (CommandDefinition definition : definitions) {
             registry.register(definition, context -> CommandFeedbackUseCases.usage(
-                    CommandUsageFormatter.usage(all(), definition, ignored -> true)
+                    CommandUsageFormatter.usage(definitions, definition, ignored -> true)
             ));
         }
         return registry;

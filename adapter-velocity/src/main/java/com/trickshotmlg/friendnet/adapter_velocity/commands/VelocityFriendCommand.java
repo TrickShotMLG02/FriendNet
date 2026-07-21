@@ -133,6 +133,10 @@ public class VelocityFriendCommand implements SimpleCommand {
     }
 
     private static CommandRegistry createRegistry(FriendNetVelocityPlugin plugin) {
+        if (plugin.isRestrictedToReloadOnly()) {
+            return reloadOnlyRegistry(plugin);
+        }
+
         CommandRegistry registry = FriendCommandDefinitions.registryWithUsageHandlers();
         FriendCommandUseCases useCases = plugin.getApplicationServices().friendCommandUseCases();
 
@@ -235,6 +239,26 @@ public class VelocityFriendCommand implements SimpleCommand {
         registry.override(FriendCommandDefinitions.PROXY_HANDSHAKE.path(), (context, next) -> CommandFeedbackUseCases.proxyHandshakeUnavailable());
         registry.override(FriendCommandDefinitions.PROXY_RELOAD.path(), (context, next) -> CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs()));
 
+        return registry;
+    }
+
+    private static CommandRegistry reloadOnlyRegistry(FriendNetVelocityPlugin plugin) {
+        CommandRegistry registry = FriendCommandDefinitions.registryWithUsageHandlers(List.of(
+                FriendCommandDefinitions.ROOT,
+                FriendCommandDefinitions.RELOAD,
+                FriendCommandDefinitions.PROXY,
+                FriendCommandDefinitions.PROXY_RELOAD
+        ));
+        registry.override(FriendCommandDefinitions.PROXY.path(), (context, next) ->
+                CommandFeedbackUseCases.usage(CommandUsageFormatter.usage(
+                        registry.definitions(),
+                        FriendCommandDefinitions.PROXY,
+                        ignored -> true
+                ))
+        );
+        registry.override(FriendCommandDefinitions.PROXY_RELOAD.path(), (context, next) ->
+                CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
+        );
         return registry;
     }
 
@@ -399,7 +423,12 @@ public class VelocityFriendCommand implements SimpleCommand {
         }
 
         if (resolvedCommand.path().equals(FriendCommandDefinitions.RELOAD.path())) {
-            plugin.getProxyMessagingService().reloadBackend(player).whenComplete((success, throwable) ->
+            VelocityProxyMessagingService proxyMessagingService = plugin.getProxyMessagingService();
+            if (proxyMessagingService == null) {
+                return CommandFeedbackUseCases.proxyBackendCommandDisabled();
+            }
+
+            proxyMessagingService.reloadBackend(player).whenComplete((success, throwable) ->
                     VelocityCommandResultRenderer.render(
                             plugin,
                             source,
@@ -438,6 +467,13 @@ public class VelocityFriendCommand implements SimpleCommand {
     }
 
     private boolean hasCommandPermission(CommandSource source, CommandDefinition definition) {
+        if (plugin.isRestrictedToReloadOnly()) {
+            return definition.path().equals(FriendCommandDefinitions.ROOT.path())
+                    || definition.path().equals(FriendCommandDefinitions.PROXY.path())
+                    || definition.path().equals(FriendCommandDefinitions.PROXY_RELOAD.path())
+                    || definition.path().equals(FriendCommandDefinitions.RELOAD.path());
+        }
+
         if (hasPermission(source, definition.permission())) {
             return true;
         }
@@ -447,7 +483,9 @@ public class VelocityFriendCommand implements SimpleCommand {
         if (!isProxyCommandTree(definition.path()) && !definition.path().equals(FriendCommandDefinitions.RELOAD.path())) {
             return false;
         }
-        return plugin.getProxyMessagingService().hasBackendCommandPermission(player, definition.path().toString());
+        VelocityProxyMessagingService proxyMessagingService = plugin.getProxyMessagingService();
+        return proxyMessagingService != null
+                && proxyMessagingService.hasBackendCommandPermission(player, definition.path().toString());
     }
 
     private String proxyUsage(CommandSource source) {

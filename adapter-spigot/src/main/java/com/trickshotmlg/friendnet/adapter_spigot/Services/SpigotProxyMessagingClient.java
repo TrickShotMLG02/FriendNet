@@ -65,7 +65,10 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
         }
         plugin.getServer().getMessenger().unregisterOutgoingPluginChannel(plugin, FriendNetProxyProtocol.CHANNEL);
         plugin.getServer().getMessenger().unregisterIncomingPluginChannel(plugin, FriendNetProxyProtocol.CHANNEL, this);
-        pendingRequests.values().forEach(request -> request.future().cancel(false));
+        pendingRequests.values().forEach(request -> {
+            request.timeoutTask().cancel();
+            request.future().cancel(false);
+        });
         pendingRequests.clear();
     }
 
@@ -106,7 +109,7 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
                 })
                 .whenComplete((ignored, throwable) -> {
                     if (throwable != null && plugin.isProxyBackendMode()) {
-                        plugin.disableForProxyAuthenticationFailure("Could not complete FriendNet proxy handshake: " + throwable.getMessage(), throwable);
+                        plugin.disableForProxyAuthenticationFailure("Could not complete FriendNet proxy handshake: " + throwable.getMessage());
                     }
                 });
     }
@@ -225,7 +228,7 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
         } catch (ProxyProtocolException e) {
             Logger.warn("Rejected proxy response: " + e.getMessage());
             if (e.getErrorCode() == ProxyErrorCode.AUTHENTICATION_FAILED) {
-                plugin.disableForProxyAuthenticationFailure("Rejected FriendNet proxy response because authentication failed.", e);
+                plugin.disableForProxyAuthenticationFailure("Rejected FriendNet proxy response because authentication failed.");
             }
         } catch (RuntimeException e) {
             Logger.error("Could not handle proxy response", e);
