@@ -66,11 +66,13 @@ public class VelocityApplicationServices {
         FriendStatusVisibilityNotifier statusNotifier = new FriendStatusVisibilityNotifier() {
             @Override
             public void notifyOnline(java.util.UUID playerId) {
+                updatePresenceVisibility(plugin, playerId, true);
                 VelocityFriendStatusNotifier.notifyOnline(plugin, playerId);
             }
 
             @Override
             public void notifyOffline(java.util.UUID playerId) {
+                updatePresenceVisibility(plugin, playerId, false);
                 VelocityFriendStatusNotifier.notifyOffline(plugin, playerId);
             }
         };
@@ -89,6 +91,28 @@ public class VelocityApplicationServices {
                 },
                 statusNotifier
         );
+    }
+
+    private void updatePresenceVisibility(FriendNetVelocityPlugin plugin, UUID playerId, boolean visibleOnline) {
+        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+        plugin.getNetworkAuthorityService().getPresence(playerId)
+                .ifPresentOrElse(
+                        presence -> plugin.getNetworkAuthorityService().setPresence(
+                                presence.withVisibleOnline(visibleOnline)
+                                        .withLastSeen(playerData != null ? playerData.getLastSeen() : presence.lastSeen())
+                        ),
+                        () -> plugin.getServer().getPlayer(playerId).ifPresent(player -> plugin.getNetworkAuthorityService().setPresence(
+                                new NetworkPlayerPresence(
+                                        playerId,
+                                        player.getUsername(),
+                                        player.getUsername(),
+                                        player.getCurrentServer().map(server -> server.getServerInfo().getName()).orElse(null),
+                                        true,
+                                        visibleOnline,
+                                        playerData != null ? playerData.getLastSeen() : null
+                                )
+                        ))
+                );
     }
 
     protected FriendCommandUseCases createFriendCommandUseCases(FriendNetVelocityPlugin plugin) {

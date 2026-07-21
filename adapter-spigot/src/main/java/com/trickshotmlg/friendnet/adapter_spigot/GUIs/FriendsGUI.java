@@ -419,7 +419,7 @@ public class FriendsGUI extends AbstractGUI {
         }
 
         ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
-        if (proxyEntry == null || proxyEntry.currentServerName().isBlank()) {
+        if (proxyEntry == null || !proxyEntry.online() || proxyEntry.currentServerName().isBlank()) {
             return null;
         }
 
