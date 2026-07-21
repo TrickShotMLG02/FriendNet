@@ -87,6 +87,7 @@ public class PermissionTest extends TestCase {
 
         assertTrue(PermissionHolder.FRIENDS_PROXY_SYNC.has(player));
         assertTrue(PermissionHolder.FRIENDS_PROXY_HANDSHAKE.has(player));
+        assertTrue(PermissionHolder.FRIENDS_PROXY_RELOAD.has(player));
         assertFalse(PermissionHolder.FRIENDS_RELOAD.has(player));
     }
 

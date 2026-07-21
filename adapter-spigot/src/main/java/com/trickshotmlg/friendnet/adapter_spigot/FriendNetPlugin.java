@@ -293,6 +293,7 @@ public final class FriendNetPlugin extends JavaPlugin {
             LocaleManager.loadLocales();
             MessageManager.loadMessages();
 
+            Logger.info("FriendNet Spigot configs reloaded.");
             return true;
         } catch (Exception e) {
             Logger.error("Could not reload plugin configs", e);

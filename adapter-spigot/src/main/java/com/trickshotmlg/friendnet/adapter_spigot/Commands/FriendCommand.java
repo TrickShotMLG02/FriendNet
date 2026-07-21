@@ -166,6 +166,9 @@ public class FriendCommand extends AbstractCommand {
         registry.override(FriendCommandDefinitions.PROXY_HANDSHAKE.path(), (context, next) ->
                 CommandFeedbackUseCases.proxyHandshakeUnavailable()
         );
+        registry.override(FriendCommandDefinitions.PROXY_RELOAD.path(), (context, next) ->
+                CommandFeedbackUseCases.proxyReloadUnavailable()
+        );
 
         return registry;
     }
@@ -180,6 +183,7 @@ public class FriendCommand extends AbstractCommand {
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY_SYNC.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path()))
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY_RELOAD.path()))
                 .forEach(definition -> registry.override(definition.path(), (context, next) ->
                         definition.platformSpecific()
                                 ? CommandFeedbackUseCases.proxyBackendGuiUnavailable()
@@ -197,6 +201,9 @@ public class FriendCommand extends AbstractCommand {
         );
         registry.override(FriendCommandDefinitions.PROXY_SYNC.path(), (context, next) -> proxySync(plugin, context.args()));
         registry.override(FriendCommandDefinitions.PROXY_HANDSHAKE.path(), (context, next) -> proxyHandshake(plugin, context.senderId(), context.args()));
+        registry.override(FriendCommandDefinitions.PROXY_RELOAD.path(), (context, next) ->
+                CommandFeedbackUseCases.proxyReloadUnavailable()
+        );
     }
 
     private static String usage(CommandRegistry registry, CommandDefinition definition, CommandExecutionContext context) {

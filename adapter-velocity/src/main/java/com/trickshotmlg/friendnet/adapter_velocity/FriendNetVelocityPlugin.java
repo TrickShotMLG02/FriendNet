@@ -1,7 +1,6 @@
 package com.trickshotmlg.friendnet.adapter_velocity;
 
 import com.google.inject.Inject;
-import com.trickshotmlg.friendnet.adapter_velocity.commands.FriendNetVelocityCommand;
 import com.trickshotmlg.friendnet.adapter_velocity.commands.VelocityFriendCommand;
 import com.trickshotmlg.friendnet.adapter_velocity.config.VelocityConfig;
 import com.trickshotmlg.friendnet.adapter_velocity.listeners.VelocityPlayerStatusListener;
@@ -62,7 +61,6 @@ public final class FriendNetVelocityPlugin {
     private Platform platform;
     private VelocityApplicationServices applicationServices;
     private VelocityProxyMessagingService proxyMessagingService;
-    private CommandMeta friendNetCommandMeta;
     private CommandMeta friendCommandMeta;
     private boolean enabled;
     private boolean disabledDueToStartupFailure;
@@ -147,12 +145,6 @@ public final class FriendNetVelocityPlugin {
 
     private void registerCommands() {
         CommandManager commandManager = server.getCommandManager();
-        friendNetCommandMeta = commandManager.metaBuilder("friendnet")
-                .aliases("fn")
-                .plugin(this)
-                .build();
-        commandManager.register(friendNetCommandMeta, new FriendNetVelocityCommand(this));
-
         friendCommandMeta = commandManager.metaBuilder("friend")
                 .aliases("friends")
                 .plugin(this)
@@ -177,10 +169,6 @@ public final class FriendNetVelocityPlugin {
 
     private void unregisterVelocityEntrypoints() {
         CommandManager commandManager = server.getCommandManager();
-        if (friendNetCommandMeta != null) {
-            commandManager.unregister(friendNetCommandMeta);
-            friendNetCommandMeta = null;
-        }
         if (friendCommandMeta != null) {
             commandManager.unregister(friendCommandMeta);
             friendCommandMeta = null;

@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -48,11 +49,13 @@ public class VelocityProxyMessagingService {
 
     public static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(FriendNetProxyProtocol.CHANNEL);
     private static final long BACKEND_GUI_TIMEOUT_MILLIS = 1500L;
+    private static final long BACKEND_RELOAD_TIMEOUT_MILLIS = 1500L;
     private static final long DISPLAY_NAME_UPDATE_WAIT_MILLIS = 2500L;
     private static final long BACKEND_REGISTRATION_TTL_MILLIS = 45_000L;
 
     private final FriendNetVelocityPlugin plugin;
     private final Map<UUID, PendingBackendGuiRequest> pendingBackendGuiRequests = new ConcurrentHashMap<>();
+    private final Map<UUID, PendingBackendReloadRequest> pendingBackendReloadRequests = new ConcurrentHashMap<>();
     private final Map<UUID, ScheduledTask> pendingOnlineNotifications = new ConcurrentHashMap<>();
     private final Map<String, Long> registeredBackends = new ConcurrentHashMap<>();
     private final Map<UUID, Set<String>> backendCommandPermissions = new ConcurrentHashMap<>();
@@ -70,6 +73,8 @@ public class VelocityProxyMessagingService {
         plugin.getServer().getChannelRegistrar().unregister(CHANNEL);
         pendingBackendGuiRequests.values().forEach(request -> request.timeoutTask().cancel());
         pendingBackendGuiRequests.clear();
+        pendingBackendReloadRequests.values().forEach(request -> request.timeoutTask().cancel());
+        pendingBackendReloadRequests.clear();
         pendingOnlineNotifications.values().forEach(ScheduledTask::cancel);
         pendingOnlineNotifications.clear();
         registeredBackends.clear();
@@ -136,6 +141,39 @@ public class VelocityProxyMessagingService {
         return allowedCommandPaths != null && allowedCommandPaths.contains(commandPath);
     }
 
+    public CompletableFuture<Boolean> reloadBackend(Player player) {
+        ServerConnection connection = player.getCurrentServer().orElse(null);
+        if (connection == null || !isBackendRegistered(connection.getServerInfo().getName())) {
+            return CompletableFuture.completedFuture(false);
+        }
+
+        ProxyProtocolMessage request = ProxyProtocolCodec.request(
+                ProxyRequestType.BACKEND_RELOAD,
+                player.getUniqueId(),
+                "velocity",
+                new byte[0]
+        );
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        ScheduledTask timeoutTask = plugin.getServer().getScheduler().buildTask(plugin, () -> {
+            PendingBackendReloadRequest removed = pendingBackendReloadRequests.remove(request.correlationId());
+            if (removed != null) {
+                removed.future().complete(false);
+            }
+        }).delay(BACKEND_RELOAD_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS).schedule();
+
+        pendingBackendReloadRequests.put(request.correlationId(), new PendingBackendReloadRequest(future, timeoutTask));
+        boolean sent = connection.sendPluginMessage(CHANNEL, ProxyProtocolCodec.encodeSigned(request, plugin.getConnectionToken()));
+        if (!sent) {
+            PendingBackendReloadRequest removed = pendingBackendReloadRequests.remove(request.correlationId());
+            if (removed != null) {
+                removed.timeoutTask().cancel();
+            }
+            return CompletableFuture.completedFuture(false);
+        }
+
+        return future;
+    }
+
     @Subscribe
     public void onPluginMessage(PluginMessageEvent event) {
         if (!CHANNEL.equals(event.getIdentifier())) {
@@ -159,7 +197,11 @@ public class VelocityProxyMessagingService {
 
         try {
             if (message.kind() == ProxyMessageKind.RESPONSE) {
-                handleBackendGuiResponse(message);
+                if (pendingBackendReloadRequests.containsKey(message.correlationId())) {
+                    handleBackendReloadResponse(message);
+                } else {
+                    handleBackendGuiResponse(message);
+                }
                 return;
             }
 
@@ -216,6 +258,17 @@ public class VelocityProxyMessagingService {
         }
     }
 
+    private void handleBackendReloadResponse(ProxyProtocolMessage response) {
+        PendingBackendReloadRequest pendingRequest = pendingBackendReloadRequests.remove(response.correlationId());
+        if (pendingRequest == null) {
+            Logger.debug("Received backend reload response without pending request: " + response.correlationId());
+            return;
+        }
+
+        pendingRequest.timeoutTask().cancel();
+        pendingRequest.future().complete(response.responseStatus() == ProxyResponseStatus.SUCCESS);
+    }
+
     private ProxyProtocolMessage handleRequest(ProxyProtocolMessage request, Player player) {
         return switch (request.requestType()) {
             case HANDSHAKE -> handleHandshake(request, player);
@@ -223,7 +276,7 @@ public class VelocityProxyMessagingService {
             case FRIEND_ACTION_EXECUTE -> handleFriendAction(request, player);
             case DISPLAY_NAME_UPDATE -> handleDisplayNameUpdate(request, player);
             case BACKEND_COMMAND_PERMISSIONS -> handleBackendCommandPermissions(request, player);
-            case OPEN_BACKEND_GUI -> throw new ProxyProtocolException(ProxyErrorCode.UNKNOWN_REQUEST, "Backend GUI requests are proxy-to-backend only.");
+            case OPEN_BACKEND_GUI, BACKEND_RELOAD -> throw new ProxyProtocolException(ProxyErrorCode.UNKNOWN_REQUEST, "Backend requests are proxy-to-backend only.");
         };
     }
 
@@ -381,6 +434,12 @@ public class VelocityProxyMessagingService {
     private record PendingBackendGuiRequest(
             UUID playerId,
             Runnable fallback,
+            ScheduledTask timeoutTask
+    ) {
+    }
+
+    private record PendingBackendReloadRequest(
+            CompletableFuture<Boolean> future,
             ScheduledTask timeoutTask
     ) {
     }

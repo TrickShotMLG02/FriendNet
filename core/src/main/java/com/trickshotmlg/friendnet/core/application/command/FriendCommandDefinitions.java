@@ -132,6 +132,13 @@ public final class FriendCommandDefinitions {
             .platformSpecific(true)
             .build();
 
+    public static final CommandDefinition PROXY_RELOAD = CommandDefinition.builder(PROXY.path().append("reload"))
+            .description("Reload FriendNet proxy configs")
+            .usage("/friend proxy reload")
+            .permission(PermissionHolder.FRIENDS_PROXY_RELOAD)
+            .platformSpecific(true)
+            .build();
+
     private FriendCommandDefinitions() {
     }
 
@@ -153,7 +160,8 @@ public final class FriendCommandDefinitions {
                 RELOAD,
                 PROXY,
                 PROXY_SYNC,
-                PROXY_HANDSHAKE
+                PROXY_HANDSHAKE,
+                PROXY_RELOAD
         );
     }
 

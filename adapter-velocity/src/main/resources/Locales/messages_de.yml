@@ -15,6 +15,7 @@ commandFeedback:
   proxyBackendGuiUnavailable: "&cFreunde-GUIs benoetigen die Proxy-Verbindung, bevor sie im Proxy-Modus verwendet werden koennen."
   proxyHandshakeQueued: "&aFriendNet-Proxy-Handshake eingereiht."
   proxyHandshakeUnavailable: "&cProxy-Handshake ist nur fuer Spieler auf Proxy-Backend-Servern verfuegbar."
+  proxyReloadUnavailable: "&cProxy-Reload ist nur auf dem Velocity-Proxy verfuegbar."
   proxySyncQueued: "&aAnzeigenamen-Sync fuer &e%count% &aOnline-Spieler eingereiht."
   proxySyncUnavailable: "&cDer Anzeigenamen-Proxy-Sync ist nur auf Proxy-Backend-Servern verfuegbar."
 

@@ -15,6 +15,7 @@ commandFeedback:
   proxyBackendGuiUnavailable: "&cFriend GUIs need the proxy bridge before they can be used in proxy mode."
   proxyHandshakeQueued: "&aQueued FriendNet proxy handshake."
   proxyHandshakeUnavailable: "&cProxy handshake is only available to players on proxy backend servers."
+  proxyReloadUnavailable: "&cProxy reload is only available on the Velocity proxy."
   proxySyncQueued: "&aQueued display name sync for &e%count% &aonline players."
   proxySyncUnavailable: "&cDisplay name proxy sync is only available on proxy backend servers."
 

@@ -63,8 +63,8 @@ public class VelocityFriendCommand implements SimpleCommand {
             return;
         }
 
-        if (isBackendProxyCommand(resolvedCommand.path())) {
-            VelocityCommandResultRenderer.render(plugin, invocation.source(), forwardBackendCommand(invocation.source(), resolvedCommand));
+        if (isBackendForwardedCommand(resolvedCommand.path())) {
+            VelocityCommandResultRenderer.render(plugin, invocation.source(), forwardBackendCommand(plugin, invocation.source(), resolvedCommand));
             return;
         }
 
@@ -126,7 +126,9 @@ public class VelocityFriendCommand implements SimpleCommand {
     @Override
     public boolean hasPermission(Invocation invocation) {
         return registry.definition(resolve(invocation.alias(), invocation.arguments()).path())
-                .map(definition -> isProxyCommandTree(definition.path()) || hasCommandPermission(invocation.source(), definition))
+                .map(definition -> isProxyCommandTree(definition.path())
+                        || definition.path().equals(FriendCommandDefinitions.RELOAD.path())
+                        || hasCommandPermission(invocation.source(), definition))
                 .orElse(true);
     }
 
@@ -227,10 +229,11 @@ public class VelocityFriendCommand implements SimpleCommand {
         registry.override(FriendCommandDefinitions.LIST.path(), (context, next) -> showFriends(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.FRIENDS_ALIAS.path(), (context, next) -> showFriends(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.REQUESTS.path(), (context, next) -> showRequests(plugin, context.senderId(), context.args()));
-        registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) -> CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs()));
+        registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) -> CommandFeedbackUseCases.proxyReloadUnavailable());
         registry.override(FriendCommandDefinitions.PROXY.path(), (context, next) -> CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY.usage()));
         registry.override(FriendCommandDefinitions.PROXY_SYNC.path(), (context, next) -> CommandFeedbackUseCases.proxySyncUnavailable());
         registry.override(FriendCommandDefinitions.PROXY_HANDSHAKE.path(), (context, next) -> CommandFeedbackUseCases.proxyHandshakeUnavailable());
+        registry.override(FriendCommandDefinitions.PROXY_RELOAD.path(), (context, next) -> CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs()));
 
         return registry;
     }
@@ -372,24 +375,38 @@ public class VelocityFriendCommand implements SimpleCommand {
         );
     }
 
-    private static boolean isBackendProxyCommand(CommandPath path) {
-        return isProxyCommandTree(path)
-                && path.segments().size() > FriendCommandDefinitions.PROXY.path().segments().size();
+    private static boolean isBackendForwardedCommand(CommandPath path) {
+        return path.equals(FriendCommandDefinitions.RELOAD.path())
+                || path.equals(FriendCommandDefinitions.PROXY_SYNC.path())
+                || path.equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path());
     }
 
     private static boolean isProxyCommandTree(CommandPath path) {
         return path.startsWith(FriendCommandDefinitions.PROXY.path());
     }
 
-    private static CommandUseCaseResult forwardBackendCommand(CommandSource source, ResolvedCommand resolvedCommand) {
+    private static CommandUseCaseResult forwardBackendCommand(
+            FriendNetVelocityPlugin plugin,
+            CommandSource source,
+            ResolvedCommand resolvedCommand
+    ) {
         if (!resolvedCommand.args().isEmpty()) {
             return CommandFeedbackUseCases.usage(registryUsage(resolvedCommand.path()));
         }
 
         if (!(source instanceof Player player)) {
-            return resolvedCommand.path().equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path())
-                    ? CommandFeedbackUseCases.proxyHandshakeUnavailable()
-                    : CommandFeedbackUseCases.proxySyncUnavailable();
+            return CommandFeedbackUseCases.playersOnly();
+        }
+
+        if (resolvedCommand.path().equals(FriendCommandDefinitions.RELOAD.path())) {
+            plugin.getProxyMessagingService().reloadBackend(player).whenComplete((success, throwable) ->
+                    VelocityCommandResultRenderer.render(
+                            plugin,
+                            source,
+                            CommandFeedbackUseCases.reload(throwable == null && Boolean.TRUE.equals(success))
+                    )
+            );
+            return CommandUseCaseResult.builder(true).build();
         }
 
         String command = resolvedCommand.path().toString();
@@ -401,6 +418,9 @@ public class VelocityFriendCommand implements SimpleCommand {
     }
 
     private static String registryUsage(CommandPath path) {
+        if (path.equals(FriendCommandDefinitions.RELOAD.path())) {
+            return FriendCommandDefinitions.RELOAD.usage();
+        }
         if (path.equals(FriendCommandDefinitions.PROXY_SYNC.path())) {
             return FriendCommandDefinitions.PROXY_SYNC.usage();
         }
@@ -421,7 +441,10 @@ public class VelocityFriendCommand implements SimpleCommand {
         if (hasPermission(source, definition.permission())) {
             return true;
         }
-        if (!isProxyCommandTree(definition.path()) || !(source instanceof Player player)) {
+        if (!(source instanceof Player player)) {
+            return false;
+        }
+        if (!isProxyCommandTree(definition.path()) && !definition.path().equals(FriendCommandDefinitions.RELOAD.path())) {
             return false;
         }
         return plugin.getProxyMessagingService().hasBackendCommandPermission(player, definition.path().toString());

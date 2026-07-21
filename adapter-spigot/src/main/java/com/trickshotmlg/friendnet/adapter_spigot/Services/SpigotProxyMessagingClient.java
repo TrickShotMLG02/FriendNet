@@ -140,9 +140,11 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
     public void sendBackendCommandPermissions(Player player) {
         SpigotPlayer platformPlayer = new SpigotPlayer(player);
         List<String> allowedCommandPaths = List.of(
+                        FriendCommandDefinitions.RELOAD,
                         FriendCommandDefinitions.PROXY,
                         FriendCommandDefinitions.PROXY_SYNC,
-                        FriendCommandDefinitions.PROXY_HANDSHAKE
+                        FriendCommandDefinitions.PROXY_HANDSHAKE,
+                        FriendCommandDefinitions.PROXY_RELOAD
                 ).stream()
                 .filter(definition -> definition.permission().has(platformPlayer))
                 .map(CommandDefinition::path)
@@ -236,11 +238,14 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
             return;
         }
 
-        if (request.requestType() != ProxyRequestType.OPEN_BACKEND_GUI) {
-            Logger.warn("Rejected unsupported proxy-to-backend request: " + request.requestType());
-            return;
+        switch (request.requestType()) {
+            case OPEN_BACKEND_GUI -> handleOpenBackendGui(player, request);
+            case BACKEND_RELOAD -> handleBackendReload(player, request);
+            default -> Logger.warn("Rejected unsupported proxy-to-backend request: " + request.requestType());
         }
+    }
 
+    private void handleOpenBackendGui(Player player, ProxyProtocolMessage request) {
         ProxyBackendGuiType guiType = ProxyOpenBackendGuiPayloadCodec.decode(request.payload());
         plugin.getFriendGuiService().friendListView(player).whenComplete((viewData, throwable) ->
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
@@ -257,6 +262,18 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
                     sendProxyResponse(player, request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE);
                 })
         );
+    }
+
+    private void handleBackendReload(Player player, ProxyProtocolMessage request) {
+        plugin.getServer().getScheduler().runTask(plugin, () -> {
+            boolean success = plugin.reloadPluginConfigs();
+            sendProxyResponse(
+                    player,
+                    request,
+                    success ? ProxyResponseStatus.SUCCESS : ProxyResponseStatus.ERROR,
+                    success ? ProxyErrorCode.NONE : ProxyErrorCode.INTERNAL_ERROR
+            );
+        });
     }
 
     private void sendProxyResponse(Player player, ProxyProtocolMessage request, ProxyResponseStatus status, ProxyErrorCode errorCode) {

@@ -61,6 +61,12 @@ public final class CommandFeedbackUseCases {
                 .build();
     }
 
+    public static CommandUseCaseResult proxyReloadUnavailable() {
+        return CommandUseCaseResult.builder(false)
+                .message(CommandMessage.sender("commandFeedback.proxyReloadUnavailable"))
+                .build();
+    }
+
     public static CommandUseCaseResult proxyHandshakeQueued() {
         return CommandUseCaseResult.builder(true)
                 .message(CommandMessage.sender("commandFeedback.proxyHandshakeQueued"))
