@@ -1,0 +1,405 @@
+# GUI Titles
+locale:
+  texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzVjMjdlZDliOGNmNmYzNzgyODE1MGRmMDJjNDg2Nzk5ODlhZTcwODI5ODY2Y2U2OThjMjVhMzdjNjY2ZGUyIn19fQ=="
+
+format:
+  timestamp: "dd.MM.yyyy HH:mm"
+
+titles:
+  friendsGUI: "Dini Fründe"
+  friendRequestsGUI: "Fründschaftsafrage"
+  friendSettingsGUI: "%target%s Iistellige"
+  personalSettingsGUI: "Dini Iistellige"
+  localeSelectionGUI: "Sprach ändere"
+  blocklistGUI: "Blockierti Spieler"
+  favoriteFriendsGUI: "Favorisierti Fründe"
+  friendFilterGUI: "Fründesfilter"
+  friendNameSearchGUI: "Fründe süäche"
+  friendDetailGUI: "%target%"
+  friendRequestDetailGUI: "Afraag vo %target%"
+  sentRequestsGUI: "Gschickti Afrage"
+  sentRequestDetailGUI: "Afraag a %target%"
+  confirmationGUI: "Aktion bestätige"
+
+# Buttons / Items
+buttons:
+  toggle:
+    active:
+      displayName: "&aAa"
+      lore:
+        - "&7Klicke zum Umschalte"
+    inactive:
+      displayName: "&4Us"
+      lore:
+        - "&7Klicke zum Umschalte"
+  selector:
+    active:
+      displayName: "&aUsgwählt"
+      lore:
+        - "&7Die Option isch scho usgwählt"
+    inactive:
+      displayName: "&4Nöd usgwählt"
+      lore:
+        - "&7Klicke zum Uswähle"
+  close:
+    displayName: "&cSchlüüsse"
+    lore:
+      - "&7Klick da, zum s Menü z schlüüsse"
+  back:
+    displayName: "&eZrugg"
+    lore:
+      - "&7Zrugg zum vorige Menü"
+  favourite:
+    displayName: "&aFavorit"
+    lore:
+      - "&7Markier de Fründ als Favorit"
+  removeFriend:
+    displayName: "&cFründ entferne"
+    lore:
+      - "&7Entfern de Spieler vo dinere Fründesliste"
+  acceptRequest:
+    displayName: "&aAanäh"
+    lore:
+      - "&7Klick da, zum d Fründschaftsafraag aaznäh"
+  denyRequest:
+    displayName: "&cAblehne"
+    lore:
+      - "&7Klick da, zum d Fründschaftsafraag abzlehne"
+
+confirmationGUI:
+  buttons:
+    "yes":
+      displayName: "&aJa"
+      lore:
+        - "&7Bestätig die Aktion."
+    "no":
+      displayName: "&cNei"
+      lore:
+        - "&7Abbräche und zrugg."
+
+confirmations:
+  removeFriend:
+    displayName: "&c%target% entferne?"
+    lore:
+      - "&7De Spieler wird vo dinere Fründesliste entfernt."
+      - "&7Klick Ja, zum wiiterzfahre."
+  blockPlayer:
+    displayName: "&c%target% blockiere?"
+    lore:
+      - "&7De Spieler wird blockiert und zueghörigi Afrage oder Fründschafte werded entfernt."
+      - "&7Klick Ja, zum wiiterzfahre."
+  denyRequest:
+    displayName: "&cAfraag vo %target% ablehne?"
+    lore:
+      - "&7Die offeni Fründschaftsafraag wird entfernt."
+      - "&7Klick Ja, zum wiiterzfahre."
+  denyAllRequests:
+    displayName: "&cAlli Afrage ablehne?"
+    lore:
+      - "&7Alli iigangene Fründschaftsafrage werded entfernt."
+      - "&7Klick Ja, zum wiiterzfahre."
+  cancelRequest:
+    displayName: "&cAfraag a %target% abbräche?"
+    lore:
+      - "&7Die gschickti Fründschaftsafraag wird entfernt."
+      - "&7Klick Ja, zum wiiterzfahre."
+  cancelAllRequests:
+    displayName: "&cAlli gschickte Afrage abbräche?"
+    lore:
+      - "&7Alli vo dir gschickte Fründschaftsafrage werded entfernt."
+      - "&7Klick Ja, zum wiiterzfahre."
+  clearBlocklist:
+    displayName: "&cBlockliste leere?"
+    lore:
+      - "&7Alli Spieler uf dinere Blockliste werded entblockt."
+      - "&7Klick Ja, zum wiiterzfahre."
+  unblockPlayer:
+    displayName: "&c%target% entblocke?"
+    lore:
+      - "&7De Spieler cha wieder mit dir interagiere."
+      - "&7Klick Ja, zum wiiterzfahre."
+
+# Friend List GUI
+friendsGUI:
+  buttons:
+    requests:
+      displayName: "&eOffeni Afrage"
+      lore:
+        - "&7Klick da, zum dini offene Afrage aaluege"
+    personalSettings:
+      displayName: "&eIistellige"
+      lore:
+        - "&7Klick da, zum dini Iistellige z ändere"
+    blocklist:
+      displayName: "&eBlockierti Spieler"
+      lore:
+        - "&7Klick da, zum blockierti Spieler aaluege"
+    filter:
+      displayName: "&eFilter"
+      lore:
+        - "&7Klick da, zum dini Fründe z filtere"
+    favorites:
+      displayName: "&eFavorite"
+      lore:
+        - "&7Klick da, zum dini Favorite aaluege"
+
+  emptyListMessage: "&cDu hesch nonig kei Fründe!"
+  playerSummary:
+    statistics: "&7Statistike:"
+    totalFriends: "&7Fründe total: &e%count%"
+    totalRequests: "&7Afrage total: &e%count%"
+
+# Friend Entry Lore
+friendEntries:
+  lore:
+    status: "&7Status: %status%"
+    server: "&7Server: %server%"
+    favourite: "&7Favorit: %value%"
+    friendsSince: "&7Befründet sit: %date%"
+    lastSeen: "&7Zletscht gseh: %date%"
+  status:
+    online: "&aOnline"
+    offline: "&cOffline"
+  boolean:
+    "yes": "&aJa"
+    "no": "&cNei"
+  lastSeen:
+    now: "&aJetzt"
+    unknown: "&8Unbekannt"
+
+# Friend Requests GUI
+friendRequestsGUI:
+  emptyListMessage: "&cKei offeni Fründschaftsafrage"
+  requestEntry:
+    status:
+      pending: "Offe"
+    lore:
+      status: "&7Status: %status%"
+      sentAt: "&7Gschickt am: %date%"
+      clickToOpen: "&eKlick da, zum die Afraag z verwalte."
+  buttons:
+    acceptAllRequests:
+      displayName: "&aAlli aanäh"
+      lore:
+        - "&7Klick da, zum alli Fründschaftsafrage aaznäh"
+    denyAllRequests:
+      displayName: "&cAlli ablehne"
+      lore:
+        - "&7Klick da, zum alli Fründschaftsafrage abzlehne"
+    sentRequests:
+      displayName: "&eGschickti Afrage"
+      lore:
+        - "&7Zeig Fründschaftsafrage, wo du gschickt hesch."
+
+# Friend Request Detail GUI
+friendRequestDetailGUI:
+  buttons:
+    accept:
+      displayName: "&aAfraag aanäh"
+      lore:
+        - "&7Nimm die Fründschaftsafraag aa."
+    deny:
+      displayName: "&cAfraag ablehne"
+      lore:
+        - "&7Lehn die Fründschaftsafraag ab."
+    block:
+      displayName: "&cSpieler blockiere"
+      lore:
+        - "&7Blockier de Spieler und entfern d Afraag."
+
+# Sent Requests GUI
+sentRequestsGUI:
+  emptyListMessage: "&cKei gschickte Fründschaftsafrage"
+  requestEntry:
+    status:
+      pending: "Offe"
+    lore:
+      status: "&7Status: %status%"
+      sentAt: "&7Gschickt am: %date%"
+      clickToOpen: "&eKlick da, zum die gschickti Afraag z verwalte."
+  buttons:
+    cancelAll:
+      displayName: "&cAlli abbräche"
+      lore:
+        - "&7Brich alli gschickte Fründschaftsafrage ab."
+
+# Sent Request Detail GUI
+sentRequestDetailGUI:
+  buttons:
+    cancel:
+      displayName: "&cAfraag abbräche"
+      lore:
+        - "&7Brich die gschickti Fründschaftsafraag ab."
+    block:
+      displayName: "&cSpieler blockiere"
+      lore:
+        - "&7Blockier de Spieler und entfern d Afraag."
+
+# Blocklist GUI
+blocklistGUI:
+  emptyListMessage: "&cDu hesch kei Spieler blockiert."
+  blockedPlayer:
+    lore:
+      blockedAt: "&7Blockiert am: %date%"
+      status: "&7Status: %status%"
+      clickToUnblock: "&eKlick da, zum de Spieler z entblocke."
+  chatInput:
+    prompt: "&eSchriib de Spielername zum Blockiere in Chat. Schriib &cabbräche&e zum Abbräche."
+    cancelKeyword: "abbräche"
+  buttons:
+    blockedPlayers:
+      displayName: "&eBlockierti Spieler"
+      lore:
+        - "&7Blockierti Spieler werded da aazeigt."
+    addBlockedPlayer:
+      displayName: "&aSpieler blockiere"
+      lore:
+        - "&7Schriib en Spielername in Chat, zum ihn z blockiere."
+    clearBlocklist:
+      displayName: "&cBlockliste leere"
+      lore:
+        - "&7Entfern alli Spieler vo dinere Blockliste."
+
+# Favorite Friends GUI
+favoriteFriendsGUI:
+  emptyListMessage: "&cDu hesch kei favorisierte Fründe."
+  buttons:
+    sortFavorites:
+      displayName: "&eFavorite sortiere"
+      lore:
+        - "&7Platzhalter, zum d Sortierig z ändere."
+
+# Friend Filter GUI
+friendFilterGUI:
+  buttons:
+    favoritesOnly:
+      displayName: "&eNume Favorite"
+      lore:
+        - "&7Zeig nume favorisierti Fründe."
+    onlineOnly:
+      displayName: "&eNume online"
+      lore:
+        - "&7Zeig nume Fründe, wo online sind."
+    nameSearch:
+      displayName: "&eNamesüächi"
+      lore:
+        - "&7Filter Fründe mit ere unscharfe Namesüächi."
+      search:
+        displayName: "&eSüäche"
+      active:
+        displayName: "&a%query%"
+      current: "&7Aktuell: &e%query%"
+    recentlySeen:
+      displayName: "&eZletscht gseh"
+      lore:
+        - "&7Priorisier Fründe, wo chürzlich gseh worde sind."
+    sortDirection:
+      displayName: "&eSortierrichtig"
+      lore:
+        - "&7Wähl, ob älteri oder nöieri Iiträg zerscht chönd."
+      ascending:
+        displayName: "&aUfstiigend"
+        lore:
+          - "&7Ältesti Iiträg zerscht."
+          - "&7Klicke, zum uf abstiigend z wächsle."
+      descending:
+        displayName: "&aAbstiigend"
+        lore:
+          - "&7Nöisti Iiträg zerscht."
+          - "&7Klicke, zum uf ufstiigend z wächsle."
+    reset:
+      displayName: "&cFilter zruggsetze"
+      lore:
+        - "&7Entfern alli usgwählte Filter."
+    apply:
+      displayName: "&aFilter aawände"
+      lore:
+        - "&7Wänd d usgwählte Filter aa."
+
+# Friend Name Search GUI
+friendNameSearchGUI:
+  prompt: "&eSchriib de Süächbegriff in Chat. Schriib &cabbräche&e zum Abbräche."
+  cancelKeyword: "abbräche"
+
+# Friend Settings GUI
+friendSettingsGUI:
+  toggleFavourite:
+    on: "&aDe Fründ isch jetzt en Favorit"
+    off: "&cDe Fründ isch kei Favorit meh"
+  removeFriend:
+    confirm: "&cBisch sicher, dass du &e%target% &centferne wotsch?"
+    success: "&e%target% &bwurde us dine Fründe entfernt"
+    fail: "&cFehler bim Entferne vo &e%target%"
+
+# Friend Detail GUI
+friendDetailGUI:
+  buttons:
+    favourite:
+      add:
+        displayName: "&aFavorit dezue tue"
+        lore:
+          - "&7Markier de Fründ als Favorit."
+      remove:
+        displayName: "&cFavorit entferne"
+        lore:
+          - "&7Entfern de Fründ us dine Favorite."
+    message:
+      displayName: "&eNachricht schicke"
+      lore:
+        - "&7Bereit e privati Nachricht vor."
+    blockPlayer:
+      displayName: "&cSpieler blockiere"
+      lore:
+        - "&7Blockier de Spieler und entfern jedi Fründschaft."
+    removeFriend:
+      displayName: "&cFründ entferne"
+      lore:
+        - "&7Entfern de Spieler us dinere Fründesliste."
+  message:
+    prompt: "&eKlick da, zum &a%target% &ee Nachricht z schicke"
+    hover: "&7Befehl vorschlah: &e%command%"
+
+# Personal Settings GUI
+personalSettingsGUI:
+  buttons:
+    toggleAllowRequests:
+      displayName: "&eFründschaftsafrage erlaube"
+      lore:
+        - "&7Erlaub oder blockier iigangeni Fründschaftsafrage."
+    toggleShowOnlineStatus:
+      displayName: "&eOnline-Status aazeige"
+      lore:
+        - "&7Leg fest, ob Fründe din Online-Status gseh chönd."
+    toggleAutoAcceptRequests:
+      displayName: "&eAfrage automatisch aanäh"
+      lore:
+        - "&7Nimm iigangeni Fründschaftsafrage automatisch aa."
+    toggleRequestNotifications:
+      displayName: "&eAfraag-Benachrichtigunge"
+      lore:
+        - "&7Erhalt Benachrichtigunge für nöii Fründschaftsafrage."
+    togglePublicFriendList:
+      displayName: "&eÖffentligi Fründesliste"
+      lore:
+        - "&7Erlaub andere, dini Fründesliste z gseh."
+    setLanguage:
+      displayName: "&eSprach festlege"
+      lore:
+        - "&7Wähl dini bevorzugti Sprach."
+    openLanguageMenu:
+      displayName: "&aSprachmenü öffne"
+      lore:
+        - "&7Klick da, zum dini bevorzugti Sprach z wähle."
+
+# Pagination buttons (for all GUIs)
+pagination:
+  nextPage:
+    displayName: "&aNächsti Siite"
+    lore:
+      - "&7Gang zur nächste Siite"
+  previousPage:
+    displayName: "&aVorigi Siite"
+    lore:
+      - "&7Gang zur vorige Siite"
+  pageIndicator:
+    displayName: "&7Siite %current%/%max%"

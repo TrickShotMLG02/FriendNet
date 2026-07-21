@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.jar.JarEntry;
@@ -37,7 +38,6 @@ import java.util.regex.Pattern;
 public class VelocityMessageManager {
 
     private static final String MESSAGE_FILE_TYPE = "messages";
-    private static final Pattern LOCALE_PATTERN = Pattern.compile("_(\\w{2}(?:_\\w{2})?)$");
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("%([^%]+)%");
 
     private final FriendNetVelocityPlugin plugin;
@@ -124,8 +124,13 @@ public class VelocityMessageManager {
         LocaleKey defaultLocale = LocaleKey.getDefaultLocale();
         Map<String, Object> exact = locale != null ? localeMessages.get(locale) : null;
         Map<String, Object> root = null;
-        if (locale != null && locale.getLanguage() != null && !locale.getLanguage().equalsIgnoreCase(locale.toString())) {
-            root = localeMessages.get(new LocaleKey(locale.getLanguage()));
+        if (locale != null) {
+            root = locale.fallbackChain().stream()
+                    .skip(1)
+                    .map(localeMessages::get)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
         }
         Map<String, Object> fallback = defaultLocale != null ? localeMessages.get(defaultLocale) : null;
 
@@ -286,13 +291,13 @@ public class VelocityMessageManager {
         }
 
         String nameWithoutExtension = filename.substring(0, lastDot);
-        Matcher matcher = LOCALE_PATTERN.matcher(nameWithoutExtension);
-        if (!matcher.find()) {
+        Optional<LocaleKey.LocaleFileName> localeFileName = LocaleKey.parseLocaleFileName(nameWithoutExtension);
+        if (localeFileName.isEmpty()) {
             return;
         }
 
-        String type = nameWithoutExtension.substring(0, matcher.start()).toLowerCase();
-        LocaleKey locale = new LocaleKey(matcher.group(1));
+        String type = localeFileName.get().baseName().toLowerCase();
+        LocaleKey locale = localeFileName.get().locale();
         if (!isSupportedLocale(locale)) {
             return;
         }
@@ -318,13 +323,13 @@ public class VelocityMessageManager {
             }
 
             String nameWithoutExtension = filename.substring(0, lastDot);
-            Matcher matcher = LOCALE_PATTERN.matcher(nameWithoutExtension);
-            if (!matcher.find()) {
+            Optional<LocaleKey.LocaleFileName> localeFileName = LocaleKey.parseLocaleFileName(nameWithoutExtension);
+            if (localeFileName.isEmpty()) {
                 continue;
             }
 
-            String type = nameWithoutExtension.substring(0, matcher.start()).toLowerCase();
-            LocaleKey locale = new LocaleKey(matcher.group(1));
+            String type = localeFileName.get().baseName().toLowerCase();
+            LocaleKey locale = localeFileName.get().locale();
             if (!isSupportedLocale(locale)) {
                 continue;
             }
@@ -365,7 +370,8 @@ public class VelocityMessageManager {
         }
 
         for (LocaleKey supportedLocale : LocaleKey.values()) {
-            if (supportedLocale.getLanguage().equals(locale.getLanguage())) {
+            if (supportedLocale.fallbackChain().contains(locale)
+                    || locale.fallbackChain().contains(supportedLocale)) {
                 return true;
             }
         }

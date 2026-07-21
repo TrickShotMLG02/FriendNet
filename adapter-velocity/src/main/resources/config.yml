@@ -12,6 +12,7 @@ ConnectionToken: change-me
 SupportedLocales:
   - en_US
   - de
+  - gsw_CH
 
 DefaultLocale: "en_US"
 

@@ -27,15 +27,18 @@ public final class GUIUtils {
     public static final String SETTINGS_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYjJmNzkwMTZjYWQ4NGQxYWUyMTYwOWM0ODEzNzgyNTk4ZTM4Nzk2MWJlMTNjMTU2ODI3NTJmMTI2ZGNlN2EifX19";
     public static final String UNITED_STATES_FLAG_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZmNiYzMyY2IyNGQ1N2ZjZGMwMzFlODUxMjM1ZGEyZGFhZDNlMTkxNGI4NzA0M2JkMDEyNjMzZTZmMzJjNyJ9fX0=";
     public static final String GERMANY_FLAG_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjFjMjMwOTdlZjE3NjJkNTFkZjI5N2Y5YzQ0NTcwOGQ5NDM5ZmY5MTc0NmQyZjY3N2IyOGRkZGZhMjczMTYifX19";
+    public static final String SWITZERLAND_FLAG_TEXTURE = "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvYzVjMjdlZDliOGNmNmYzNzgyODE1MGRmMDJjNDg2Nzk5ODlhZTcwODI5ODY2Y2U2OThjMjVhMzdjNjY2ZGUyIn19fQ==";
 
     private static final Map<String, String> LANGUAGE_FLAG_COUNTRIES = Map.of(
             "en", "US",
-            "de", "DE"
+            "de", "DE",
+            "gsw", "CH"
     );
 
     private static final Map<String, String> COUNTRY_FLAG_TEXTURES = Map.of(
             "US", UNITED_STATES_FLAG_TEXTURE,
-            "DE", GERMANY_FLAG_TEXTURE
+            "DE", GERMANY_FLAG_TEXTURE,
+            "CH", SWITZERLAND_FLAG_TEXTURE
     );
 
     public static int CalculateMaxPage(int itemCount, int itemsPerPage) {

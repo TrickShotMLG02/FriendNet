@@ -17,6 +17,7 @@ PlayerDataFlushIntervalSeconds: 30
 SupportedLocales:
   - en_US
   - de
+  - gsw_CH
 
 DefaultLocale: "en_US"
 

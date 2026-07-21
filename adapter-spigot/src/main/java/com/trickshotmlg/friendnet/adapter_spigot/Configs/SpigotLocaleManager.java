@@ -15,8 +15,6 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class SpigotLocaleManager implements LocaleManager {
 
@@ -126,9 +124,6 @@ public class SpigotLocaleManager implements LocaleManager {
         File[] files = localesDir.listFiles((dir, name) -> name.endsWith(".yml"));
         if (files == null) return;
 
-        // Regex to detect locale at the end of filename: "_xx" or "_xx_XX"
-        Pattern localePattern = Pattern.compile("_(\\w{2}(?:_\\w{2})?)$");
-
         for (File file : files) {
             String filename = file.getName(); // e.g., messages_en.yml or gui_de_DE.yml
             int lastDot = filename.lastIndexOf('.');
@@ -136,20 +131,13 @@ public class SpigotLocaleManager implements LocaleManager {
 
             String nameWithoutExtension = filename.substring(0, lastDot);
 
-            // Detect locale using regex
-            Matcher matcher = localePattern.matcher(nameWithoutExtension);
-            String baseName;
-            String localeCode;
-
-            if (matcher.find()) {
-                localeCode = matcher.group(1); // "en", "de_CH"
-                baseName = nameWithoutExtension.substring(0, matcher.start()); // before "_xx" or "_xx_XX"
-            } else {
-                localeCode = ""; // no locale -> default
-                baseName = nameWithoutExtension;
+            Optional<LocaleKey.LocaleFileName> localeFileName = LocaleKey.parseLocaleFileName(nameWithoutExtension);
+            if (localeFileName.isEmpty()) {
+                continue;
             }
 
-            LocaleKey locale = new LocaleKey(localeCode);
+            String baseName = localeFileName.get().baseName();
+            LocaleKey locale = localeFileName.get().locale();
             if (!isSupportedLocaleFileLocale(locale)) {
                 // skip this file, since its locale code is not in the supported locales config value
                 continue;
@@ -198,8 +186,13 @@ public class SpigotLocaleManager implements LocaleManager {
         AbstractConfig configExact = locale != null ? localeConfigs.get(locale) : null;
         AbstractConfig configRoot = null;
 
-        if (locale != null && locale.getLanguage() != null && !locale.getLanguage().equalsIgnoreCase(locale.toString())) {
-            configRoot = localeConfigs.get(new LocaleKey(locale.getLanguage()));
+        if (locale != null) {
+            configRoot = locale.fallbackChain().stream()
+                    .skip(1)
+                    .map(localeConfigs::get)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
         }
 
         String value = tryGetString(configExact, path);
@@ -230,9 +223,14 @@ public class SpigotLocaleManager implements LocaleManager {
         AbstractConfig configRoot = null;
         AbstractConfig configDefault = defaultLocale != null ? localeConfigs.get(defaultLocale) : null;
 
-        // Try to get root-language config (e.g., "de" from "de_CH")
-        if (locale != null && locale.getLanguage() != null && !locale.getLanguage().equalsIgnoreCase(locale.toString())) {
-            configRoot = localeConfigs.get(new LocaleKey(locale.getLanguage()));
+        // Try parent locale configs, e.g. sr_Latn_RS -> sr_Latn -> sr.
+        if (locale != null) {
+            configRoot = locale.fallbackChain().stream()
+                    .skip(1)
+                    .map(localeConfigs::get)
+                    .filter(Objects::nonNull)
+                    .findFirst()
+                    .orElse(null);
         }
 
         // Try reading from most specific to most general
@@ -278,7 +276,8 @@ public class SpigotLocaleManager implements LocaleManager {
         }
 
         for (LocaleKey supportedLocale : LocaleKey.values()) {
-            if (supportedLocale.getLanguage().equals(fileLocale.getLanguage())) {
+            if (supportedLocale.fallbackChain().contains(fileLocale)
+                    || fileLocale.fallbackChain().contains(supportedLocale)) {
                 return true;
             }
         }
