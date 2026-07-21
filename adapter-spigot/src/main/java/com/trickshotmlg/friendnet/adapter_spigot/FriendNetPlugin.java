@@ -41,8 +41,6 @@ import java.io.InputStreamReader;
 import java.util.Locale;
 
 public final class FriendNetPlugin extends JavaPlugin {
-    private static boolean DEBUG = true;
-
     public static SpigotLocaleManager LocaleManager;
 
     private FriendService friendService;
@@ -61,7 +59,6 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        Logger.enableDebug(DEBUG);
         Logger.setLogger(new SpigotLogger(this));
 
         try {
@@ -274,6 +271,7 @@ public final class FriendNetPlugin extends JavaPlugin {
 
             reloadConfig();
             config = this.getConfig();
+            applyDebugConfig();
 
         } catch (IOException e) {
             throw new PluginStartupException("Could not load default config.yml", e);
@@ -284,6 +282,7 @@ public final class FriendNetPlugin extends JavaPlugin {
         try {
             super.reloadConfig();
             config = getConfig();
+            applyDebugConfig();
 
             if (config.getStringList("SupportedLocales").isEmpty()) {
                 Logger.error("Could not reload configs: SupportedLocales must contain at least one locale.", null);
@@ -303,6 +302,10 @@ public final class FriendNetPlugin extends JavaPlugin {
             Logger.error("Could not reload plugin configs", e);
             return false;
         }
+    }
+
+    private void applyDebugConfig() {
+        Logger.enableDebug(config.getBoolean("Debug", false));
     }
 
     private static final class PluginStartupException extends RuntimeException {

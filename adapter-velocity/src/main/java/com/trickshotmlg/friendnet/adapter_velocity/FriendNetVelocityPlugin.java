@@ -116,7 +116,7 @@ public final class FriendNetVelocityPlugin {
 
     private void initializePlatform() {
         this.config = VelocityConfig.load(dataDirectory);
-        Logger.enableDebug(config.getBoolean("Debug", true));
+        Logger.enableDebug(config.getBoolean("Debug", false));
         this.messageManager = new VelocityMessageManager(this);
         this.messageManager.loadMessages();
         this.platform = new VelocityPlatform(server, this);
@@ -221,7 +221,7 @@ public final class FriendNetVelocityPlugin {
     public boolean reloadPluginConfigs() {
         try {
             this.config = VelocityConfig.load(dataDirectory);
-            Logger.enableDebug(config.getBoolean("Debug", true));
+            Logger.enableDebug(config.getBoolean("Debug", false));
             messageManager.loadMessages();
             return true;
         } catch (RuntimeException e) {

@@ -14,6 +14,8 @@ DatabaseType: SQLite
 # In Proxy mode, the proxy should be the authoritative writer instead.
 PlayerDataFlushIntervalSeconds: 30
 
+Debug: false
+
 SupportedLocales:
   - en_US
   - de

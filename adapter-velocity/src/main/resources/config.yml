@@ -3,7 +3,7 @@ DatabaseType: SQLite
 
 PlayerDataFlushIntervalSeconds: 30
 
-Debug: true
+Debug: false
 
 # Shared secret for Spigot <-> proxy plugin messaging.
 # Set the same value on every Spigot backend adapter. Change this before production use.

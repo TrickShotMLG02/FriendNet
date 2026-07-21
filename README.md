@@ -108,6 +108,7 @@ Default config:
 Mode: Standalone
 DatabaseType: SQLite
 PlayerDataFlushIntervalSeconds: 30
+Debug: false
 
 SupportedLocales:
   - en_US
