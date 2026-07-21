@@ -37,6 +37,7 @@ public class PlayerStatusListener extends AbstractListener {
     private final PlayerDataSaveQueue playerDataSaveQueue;
     private static final long HANDSHAKE_DELAY_TICKS = 5L;
     private static final long DISPLAY_NAME_UPDATE_DELAY_TICKS = 20L;
+    private static final long BACKEND_COMMAND_PERMISSIONS_DELAY_TICKS = 20L;
 
     public PlayerStatusListener(JavaPlugin plugin, FriendService friendService, PlayerService playerService, DatabaseService databaseService) {
         super(plugin);
@@ -64,6 +65,7 @@ public class PlayerStatusListener extends AbstractListener {
             playerService.setOnline(playerId, true);
             scheduleProxyHandshake(playerId);
             scheduleProxyDisplayNameUpdate(playerId);
+            scheduleProxyBackendCommandPermissions(playerId);
             Logger.debug(spigotPlayer.getName() + " joined in proxy backend mode; status notification is owned by proxy.");
             return;
         }
@@ -157,6 +159,17 @@ public class PlayerStatusListener extends AbstractListener {
             Optional.ofNullable(Bukkit.getPlayer(playerId))
                     .ifPresent(player -> plugin.getProxyMessagingClient().sendHandshake(player));
         }, HANDSHAKE_DELAY_TICKS);
+    }
+
+    private void scheduleProxyBackendCommandPermissions(UUID playerId) {
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (!plugin.isProxyBackendMode() || plugin.getProxyMessagingClient() == null) {
+                return;
+            }
+
+            Optional.ofNullable(Bukkit.getPlayer(playerId))
+                    .ifPresent(player -> plugin.getProxyMessagingClient().sendBackendCommandPermissions(player));
+        }, BACKEND_COMMAND_PERMISSIONS_DELAY_TICKS);
     }
 
     private void notifyPendingRequests(UUID playerId, PlayerData playerData) {

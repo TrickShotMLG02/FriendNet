@@ -53,6 +53,11 @@ public class VelocityFriendCommand implements SimpleCommand {
         }
 
         CommandDefinition commandDefinition = definition.get();
+        if (!hasCommandPermission(invocation.source(), commandDefinition)) {
+            VelocityCommandResultRenderer.noPermission(plugin, invocation.source());
+            return;
+        }
+
         if (resolvedCommand.path().equals(FriendCommandDefinitions.PROXY.path())) {
             VelocityCommandResultRenderer.render(plugin, invocation.source(), CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY.usage()));
             return;
@@ -60,11 +65,6 @@ public class VelocityFriendCommand implements SimpleCommand {
 
         if (isBackendProxyCommand(resolvedCommand.path())) {
             VelocityCommandResultRenderer.render(plugin, invocation.source(), forwardBackendCommand(invocation.source(), resolvedCommand));
-            return;
-        }
-
-        if (!hasPermission(invocation.source(), commandDefinition.permission())) {
-            VelocityCommandResultRenderer.noPermission(plugin, invocation.source());
             return;
         }
 
@@ -126,7 +126,7 @@ public class VelocityFriendCommand implements SimpleCommand {
     @Override
     public boolean hasPermission(Invocation invocation) {
         return registry.definition(resolve(invocation.alias(), invocation.arguments()).path())
-                .map(definition -> isProxyCommandTree(definition.path()) || hasPermission(invocation.source(), definition.permission()))
+                .map(definition -> isProxyCommandTree(definition.path()) || hasCommandPermission(invocation.source(), definition))
                 .orElse(true);
     }
 
@@ -382,6 +382,10 @@ public class VelocityFriendCommand implements SimpleCommand {
     }
 
     private static CommandUseCaseResult forwardBackendCommand(CommandSource source, ResolvedCommand resolvedCommand) {
+        if (!resolvedCommand.args().isEmpty()) {
+            return CommandFeedbackUseCases.usage(registryUsage(resolvedCommand.path()));
+        }
+
         if (!(source instanceof Player player)) {
             return resolvedCommand.path().equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path())
                     ? CommandFeedbackUseCases.proxyHandshakeUnavailable()
@@ -393,7 +397,24 @@ public class VelocityFriendCommand implements SimpleCommand {
             command += " " + String.join(" ", resolvedCommand.args());
         }
         player.spoofChatInput("/" + command);
-        return CommandUseCaseResult.builder(true).build();
+        if (resolvedCommand.path().equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path())) {
+            return CommandFeedbackUseCases.proxyHandshakeQueued();
+        }
+
+        int playerCount = player.getCurrentServer()
+                .map(connection -> connection.getServer().getPlayersConnected().size())
+                .orElse(0);
+        return CommandFeedbackUseCases.proxySyncQueued(playerCount);
+    }
+
+    private static String registryUsage(CommandPath path) {
+        if (path.equals(FriendCommandDefinitions.PROXY_SYNC.path())) {
+            return FriendCommandDefinitions.PROXY_SYNC.usage();
+        }
+        if (path.equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path())) {
+            return FriendCommandDefinitions.PROXY_HANDSHAKE.usage();
+        }
+        return FriendCommandDefinitions.PROXY.usage();
     }
 
     private boolean hasPermission(CommandSource source, PermissionNode permission) {
@@ -403,11 +424,21 @@ public class VelocityFriendCommand implements SimpleCommand {
         return permission.anyParentGranted(source::hasPermission);
     }
 
+    private boolean hasCommandPermission(CommandSource source, CommandDefinition definition) {
+        if (hasPermission(source, definition.permission())) {
+            return true;
+        }
+        if (!isProxyCommandTree(definition.path()) || !(source instanceof Player player)) {
+            return false;
+        }
+        return plugin.getProxyMessagingService().hasBackendCommandPermission(player, definition.path().toString());
+    }
+
     private List<String> completeSubcommands(CommandSource source, CommandPath parentPath, String prefix) {
         return registry.definitions().stream()
                 .filter(definition -> definition.path().startsWith(parentPath))
                 .filter(definition -> definition.path().segments().size() == parentPath.segments().size() + 1)
-                .filter(definition -> isProxyCommandTree(definition.path()) || hasPermission(source, definition.permission()))
+                .filter(definition -> hasCommandPermission(source, definition))
                 .map(definition -> definition.path().commandName())
                 .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
                 .sorted(String.CASE_INSENSITIVE_ORDER)
@@ -418,7 +449,7 @@ public class VelocityFriendCommand implements SimpleCommand {
         return registry.definitions().stream()
                 .filter(definition -> definition.path().startsWith(FriendCommandDefinitions.FRIEND))
                 .filter(definition -> definition.path().segments().size() == FriendCommandDefinitions.FRIEND.segments().size() + 1)
-                .filter(definition -> hasPermission(source, definition.permission()))
+                .filter(definition -> hasCommandPermission(source, definition))
                 .map(definition -> definition.path().commandName())
                 .sorted(Comparator.naturalOrder())
                 .reduce((left, right) -> left + " | " + right)

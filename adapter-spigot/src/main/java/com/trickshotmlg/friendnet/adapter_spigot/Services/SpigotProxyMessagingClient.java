@@ -3,7 +3,10 @@ package com.trickshotmlg.friendnet.adapter_spigot.Services;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
+import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyErrorCode;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyMessageKind;
@@ -17,6 +20,8 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPaylo
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendCommandPermissionsPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendCommandPermissionsPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
@@ -26,6 +31,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -127,6 +133,31 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
 
         send(player, request).exceptionally(throwable -> {
             Logger.debug("Could not send display name update to proxy: " + throwable.getMessage());
+            return null;
+        });
+    }
+
+    public void sendBackendCommandPermissions(Player player) {
+        SpigotPlayer platformPlayer = new SpigotPlayer(player);
+        List<String> allowedCommandPaths = List.of(
+                        FriendCommandDefinitions.PROXY,
+                        FriendCommandDefinitions.PROXY_SYNC,
+                        FriendCommandDefinitions.PROXY_HANDSHAKE
+                ).stream()
+                .filter(definition -> definition.permission().has(platformPlayer))
+                .map(CommandDefinition::path)
+                .map(Object::toString)
+                .toList();
+
+        ProxyProtocolMessage request = ProxyProtocolCodec.request(
+                ProxyRequestType.BACKEND_COMMAND_PERMISSIONS,
+                player.getUniqueId(),
+                "",
+                ProxyBackendCommandPermissionsPayloadCodec.encode(new ProxyBackendCommandPermissionsPayload(allowedCommandPaths))
+        );
+
+        send(player, request).exceptionally(throwable -> {
+            Logger.debug("Could not send backend command permissions to proxy: " + throwable.getMessage());
             return null;
         });
     }

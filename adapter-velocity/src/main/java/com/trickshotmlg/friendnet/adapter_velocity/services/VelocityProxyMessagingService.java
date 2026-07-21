@@ -20,6 +20,8 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPaylo
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendCommandPermissionsPayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendCommandPermissionsPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayloadCodec;
@@ -36,6 +38,7 @@ import com.velocitypowered.api.scheduler.ScheduledTask;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +55,7 @@ public class VelocityProxyMessagingService {
     private final Map<UUID, PendingBackendGuiRequest> pendingBackendGuiRequests = new ConcurrentHashMap<>();
     private final Map<UUID, ScheduledTask> pendingOnlineNotifications = new ConcurrentHashMap<>();
     private final Map<String, Long> registeredBackends = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<String>> backendCommandPermissions = new ConcurrentHashMap<>();
 
     public VelocityProxyMessagingService(FriendNetVelocityPlugin plugin) {
         this.plugin = plugin;
@@ -69,6 +73,7 @@ public class VelocityProxyMessagingService {
         pendingOnlineNotifications.values().forEach(ScheduledTask::cancel);
         pendingOnlineNotifications.clear();
         registeredBackends.clear();
+        backendCommandPermissions.clear();
     }
 
     public void notifyOnlineWhenDisplayNameReady(UUID playerId) {
@@ -124,6 +129,11 @@ public class VelocityProxyMessagingService {
         }
 
         return true;
+    }
+
+    public boolean hasBackendCommandPermission(Player player, String commandPath) {
+        Set<String> allowedCommandPaths = backendCommandPermissions.get(player.getUniqueId());
+        return allowedCommandPaths != null && allowedCommandPaths.contains(commandPath);
     }
 
     @Subscribe
@@ -212,6 +222,7 @@ public class VelocityProxyMessagingService {
             case FRIEND_LIST_VIEW -> handleFriendListView(request, player);
             case FRIEND_ACTION_EXECUTE -> handleFriendAction(request, player);
             case DISPLAY_NAME_UPDATE -> handleDisplayNameUpdate(request, player);
+            case BACKEND_COMMAND_PERMISSIONS -> handleBackendCommandPermissions(request, player);
             case OPEN_BACKEND_GUI -> throw new ProxyProtocolException(ProxyErrorCode.UNKNOWN_REQUEST, "Backend GUI requests are proxy-to-backend only.");
         };
     }
@@ -251,6 +262,12 @@ public class VelocityProxyMessagingService {
         ProxyDisplayNameUpdatePayload payload = ProxyDisplayNameUpdatePayloadCodec.decode(request.payload());
         updateDisplayName(player, payload.displayName());
         flushPendingOnlineNotification(player.getUniqueId());
+        return ProxyProtocolCodec.response(request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE, new byte[0]);
+    }
+
+    private ProxyProtocolMessage handleBackendCommandPermissions(ProxyProtocolMessage request, Player player) {
+        ProxyBackendCommandPermissionsPayload payload = ProxyBackendCommandPermissionsPayloadCodec.decode(request.payload());
+        backendCommandPermissions.put(player.getUniqueId(), Set.copyOf(payload.allowedCommandPaths()));
         return ProxyProtocolCodec.response(request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE, new byte[0]);
     }
 
