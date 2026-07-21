@@ -64,7 +64,7 @@ public class VelocityPlayerStatusListener {
             PlayerData playerData;
             if (storedPlayerData.isPresent()) {
                 playerData = storedPlayerData.get();
-                playerData.setLastDisplayName(lastDisplayName);
+                ensureDisplayName(playerData, lastDisplayName);
                 playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
             } else {
                 playerData = initializedPlayerData;
@@ -86,7 +86,7 @@ public class VelocityPlayerStatusListener {
             });
 
             if (playerData.isShowOnlineStatus()) {
-                VelocityFriendStatusNotifier.notifyOnline(plugin, playerId);
+                plugin.getProxyMessagingService().notifyOnlineWhenDisplayNameReady(playerId);
             }
             notifyPendingRequests(playerId, playerData);
         });
@@ -108,7 +108,7 @@ public class VelocityPlayerStatusListener {
         networkAuthorityService.setPresence(new NetworkPlayerPresence(
                 playerId,
                 velocityPlayer.getName(),
-                velocityPlayer.getDisplayName(),
+                displayNameOrFallback(playerData, velocityPlayer.getDisplayName()),
                 event.getServer().getServerInfo().getName(),
                 true,
                 playerData.isShowOnlineStatus(),
@@ -130,7 +130,7 @@ public class VelocityPlayerStatusListener {
         if (wasVisibleOnline) {
             playerData.setLastSeen();
         }
-        playerData.setLastDisplayName(velocityPlayer.getDisplayName());
+        ensureDisplayName(playerData, velocityPlayer.getDisplayName());
         playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(playerData.getLastServerName()));
         networkAuthorityService.setPresence(toPresence(velocityPlayer, playerData, false));
         playerService.setOnline(playerId, false);
@@ -150,12 +150,26 @@ public class VelocityPlayerStatusListener {
         return new NetworkPlayerPresence(
                 player.getUniqueId(),
                 player.getName(),
-                player.getDisplayName(),
+                displayNameOrFallback(playerData, player.getDisplayName()),
                 player.getCurrentServerName().orElse(null),
                 online,
                 playerData.isShowOnlineStatus(),
                 playerData.getLastSeen()
         );
+    }
+
+    private void ensureDisplayName(PlayerData playerData, String fallbackName) {
+        if (playerData.getLastDisplayName() == null || playerData.getLastDisplayName().isBlank()) {
+            playerData.setLastDisplayName(fallbackName);
+        }
+    }
+
+    private String displayNameOrFallback(PlayerData playerData, String fallbackName) {
+        if (playerData != null && playerData.getLastDisplayName() != null && !playerData.getLastDisplayName().isBlank()) {
+            return playerData.getLastDisplayName();
+        }
+
+        return fallbackName;
     }
 
     private void notifyPendingRequests(UUID playerId, PlayerData playerData) {

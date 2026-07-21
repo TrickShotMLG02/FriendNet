@@ -104,6 +104,9 @@ public final class FriendNetPlugin extends JavaPlugin {
 
     private void initializeServices() {
         NetworkRole networkRole = parseSpigotNetworkRole(config.getString("Mode", "Standalone"));
+        if (networkRole.delegatesPersistentState() && FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
+            throw new PluginStartupException("Proxy mode requires a non-default, non-blank ConnectionToken.");
+        }
         this.networkAuthorityService = new NetworkAuthorityServiceImpl(networkRole);
         this.databaseService = networkAuthorityService.ownsPersistentState()
                 ? new DatabaseServiceImpl(createDatabaseFromConfig())
@@ -125,7 +128,6 @@ public final class FriendNetPlugin extends JavaPlugin {
         }
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalTicks());
         Logger.info("FriendNet Spigot running as " + networkAuthorityService.getNetworkRole());
-        warnIfProxyTokenUnsafe();
     }
 
     private Database createDatabaseFromConfig() {
@@ -231,12 +233,6 @@ public final class FriendNetPlugin extends JavaPlugin {
         return config.getString("ConnectionToken", FriendNetProxyProtocol.DEFAULT_CONNECTION_TOKEN);
     }
 
-    private void warnIfProxyTokenUnsafe() {
-        if (isProxyBackendMode() && FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
-            Logger.warn("FriendNet proxy mode is using the default or blank ConnectionToken. Set a shared secret in Spigot and Velocity configs.");
-        }
-    }
-
     private NetworkRole parseSpigotNetworkRole(String value) {
         if (value == null || value.isBlank()) {
             return NetworkRole.STANDALONE;
@@ -302,6 +298,13 @@ public final class FriendNetPlugin extends JavaPlugin {
             Logger.error("Could not reload plugin configs", e);
             return false;
         }
+    }
+
+    public void disableForProxyAuthenticationFailure(String message, Throwable throwable) {
+        Logger.error(message, throwable);
+        getLogger().severe(message);
+        getLogger().severe("FriendNet will be disabled. Check that ConnectionToken matches the Velocity adapter.");
+        getServer().getPluginManager().disablePlugin(this);
     }
 
     private void applyDebugConfig() {

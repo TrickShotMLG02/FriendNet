@@ -17,6 +17,8 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPaylo
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyOpenBackendGuiPayloadCodec;
@@ -33,9 +35,12 @@ import java.util.concurrent.TimeoutException;
 public class SpigotProxyMessagingClient implements PluginMessageListener {
 
     private static final long REQUEST_TIMEOUT_TICKS = 100L;
+    private static final long HANDSHAKE_INTERVAL_TICKS = 20L * 30L;
 
     private final FriendNetPlugin plugin;
     private final Map<UUID, PendingRequest> pendingRequests = new ConcurrentHashMap<>();
+    private volatile boolean handshakeComplete;
+    private BukkitTask handshakeTask;
 
     public SpigotProxyMessagingClient(FriendNetPlugin plugin) {
         this.plugin = plugin;
@@ -44,13 +49,28 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
     public void register() {
         plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, FriendNetProxyProtocol.CHANNEL);
         plugin.getServer().getMessenger().registerIncomingPluginChannel(plugin, FriendNetProxyProtocol.CHANNEL, this);
+        handshakeTask = plugin.getServer().getScheduler().runTaskTimer(plugin, this::sendHandshakeWithAnyOnlinePlayer, HANDSHAKE_INTERVAL_TICKS, HANDSHAKE_INTERVAL_TICKS);
     }
 
     public void unregister() {
+        if (handshakeTask != null) {
+            handshakeTask.cancel();
+            handshakeTask = null;
+        }
         plugin.getServer().getMessenger().unregisterOutgoingPluginChannel(plugin, FriendNetProxyProtocol.CHANNEL);
         plugin.getServer().getMessenger().unregisterIncomingPluginChannel(plugin, FriendNetProxyProtocol.CHANNEL, this);
         pendingRequests.values().forEach(request -> request.future().cancel(false));
         pendingRequests.clear();
+    }
+
+    public boolean sendHandshakeWithAnyOnlinePlayer() {
+        Player player = plugin.getServer().getOnlinePlayers().stream().findFirst().orElse(null);
+        if (player == null) {
+            return false;
+        }
+
+        sendHandshake(player);
+        return true;
     }
 
     public CompletableFuture<ProxyFriendListViewPayload> requestFriendListView(Player player) {
@@ -65,6 +85,26 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
         return responseFuture.thenApply(response -> ProxyFriendListViewPayloadCodec.decode(response.payload()));
     }
 
+    public CompletableFuture<Boolean> sendHandshake(Player player) {
+        ProxyProtocolMessage request = ProxyProtocolCodec.request(
+                ProxyRequestType.HANDSHAKE,
+                player.getUniqueId(),
+                "",
+                new byte[0]
+        );
+
+        return send(player, request)
+                .thenApply(response -> {
+                    handshakeComplete = true;
+                    return true;
+                })
+                .whenComplete((ignored, throwable) -> {
+                    if (throwable != null && plugin.isProxyBackendMode()) {
+                        plugin.disableForProxyAuthenticationFailure("Could not complete FriendNet proxy handshake: " + throwable.getMessage(), throwable);
+                    }
+                });
+    }
+
     public CompletableFuture<ProxyActionResponsePayload> executeFriendAction(Player player, ProxyActionRequestPayload actionRequest) {
         ProxyProtocolMessage request = ProxyProtocolCodec.request(
                 ProxyRequestType.FRIEND_ACTION_EXECUTE,
@@ -75,6 +115,33 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
 
         CompletableFuture<ProxyProtocolMessage> responseFuture = send(player, request);
         return responseFuture.thenApply(response -> ProxyActionResponsePayloadCodec.decode(response.payload()));
+    }
+
+    public void sendDisplayNameUpdate(Player player) {
+        ProxyProtocolMessage request = ProxyProtocolCodec.request(
+                ProxyRequestType.DISPLAY_NAME_UPDATE,
+                player.getUniqueId(),
+                "",
+                ProxyDisplayNameUpdatePayloadCodec.encode(new ProxyDisplayNameUpdatePayload(player.getDisplayName()))
+        );
+
+        send(player, request).exceptionally(throwable -> {
+            Logger.debug("Could not send display name update to proxy: " + throwable.getMessage());
+            return null;
+        });
+    }
+
+    public int syncOnlineDisplayNames() {
+        int count = 0;
+        for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
+            sendDisplayNameUpdate(onlinePlayer);
+            count++;
+        }
+        return count;
+    }
+
+    public boolean isHandshakeComplete() {
+        return handshakeComplete;
     }
 
     private CompletableFuture<ProxyProtocolMessage> send(Player player, ProxyProtocolMessage request) {
@@ -124,6 +191,9 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
             pendingRequest.future().complete(response);
         } catch (ProxyProtocolException e) {
             Logger.warn("Rejected proxy response: " + e.getMessage());
+            if (e.getErrorCode() == ProxyErrorCode.AUTHENTICATION_FAILED) {
+                plugin.disableForProxyAuthenticationFailure("Rejected FriendNet proxy response because authentication failed.", e);
+            }
         } catch (RuntimeException e) {
             Logger.error("Could not handle proxy response", e);
         }

@@ -13,6 +13,10 @@ commandFeedback:
   usage: "&eVerwendung: %usage%"
   proxyBackendCommandDisabled: "&cFreunde-Befehle werden in diesem Netzwerk vom Proxy verarbeitet."
   proxyBackendGuiUnavailable: "&cFreunde-GUIs benoetigen die Proxy-Verbindung, bevor sie im Proxy-Modus verwendet werden koennen."
+  proxyHandshakeQueued: "&aFriendNet-Proxy-Handshake eingereiht."
+  proxyHandshakeUnavailable: "&cProxy-Handshake ist nur fuer Spieler auf Proxy-Backend-Servern verfuegbar."
+  proxySyncQueued: "&aAnzeigenamen-Sync fuer &e%count% &aOnline-Spieler eingereiht."
+  proxySyncUnavailable: "&cDer Anzeigenamen-Proxy-Sync ist nur auf Proxy-Backend-Servern verfuegbar."
 
 chatButtons:
   acceptRequest:

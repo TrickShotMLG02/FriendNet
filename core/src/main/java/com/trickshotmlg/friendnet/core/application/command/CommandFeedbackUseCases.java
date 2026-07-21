@@ -48,4 +48,28 @@ public final class CommandFeedbackUseCases {
                 .message(CommandMessage.sender("commandFeedback.proxyBackendGuiUnavailable"))
                 .build();
     }
+
+    public static CommandUseCaseResult proxySyncQueued(int count) {
+        return CommandUseCaseResult.builder(true)
+                .message(CommandMessage.sender("commandFeedback.proxySyncQueued", Map.of("count", count)))
+                .build();
+    }
+
+    public static CommandUseCaseResult proxySyncUnavailable() {
+        return CommandUseCaseResult.builder(false)
+                .message(CommandMessage.sender("commandFeedback.proxySyncUnavailable"))
+                .build();
+    }
+
+    public static CommandUseCaseResult proxyHandshakeQueued() {
+        return CommandUseCaseResult.builder(true)
+                .message(CommandMessage.sender("commandFeedback.proxyHandshakeQueued"))
+                .build();
+    }
+
+    public static CommandUseCaseResult proxyHandshakeUnavailable() {
+        return CommandUseCaseResult.builder(false)
+                .message(CommandMessage.sender("commandFeedback.proxyHandshakeUnavailable"))
+                .build();
+    }
 }

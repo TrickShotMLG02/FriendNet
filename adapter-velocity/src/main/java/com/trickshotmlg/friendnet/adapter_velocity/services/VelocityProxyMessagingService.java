@@ -1,9 +1,12 @@
 package com.trickshotmlg.friendnet.adapter_velocity.services;
 
 import com.trickshotmlg.friendnet.adapter_velocity.FriendNetVelocityPlugin;
+import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityFriendStatusNotifier;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
+import com.trickshotmlg.friendnet.core_api.models.NetworkPlayerPresence;
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyErrorCode;
 import com.trickshotmlg.friendnet.core_api.proxy.ProxyMessageKind;
@@ -18,6 +21,8 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayl
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayload;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessagePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessageRecipient;
@@ -40,9 +45,13 @@ public class VelocityProxyMessagingService {
 
     public static final MinecraftChannelIdentifier CHANNEL = MinecraftChannelIdentifier.from(FriendNetProxyProtocol.CHANNEL);
     private static final long BACKEND_GUI_TIMEOUT_MILLIS = 1500L;
+    private static final long DISPLAY_NAME_UPDATE_WAIT_MILLIS = 2500L;
+    private static final long BACKEND_REGISTRATION_TTL_MILLIS = 45_000L;
 
     private final FriendNetVelocityPlugin plugin;
     private final Map<UUID, PendingBackendGuiRequest> pendingBackendGuiRequests = new ConcurrentHashMap<>();
+    private final Map<UUID, ScheduledTask> pendingOnlineNotifications = new ConcurrentHashMap<>();
+    private final Map<String, Long> registeredBackends = new ConcurrentHashMap<>();
 
     public VelocityProxyMessagingService(FriendNetVelocityPlugin plugin) {
         this.plugin = plugin;
@@ -57,11 +66,36 @@ public class VelocityProxyMessagingService {
         plugin.getServer().getChannelRegistrar().unregister(CHANNEL);
         pendingBackendGuiRequests.values().forEach(request -> request.timeoutTask().cancel());
         pendingBackendGuiRequests.clear();
+        pendingOnlineNotifications.values().forEach(ScheduledTask::cancel);
+        pendingOnlineNotifications.clear();
+        registeredBackends.clear();
+    }
+
+    public void notifyOnlineWhenDisplayNameReady(UUID playerId) {
+        if (playerId == null) {
+            return;
+        }
+
+        ScheduledTask oldTask = pendingOnlineNotifications.remove(playerId);
+        if (oldTask != null) {
+            oldTask.cancel();
+        }
+
+        ScheduledTask task = plugin.getServer().getScheduler().buildTask(plugin, () -> {
+            if (pendingOnlineNotifications.remove(playerId) != null) {
+                VelocityFriendStatusNotifier.notifyOnline(plugin, playerId);
+            }
+        }).delay(DISPLAY_NAME_UPDATE_WAIT_MILLIS, TimeUnit.MILLISECONDS).schedule();
+        pendingOnlineNotifications.put(playerId, task);
     }
 
     public boolean openBackendGui(Player player, ProxyBackendGuiType guiType, Runnable fallback) {
         ServerConnection connection = player.getCurrentServer().orElse(null);
         if (connection == null) {
+            return false;
+        }
+        if (!isBackendRegistered(connection.getServerInfo().getName())) {
+            Logger.debug("Skipping backend GUI request because FriendNet backend is not registered: " + connection.getServerInfo().getName());
             return false;
         }
 
@@ -174,10 +208,33 @@ public class VelocityProxyMessagingService {
 
     private ProxyProtocolMessage handleRequest(ProxyProtocolMessage request, Player player) {
         return switch (request.requestType()) {
+            case HANDSHAKE -> handleHandshake(request, player);
             case FRIEND_LIST_VIEW -> handleFriendListView(request, player);
             case FRIEND_ACTION_EXECUTE -> handleFriendAction(request, player);
+            case DISPLAY_NAME_UPDATE -> handleDisplayNameUpdate(request, player);
             case OPEN_BACKEND_GUI -> throw new ProxyProtocolException(ProxyErrorCode.UNKNOWN_REQUEST, "Backend GUI requests are proxy-to-backend only.");
         };
+    }
+
+    private ProxyProtocolMessage handleHandshake(ProxyProtocolMessage request, Player player) {
+        player.getCurrentServer().ifPresent(connection ->
+                registeredBackends.put(connection.getServerInfo().getName(), System.currentTimeMillis())
+        );
+        return ProxyProtocolCodec.response(request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE, new byte[0]);
+    }
+
+    private boolean isBackendRegistered(String serverName) {
+        Long lastSeen = registeredBackends.get(serverName);
+        if (lastSeen == null) {
+            return false;
+        }
+
+        if (System.currentTimeMillis() - lastSeen > BACKEND_REGISTRATION_TTL_MILLIS) {
+            registeredBackends.remove(serverName, lastSeen);
+            return false;
+        }
+
+        return true;
     }
 
     private ProxyProtocolMessage handleFriendListView(ProxyProtocolMessage request, Player player) {
@@ -188,6 +245,54 @@ public class VelocityProxyMessagingService {
                 ProxyErrorCode.NONE,
                 ProxyFriendListViewPayloadCodec.encode(plugin.getApplicationServices().friendListViewPayload(request.playerId()))
         );
+    }
+
+    private ProxyProtocolMessage handleDisplayNameUpdate(ProxyProtocolMessage request, Player player) {
+        ProxyDisplayNameUpdatePayload payload = ProxyDisplayNameUpdatePayloadCodec.decode(request.payload());
+        updateDisplayName(player, payload.displayName());
+        flushPendingOnlineNotification(player.getUniqueId());
+        return ProxyProtocolCodec.response(request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE, new byte[0]);
+    }
+
+    private void updateDisplayName(Player player, String displayName) {
+        if (displayName == null || displayName.isBlank()) {
+            return;
+        }
+
+        UUID playerId = player.getUniqueId();
+        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+        if (playerData == null) {
+            playerData = plugin.getDatabaseService()
+                    .find(playerId, PlayerData.class)
+                    .orElseGet(() -> plugin.getPlayerService().initPlayer(playerId));
+            plugin.getPlayerService().putPlayerData(playerData);
+        }
+
+        playerData.setLastDisplayName(displayName);
+        plugin.getPlayerDataSaveQueue().markDirty(playerData);
+
+        String serverName = player.getCurrentServer()
+                .map(connection -> connection.getServerInfo().getName())
+                .orElse(playerData.getLastServerName());
+        plugin.getNetworkAuthorityService().setPresence(new NetworkPlayerPresence(
+                playerId,
+                player.getUsername(),
+                displayName,
+                serverName,
+                true,
+                playerData.isShowOnlineStatus(),
+                playerData.getLastSeen()
+        ));
+    }
+
+    private void flushPendingOnlineNotification(UUID playerId) {
+        ScheduledTask task = pendingOnlineNotifications.remove(playerId);
+        if (task == null) {
+            return;
+        }
+
+        task.cancel();
+        VelocityFriendStatusNotifier.notifyOnline(plugin, playerId);
     }
 
     private ProxyProtocolMessage handleFriendAction(ProxyProtocolMessage request, Player player) {

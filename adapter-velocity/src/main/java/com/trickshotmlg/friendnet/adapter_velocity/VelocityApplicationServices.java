@@ -105,7 +105,9 @@ public class VelocityApplicationServices {
                                 new NetworkPlayerPresence(
                                         playerId,
                                         player.getUsername(),
-                                        player.getUsername(),
+                                        playerData != null && playerData.getLastDisplayName() != null && !playerData.getLastDisplayName().isBlank()
+                                                ? playerData.getLastDisplayName()
+                                                : player.getUsername(),
                                         player.getCurrentServer().map(server -> server.getServerInfo().getName()).orElse(null),
                                         true,
                                         visibleOnline,

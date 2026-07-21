@@ -8,6 +8,8 @@ public class PermissionHolder {
     public static final Permission FRIENDS_ADMIN = new Permission("admin", null);
 
     public static final Permission FRIENDS_RELOAD = new Permission("reload", FRIENDS_ADMIN, false);
+    public static final Permission FRIENDS_PROXY_HANDSHAKE = new Permission("proxyhandshake", FRIENDS_ADMIN, false);
+    public static final Permission FRIENDS_PROXY_SYNC = new Permission("proxysync", FRIENDS_ADMIN, false);
 
 
     ///////////////////////////////////////////

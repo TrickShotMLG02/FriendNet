@@ -153,6 +153,12 @@ public class FriendCommand extends AbstractCommand {
         registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) ->
                 CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
         );
+        registry.override(FriendCommandDefinitions.PROXY_SYNC.path(), (context, next) ->
+                CommandFeedbackUseCases.proxySyncUnavailable()
+        );
+        registry.override(FriendCommandDefinitions.PROXY_HANDSHAKE.path(), (context, next) ->
+                CommandFeedbackUseCases.proxyHandshakeUnavailable()
+        );
 
         return registry;
     }
@@ -164,6 +170,8 @@ public class FriendCommand extends AbstractCommand {
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.LIST.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.FRIENDS_ALIAS.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.REQUESTS.path()))
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY_SYNC.path()))
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path()))
                 .forEach(definition -> registry.override(definition.path(), (context, next) ->
                         definition.platformSpecific()
                                 ? CommandFeedbackUseCases.proxyBackendGuiUnavailable()
@@ -176,6 +184,38 @@ public class FriendCommand extends AbstractCommand {
         registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) ->
                 CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
         );
+        registry.override(FriendCommandDefinitions.PROXY_SYNC.path(), (context, next) -> proxySync(plugin, context.args()));
+        registry.override(FriendCommandDefinitions.PROXY_HANDSHAKE.path(), (context, next) -> proxyHandshake(plugin, context.senderId(), context.args()));
+    }
+
+    private static CommandUseCaseResult proxySync(FriendNetPlugin plugin, List<String> args) {
+        if (!args.isEmpty()) {
+            return CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY_SYNC.usage());
+        }
+
+        if (!plugin.isProxyBackendMode() || plugin.getProxyMessagingClient() == null) {
+            return CommandFeedbackUseCases.proxySyncUnavailable();
+        }
+
+        return CommandFeedbackUseCases.proxySyncQueued(plugin.getProxyMessagingClient().syncOnlineDisplayNames());
+    }
+
+    private static CommandUseCaseResult proxyHandshake(FriendNetPlugin plugin, UUID senderId, List<String> args) {
+        if (!args.isEmpty()) {
+            return CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY_HANDSHAKE.usage());
+        }
+
+        if (!plugin.isProxyBackendMode() || plugin.getProxyMessagingClient() == null) {
+            return CommandFeedbackUseCases.proxyHandshakeUnavailable();
+        }
+
+        Player player = Bukkit.getPlayer(senderId);
+        if (player == null) {
+            return CommandFeedbackUseCases.playersOnly();
+        }
+
+        plugin.getProxyMessagingClient().sendHandshake(player);
+        return CommandFeedbackUseCases.proxyHandshakeQueued();
     }
 
     private static Optional<KnownPlayerLookup.KnownPlayer> resolveTarget(FriendNetPlugin plugin, String name) {

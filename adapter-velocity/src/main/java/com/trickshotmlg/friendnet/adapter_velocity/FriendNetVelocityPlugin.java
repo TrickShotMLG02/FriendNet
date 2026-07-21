@@ -124,6 +124,9 @@ public final class FriendNetVelocityPlugin {
 
     private void initializeServices() {
         this.databaseService = new DatabaseServiceImpl(createDatabaseFromConfig());
+        if (FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
+            throw new PluginStartupException("Velocity proxy mode requires a non-default, non-blank ConnectionToken.");
+        }
         this.playerService = new PlayerServiceImpl();
         this.friendService = new FriendServiceImpl(databaseService, playerService);
         this.networkAuthorityService = new NetworkAuthorityServiceImpl(NetworkRole.PROXY_AUTHORITY);
@@ -136,7 +139,6 @@ public final class FriendNetVelocityPlugin {
         this.databaseService.start();
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalSeconds());
         this.proxyMessagingService.register();
-        warnIfConnectionTokenUnsafe();
     }
 
     private void registerListeners() {
@@ -292,12 +294,6 @@ public final class FriendNetVelocityPlugin {
 
     public boolean isDisabledDueToStartupFailure() {
         return disabledDueToStartupFailure;
-    }
-
-    private void warnIfConnectionTokenUnsafe() {
-        if (FriendNetProxyProtocol.isUnsafeToken(getConnectionToken())) {
-            Logger.warn("FriendNet Velocity is using the default or blank ConnectionToken. Set a shared secret in Spigot and Velocity configs.");
-        }
     }
 
     private static final class PluginStartupException extends RuntimeException {
