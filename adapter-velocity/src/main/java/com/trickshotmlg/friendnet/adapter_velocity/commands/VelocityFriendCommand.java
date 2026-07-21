@@ -9,6 +9,7 @@ import com.trickshotmlg.friendnet.core.application.command.CommandExecutionConte
 import com.trickshotmlg.friendnet.core.application.command.CommandFeedbackUseCases;
 import com.trickshotmlg.friendnet.core.application.command.CommandPath;
 import com.trickshotmlg.friendnet.core.application.command.CommandRegistry;
+import com.trickshotmlg.friendnet.core.application.command.CommandUsageFormatter;
 import com.trickshotmlg.friendnet.core.application.command.CommandUseCaseResult;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
@@ -25,7 +26,6 @@ import com.velocitypowered.api.proxy.Player;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -59,7 +59,7 @@ public class VelocityFriendCommand implements SimpleCommand {
         }
 
         if (resolvedCommand.path().equals(FriendCommandDefinitions.PROXY.path())) {
-            VelocityCommandResultRenderer.render(plugin, invocation.source(), CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY.usage()));
+            VelocityCommandResultRenderer.render(plugin, invocation.source(), CommandFeedbackUseCases.usage(proxyUsage(invocation.source())));
             return;
         }
 
@@ -397,14 +397,7 @@ public class VelocityFriendCommand implements SimpleCommand {
             command += " " + String.join(" ", resolvedCommand.args());
         }
         player.spoofChatInput("/" + command);
-        if (resolvedCommand.path().equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path())) {
-            return CommandFeedbackUseCases.proxyHandshakeQueued();
-        }
-
-        int playerCount = player.getCurrentServer()
-                .map(connection -> connection.getServer().getPlayersConnected().size())
-                .orElse(0);
-        return CommandFeedbackUseCases.proxySyncQueued(playerCount);
+        return CommandUseCaseResult.builder(true).build();
     }
 
     private static String registryUsage(CommandPath path) {
@@ -434,6 +427,10 @@ public class VelocityFriendCommand implements SimpleCommand {
         return plugin.getProxyMessagingService().hasBackendCommandPermission(player, definition.path().toString());
     }
 
+    private String proxyUsage(CommandSource source) {
+        return usage(FriendCommandDefinitions.PROXY, source);
+    }
+
     private List<String> completeSubcommands(CommandSource source, CommandPath parentPath, String prefix) {
         return registry.definitions().stream()
                 .filter(definition -> definition.path().startsWith(parentPath))
@@ -446,15 +443,15 @@ public class VelocityFriendCommand implements SimpleCommand {
     }
 
     private String primaryUsage(CommandSource source) {
-        return registry.definitions().stream()
-                .filter(definition -> definition.path().startsWith(FriendCommandDefinitions.FRIEND))
-                .filter(definition -> definition.path().segments().size() == FriendCommandDefinitions.FRIEND.segments().size() + 1)
-                .filter(definition -> hasCommandPermission(source, definition))
-                .map(definition -> definition.path().commandName())
-                .sorted(Comparator.naturalOrder())
-                .reduce((left, right) -> left + " | " + right)
-                .map(names -> "/friend <" + names + ">")
-                .orElse("/friend");
+        return usage(FriendCommandDefinitions.ROOT, source);
+    }
+
+    private String usage(CommandDefinition definition, CommandSource source) {
+        return CommandUsageFormatter.usage(
+                registry.definitions(),
+                definition,
+                child -> hasCommandPermission(source, child)
+        );
     }
 
     private List<String> completeAdd(CommandSource source, List<String> args) {

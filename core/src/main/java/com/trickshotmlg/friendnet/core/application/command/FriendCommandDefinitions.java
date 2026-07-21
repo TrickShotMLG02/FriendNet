@@ -112,7 +112,7 @@ public final class FriendCommandDefinitions {
 
     public static final CommandDefinition PROXY = CommandDefinition.builder(FRIEND.append("proxy"))
             .description("Manage FriendNet proxy backend operations")
-            .usage("/friend proxy <handshake|sync>")
+            .usage("/friend proxy <subcommand>")
             .permission(PermissionHolder.FRIENDS_PROXY)
             .platformSpecific(true)
             .build();
@@ -160,7 +160,9 @@ public final class FriendCommandDefinitions {
     public static CommandRegistry registryWithUsageHandlers() {
         CommandRegistry registry = new CommandRegistry();
         for (CommandDefinition definition : all()) {
-            registry.register(definition, context -> CommandFeedbackUseCases.usage(definition.usage()));
+            registry.register(definition, context -> CommandFeedbackUseCases.usage(
+                    CommandUsageFormatter.usage(all(), definition, ignored -> true)
+            ));
         }
         return registry;
     }

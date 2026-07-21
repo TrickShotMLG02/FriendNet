@@ -51,4 +51,27 @@ public class CommandRegistryTest {
         assertEquals(CommandPath.of("friend", "proxy", "sync"), FriendCommandDefinitions.PROXY_SYNC.path());
         assertEquals(CommandPath.of("friend", "proxy", "handshake"), FriendCommandDefinitions.PROXY_HANDSHAKE.path());
     }
+
+    @Test
+    public void usageFormatterBuildsParentUsageFromDirectChildrenAndKeepsLeafUsage() {
+        String rootUsage = CommandUsageFormatter.childrenUsage(
+                FriendCommandDefinitions.all(),
+                FriendCommandDefinitions.FRIEND,
+                ignored -> true
+        );
+        String proxyUsage = CommandUsageFormatter.usage(
+                FriendCommandDefinitions.all(),
+                FriendCommandDefinitions.PROXY,
+                ignored -> true
+        );
+        String addUsage = CommandUsageFormatter.usage(
+                FriendCommandDefinitions.all(),
+                FriendCommandDefinitions.ADD,
+                ignored -> true
+        );
+
+        assertTrue(rootUsage.contains("proxy"));
+        assertEquals("/friend proxy <handshake | sync>", proxyUsage);
+        assertEquals("/friend add <player>", addUsage);
+    }
 }

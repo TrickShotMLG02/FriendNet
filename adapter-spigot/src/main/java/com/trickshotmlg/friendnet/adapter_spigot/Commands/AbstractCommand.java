@@ -8,6 +8,7 @@ import com.trickshotmlg.friendnet.core.application.command.CommandExecutionConte
 import com.trickshotmlg.friendnet.core.application.command.CommandFeedbackUseCases;
 import com.trickshotmlg.friendnet.core.application.command.CommandPath;
 import com.trickshotmlg.friendnet.core.application.command.CommandRegistry;
+import com.trickshotmlg.friendnet.core.application.command.CommandUsageFormatter;
 import com.trickshotmlg.friendnet.core_api.interfaces.PermissionNode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -18,7 +19,6 @@ import org.bukkit.entity.Player;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -186,15 +186,13 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
     }
 
     private String primaryUsage(CommandSender sender) {
-        return registry.definitions().stream()
-                .filter(definition -> definition.path().startsWith(primaryPath))
-                .filter(definition -> definition.path().segments().size() == primaryPath.segments().size() + 1)
-                .filter(definition -> hasPermission(sender, definition.permission()))
-                .map(definition -> definition.path().commandName())
-                .sorted(Comparator.naturalOrder())
-                .reduce((left, right) -> left + " | " + right)
-                .map(names -> "/" + primaryPath.commandName() + " <" + names + ">")
-                .orElse("/" + primaryPath.commandName());
+        return registry.definition(primaryPath)
+                .map(definition -> CommandUsageFormatter.usage(
+                        registry.definitions(),
+                        definition,
+                        child -> hasPermission(sender, child.permission())
+                ))
+                .orElse("/" + primaryPath);
     }
 
     private boolean isAlias(String value, String expected) {

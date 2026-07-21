@@ -3,10 +3,14 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
 import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
+import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
+import com.trickshotmlg.friendnet.core.application.command.CommandExecutionContext;
 import com.trickshotmlg.friendnet.core.application.command.CommandFeedbackUseCases;
 import com.trickshotmlg.friendnet.core.application.command.CommandRegistry;
+import com.trickshotmlg.friendnet.core.application.command.CommandUsageFormatter;
 import com.trickshotmlg.friendnet.core.application.command.CommandUseCaseResult;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
@@ -154,7 +158,7 @@ public class FriendCommand extends AbstractCommand {
                 CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
         );
         registry.override(FriendCommandDefinitions.PROXY.path(), (context, next) ->
-                CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY.usage())
+                CommandFeedbackUseCases.usage(usage(registry, FriendCommandDefinitions.PROXY, context))
         );
         registry.override(FriendCommandDefinitions.PROXY_SYNC.path(), (context, next) ->
                 CommandFeedbackUseCases.proxySyncUnavailable()
@@ -189,10 +193,27 @@ public class FriendCommand extends AbstractCommand {
                 CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
         );
         registry.override(FriendCommandDefinitions.PROXY.path(), (context, next) ->
-                CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY.usage())
+                CommandFeedbackUseCases.usage(usage(registry, FriendCommandDefinitions.PROXY, context))
         );
         registry.override(FriendCommandDefinitions.PROXY_SYNC.path(), (context, next) -> proxySync(plugin, context.args()));
         registry.override(FriendCommandDefinitions.PROXY_HANDSHAKE.path(), (context, next) -> proxyHandshake(plugin, context.senderId(), context.args()));
+    }
+
+    private static String usage(CommandRegistry registry, CommandDefinition definition, CommandExecutionContext context) {
+        return CommandUsageFormatter.usage(
+                registry.definitions(),
+                definition,
+                child -> hasCommandPermission(context, child)
+        );
+    }
+
+    private static boolean hasCommandPermission(CommandExecutionContext context, CommandDefinition definition) {
+        if (!context.player()) {
+            return true;
+        }
+
+        Player player = Bukkit.getPlayer(context.senderId());
+        return player != null && definition.permission().has(new SpigotPlayer(player));
     }
 
     private static CommandUseCaseResult proxySync(FriendNetPlugin plugin, List<String> args) {
