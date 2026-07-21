@@ -153,6 +153,9 @@ public class FriendCommand extends AbstractCommand {
         registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) ->
                 CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
         );
+        registry.override(FriendCommandDefinitions.PROXY.path(), (context, next) ->
+                CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY.usage())
+        );
         registry.override(FriendCommandDefinitions.PROXY_SYNC.path(), (context, next) ->
                 CommandFeedbackUseCases.proxySyncUnavailable()
         );
@@ -170,6 +173,7 @@ public class FriendCommand extends AbstractCommand {
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.LIST.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.FRIENDS_ALIAS.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.REQUESTS.path()))
+                .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY_SYNC.path()))
                 .filter(definition -> !definition.path().equals(FriendCommandDefinitions.PROXY_HANDSHAKE.path()))
                 .forEach(definition -> registry.override(definition.path(), (context, next) ->
@@ -183,6 +187,9 @@ public class FriendCommand extends AbstractCommand {
         registry.override(FriendCommandDefinitions.REQUESTS.path(), (context, next) -> openRequestsGui(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) ->
                 CommandFeedbackUseCases.reload(plugin.reloadPluginConfigs())
+        );
+        registry.override(FriendCommandDefinitions.PROXY.path(), (context, next) ->
+                CommandFeedbackUseCases.usage(FriendCommandDefinitions.PROXY.usage())
         );
         registry.override(FriendCommandDefinitions.PROXY_SYNC.path(), (context, next) -> proxySync(plugin, context.args()));
         registry.override(FriendCommandDefinitions.PROXY_HANDSHAKE.path(), (context, next) -> proxyHandshake(plugin, context.senderId(), context.args()));

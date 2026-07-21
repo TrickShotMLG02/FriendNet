@@ -44,6 +44,11 @@ public class CommandRegistryTest {
         assertTrue(FriendCommandDefinitions.LIST.platformSpecific());
         assertTrue(FriendCommandDefinitions.REQUESTS.platformSpecific());
         assertTrue(FriendCommandDefinitions.RELOAD.platformSpecific());
+        assertTrue(FriendCommandDefinitions.PROXY.platformSpecific());
+        assertTrue(FriendCommandDefinitions.PROXY_SYNC.platformSpecific());
+        assertTrue(FriendCommandDefinitions.PROXY_HANDSHAKE.platformSpecific());
         assertEquals("/friend add <player>", FriendCommandDefinitions.ADD.usage());
+        assertEquals(CommandPath.of("friend", "proxy", "sync"), FriendCommandDefinitions.PROXY_SYNC.path());
+        assertEquals(CommandPath.of("friend", "proxy", "handshake"), FriendCommandDefinitions.PROXY_HANDSHAKE.path());
     }
 }

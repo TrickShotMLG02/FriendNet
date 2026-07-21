@@ -83,16 +83,23 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (isAlias(alias, "friends")) {
+        if (isAlias(alias, "friends") && args.length == 0) {
             return List.of();
         }
 
         if (args.length <= 1) {
             String prefix = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
-            return completeSubcommands(sender, prefix);
+            return completeSubcommands(sender, primaryPath, prefix);
         }
 
         ResolvedCommand resolvedCommand = resolve(alias, args);
+        if (resolvedCommand.args().size() == 1) {
+            List<String> childCompletions = completeSubcommands(sender, resolvedCommand.path(), resolvedCommand.args().get(0));
+            if (!childCompletions.isEmpty()) {
+                return childCompletions;
+            }
+        }
+
         TabCompletionHandler handler = tabCompletionHandlers.get(resolvedCommand.path());
         if (handler == null) {
             return List.of();
@@ -109,10 +116,10 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
                 .toList();
     }
 
-    private List<String> completeSubcommands(CommandSender sender, String prefix) {
+    private List<String> completeSubcommands(CommandSender sender, CommandPath parentPath, String prefix) {
         return registry.definitions().stream()
-                .filter(definition -> definition.path().startsWith(primaryPath))
-                .filter(definition -> definition.path().segments().size() == primaryPath.segments().size() + 1)
+                .filter(definition -> definition.path().startsWith(parentPath))
+                .filter(definition -> definition.path().segments().size() == parentPath.segments().size() + 1)
                 .filter(definition -> hasPermission(sender, definition.permission()))
                 .map(definition -> definition.path().commandName())
                 .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(prefix))
@@ -121,7 +128,7 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
     }
 
     private ResolvedCommand resolve(String label, String[] args) {
-        if (isAlias(label, "friends")) {
+        if (isAlias(label, "friends") && args.length == 0) {
             return new ResolvedCommand(CommandPath.of("friends"), List.of(args));
         }
 
@@ -129,9 +136,25 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
             return new ResolvedCommand(primaryPath, List.of());
         }
 
-        CommandPath subcommandPath = primaryPath.append(args[0]);
-        if (registry.definition(subcommandPath).isPresent()) {
-            return new ResolvedCommand(subcommandPath, Arrays.asList(Arrays.copyOfRange(args, 1, args.length)));
+        CommandPath resolvedPath = primaryPath;
+        int consumedSegments = 0;
+        for (int i = 0; i < args.length; i++) {
+            String segment = args[i];
+            if (segment == null || segment.isBlank()) {
+                break;
+            }
+
+            CommandPath candidatePath = resolvedPath.append(segment);
+            if (registry.definition(candidatePath).isEmpty()) {
+                break;
+            }
+
+            resolvedPath = candidatePath;
+            consumedSegments = i + 1;
+        }
+
+        if (consumedSegments > 0) {
+            return new ResolvedCommand(resolvedPath, Arrays.asList(Arrays.copyOfRange(args, consumedSegments, args.length)));
         }
 
         return new ResolvedCommand(primaryPath, Arrays.asList(args));

@@ -110,16 +110,23 @@ public final class FriendCommandDefinitions {
             .platformSpecific(true)
             .build();
 
-    public static final CommandDefinition PROXY_SYNC = CommandDefinition.builder(FRIEND.append("proxysync"))
+    public static final CommandDefinition PROXY = CommandDefinition.builder(FRIEND.append("proxy"))
+            .description("Manage FriendNet proxy backend operations")
+            .usage("/friend proxy <handshake|sync>")
+            .permission(PermissionHolder.FRIENDS_PROXY)
+            .platformSpecific(true)
+            .build();
+
+    public static final CommandDefinition PROXY_SYNC = CommandDefinition.builder(PROXY.path().append("sync"))
             .description("Sync backend display names to the proxy")
-            .usage("/friend proxysync")
+            .usage("/friend proxy sync")
             .permission(PermissionHolder.FRIENDS_PROXY_SYNC)
             .platformSpecific(true)
             .build();
 
-    public static final CommandDefinition PROXY_HANDSHAKE = CommandDefinition.builder(FRIEND.append("proxyhandshake"))
+    public static final CommandDefinition PROXY_HANDSHAKE = CommandDefinition.builder(PROXY.path().append("handshake"))
             .description("Register this backend with the proxy")
-            .usage("/friend proxyhandshake")
+            .usage("/friend proxy handshake")
             .permission(PermissionHolder.FRIENDS_PROXY_HANDSHAKE)
             .playerOnly(true)
             .platformSpecific(true)
@@ -144,6 +151,7 @@ public final class FriendCommandDefinitions {
                 LIST,
                 FRIENDS_ALIAS,
                 RELOAD,
+                PROXY,
                 PROXY_SYNC,
                 PROXY_HANDSHAKE
         );

@@ -82,6 +82,14 @@ public class PermissionTest extends TestCase {
         assertTrue(PermissionHolder.FRIENDS_RELOAD.has(player));
     }
 
+    public void testProxyParentGrantsProxyCommands() {
+        TestPlayer player = new TestPlayer(PermissionHolder.FRIENDS_PROXY.getPermissionPrefixed());
+
+        assertTrue(PermissionHolder.FRIENDS_PROXY_SYNC.has(player));
+        assertTrue(PermissionHolder.FRIENDS_PROXY_HANDSHAKE.has(player));
+        assertFalse(PermissionHolder.FRIENDS_RELOAD.has(player));
+    }
+
     private static final class TestPlayer implements com.trickshotmlg.friendnet.core_api.interfaces.PlatformPlayer {
         private final Set<String> permissions = new HashSet<>();
 
