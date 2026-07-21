@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.core_api.enums.ServiceState;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.models.FavouriteData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
@@ -58,6 +59,11 @@ public class ProxyBackendDatabaseService implements DatabaseService {
     }
 
     @Override
+    public void save(FavouriteData entity) {
+        reportUnexpectedUse("save(FavouriteData)");
+    }
+
+    @Override
     public void save(PlayerData entity) {
         reportUnexpectedUse("save(PlayerData)");
     }
@@ -70,6 +76,11 @@ public class ProxyBackendDatabaseService implements DatabaseService {
     @Override
     public void delete(BlocklistData entity) {
         reportUnexpectedUse("delete(BlocklistData)");
+    }
+
+    @Override
+    public void delete(FavouriteData entity) {
+        reportUnexpectedUse("delete(FavouriteData)");
     }
 
     @Override

@@ -8,6 +8,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
@@ -51,14 +52,19 @@ public class BlocklistGUI extends AbstractGUI {
 
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
         BlocklistActions actions = new BlocklistActions(friendNetPlugin);
-        currentViewData = friendNetPlugin.isProxyBackendMode() && viewData != null
-                ? viewData
-                : FriendGuiViewData.local(
-                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
-                actions.getBlockedPlayers(player.getUniqueId())
-        );
+        if (friendNetPlugin.isProxyBackendMode() && viewData != null) {
+            currentViewData = viewData;
+        } else {
+            FriendListViewData localViewData = friendNetPlugin.getApplicationServices()
+                    .friendCommandUseCases()
+                    .listViewData(player.getUniqueId());
+            currentViewData = FriendGuiViewData.local(
+                    localViewData.friends(),
+                    localViewData.pendingRequests(),
+                    friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                    actions.getBlockedPlayers(player.getUniqueId())
+            );
+        }
         List<BlocklistData> blockedPlayers = currentViewData.blockedPlayers();
         clampCurrentPage(blockedPlayers.size());
 

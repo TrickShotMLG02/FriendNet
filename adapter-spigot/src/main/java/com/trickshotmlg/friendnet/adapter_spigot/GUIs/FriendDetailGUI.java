@@ -8,7 +8,9 @@ import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.ProxyActionResponseRenderer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
+import com.trickshotmlg.friendnet.core_api.models.FavouriteData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionType;
@@ -191,8 +193,12 @@ public class FriendDetailGUI extends AbstractGUI {
         }
 
         friendshipData.setFavourite(newState);
-        friendNetPlugin.getFriendService().putFriendshipData(friendshipData);
-        friendNetPlugin.getDatabaseService().save(friendshipData);
+        FavouriteData favouriteData = new FavouriteData(player.getUniqueId(), friendId);
+        if (newState) {
+            friendNetPlugin.getDatabaseService().save(favouriteData);
+        } else {
+            friendNetPlugin.getDatabaseService().delete(favouriteData);
+        }
         MessageManager.send(player, newState ? "friend.favourite.enabled" : "friend.favourite.disabled", Map.of("target", getFriendDisplayName()));
         buildInventory();
     }
@@ -246,13 +252,24 @@ public class FriendDetailGUI extends AbstractGUI {
 
     private Optional<FriendshipData> getFriendship() {
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
-        if (friendNetPlugin.isProxyBackendMode() && viewData != null) {
+        if (viewData != null) {
             return viewData.friends().stream()
                     .filter(friendship -> friendId.equals(friendship.getOtherPlayerId(player.getUniqueId())))
                     .findFirst();
         }
 
-        return ((FriendNetPlugin) plugin).getFriendService().getFriendshipData(player.getUniqueId(), friendId);
+        FriendListViewData localViewData = friendNetPlugin.getApplicationServices()
+                .friendCommandUseCases()
+                .listViewData(player.getUniqueId());
+        viewData = FriendGuiViewData.local(
+                localViewData.friends(),
+                localViewData.pendingRequests(),
+                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
+        );
+        return viewData.friends().stream()
+                .filter(friendship -> friendId.equals(friendship.getOtherPlayerId(player.getUniqueId())))
+                .findFirst();
     }
 
     private String getFriendDisplayName() {

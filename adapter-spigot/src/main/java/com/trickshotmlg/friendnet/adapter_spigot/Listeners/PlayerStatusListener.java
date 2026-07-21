@@ -55,6 +55,7 @@ public class PlayerStatusListener extends AbstractListener {
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, spigotPlayer));
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
+        initializedPlayerData.setLastServerName(null);
 
         if (plugin.isProxyBackendMode()) {
             playerService.putPlayerData(initializedPlayerData);
@@ -70,6 +71,7 @@ public class PlayerStatusListener extends AbstractListener {
             if (pld.isPresent()) {
                 playerData = pld.get();
                 playerData.setLastDisplayName(lastDisplayName);
+                playerData.setLastServerName(null);
                 Logger.debug("playerData: " + playerData);
             } else {
                 playerData = initializedPlayerData;
@@ -82,6 +84,7 @@ public class PlayerStatusListener extends AbstractListener {
             Optional<Set<FriendshipData>> friendships = databaseService.findAll(playerId, FriendshipData.class);
             if (friendships.isPresent()) {
                 for (FriendshipData friendshipData : friendships.get()) {
+                    friendshipData.setFavourite(false);
                     friendService.putFriendshipData(friendshipData);
                     UUID otherPlayerId = friendshipData.getOtherPlayerId(playerId);
                     databaseService.find(otherPlayerId, PlayerData.class).ifPresent(playerService::putPlayerData);
@@ -112,6 +115,7 @@ public class PlayerStatusListener extends AbstractListener {
             playerData.setLastSeen();
         }
         playerData.setLastDisplayName(event.getPlayer().getDisplayName());
+        playerData.setLastServerName(null);
         playerService.setOnline(playerId, false);
 
         if (wasVisibleOnline && !plugin.isProxyBackendMode()) {

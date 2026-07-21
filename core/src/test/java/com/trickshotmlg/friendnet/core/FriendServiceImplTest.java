@@ -4,6 +4,7 @@ import com.trickshotmlg.friendnet.core_api.enums.ServiceState;
 import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
+import com.trickshotmlg.friendnet.core_api.models.FavouriteData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import junit.framework.TestCase;
@@ -109,6 +110,10 @@ public class FriendServiceImplTest extends TestCase {
         }
 
         @Override
+        public void save(FavouriteData entity) {
+        }
+
+        @Override
         public void delete(FriendshipData entity) {
             savedFriendships.remove(entity);
             deletedFriendships.add(entity);
@@ -116,6 +121,10 @@ public class FriendServiceImplTest extends TestCase {
 
         @Override
         public void delete(BlocklistData entity) {
+        }
+
+        @Override
+        public void delete(FavouriteData entity) {
         }
 
         @Override

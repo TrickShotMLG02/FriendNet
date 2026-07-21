@@ -6,6 +6,7 @@ import com.trickshotmlg.friendnet.core.application.KnownPlayerLookup;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.FriendService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.enums.FriendshipStatus;
+import com.trickshotmlg.friendnet.core_api.models.FavouriteData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class FriendCommandUseCases {
 
@@ -275,8 +277,37 @@ public class FriendCommandUseCases {
 
     public FriendListViewData listViewData(UUID playerId) {
         return new FriendListViewData(
-                friendService.getFriendships(playerId).stream().toList(),
+                withViewerFavourites(playerId, friendService.getFriendships(playerId)),
                 friendService.getPendingRequests(playerId).stream().toList()
+        );
+    }
+
+    private java.util.List<FriendshipData> withViewerFavourites(UUID viewerId, Set<FriendshipData> friendships) {
+        Set<UUID> favourites = databaseService == null
+                ? Set.of()
+                : databaseService.findAll(viewerId, FavouriteData.class)
+                .orElse(Set.of())
+                .stream()
+                .map(FavouriteData::getFavouriteId)
+                .collect(Collectors.toSet());
+
+        return friendships.stream()
+                .map(friendship -> copyWithFavourite(
+                        friendship,
+                        viewerId,
+                        favourites.contains(friendship.getOtherPlayerId(viewerId))
+                ))
+                .toList();
+    }
+
+    private FriendshipData copyWithFavourite(FriendshipData friendship, UUID viewerId, boolean favourite) {
+        return new FriendshipData(
+                friendship.getRequesterId(),
+                friendship.getOtherPlayerId(friendship.getRequesterId()),
+                friendship.getFriendshipStatus(),
+                friendship.getRequestSentTime(),
+                friendship.getFriendSince(),
+                favourite
         );
     }
 
@@ -290,10 +321,13 @@ public class FriendCommandUseCases {
         }
 
         FriendshipData friendshipData = friendship.get();
-        friendshipData.setFavourite(favourite);
-        friendService.putFriendshipData(friendshipData);
         if (databaseService != null) {
-            databaseService.save(friendshipData);
+            FavouriteData favouriteData = new FavouriteData(senderId, targetId);
+            if (favourite) {
+                databaseService.save(favouriteData);
+            } else {
+                databaseService.delete(favouriteData);
+            }
         }
 
         return CommandUseCaseResult.builder(true)

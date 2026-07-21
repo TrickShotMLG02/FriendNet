@@ -11,6 +11,7 @@ public class PlayerData {
     /// The UUID of the player this data belongs to.
     private final UUID playerId;
     private String lastDisplayName = null;
+    private String lastServerName = null;
 
 
     // --- Settings --- //
@@ -27,6 +28,14 @@ public class PlayerData {
 
     public void setLastDisplayName(String lastDisplayName) {
         this.lastDisplayName = lastDisplayName;
+    }
+
+    public String getLastServerName() {
+        return lastServerName;
+    }
+
+    public void setLastServerName(String lastServerName) {
+        this.lastServerName = lastServerName;
     }
 
     public boolean isAllowFriendRequests() {
@@ -130,6 +139,7 @@ public class PlayerData {
         return "PlayerData{" +
                 "playerId=" + playerId +
                 ", lastDisplayName='" + lastDisplayName + '\'' +
+                ", lastServerName='" + lastServerName + '\'' +
                 ", allow_friend_requests=" + allowFriendRequests +
                 ", show_online_status=" + showOnlineStatus +
                 ", auto_accept_friends=" + autoAcceptFriends +

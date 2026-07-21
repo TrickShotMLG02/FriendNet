@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
@@ -51,14 +52,19 @@ public class FriendsGUI extends AbstractGUI {
         inventory.clear();
 
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
-        currentViewData = friendNetPlugin.isProxyBackendMode()
-                ? viewData
-                : FriendGuiViewData.local(
-                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
-        );
+        if (friendNetPlugin.isProxyBackendMode()) {
+            currentViewData = viewData;
+        } else {
+            FriendListViewData localViewData = friendNetPlugin.getApplicationServices()
+                    .friendCommandUseCases()
+                    .listViewData(player.getUniqueId());
+            currentViewData = FriendGuiViewData.local(
+                    localViewData.friends(),
+                    localViewData.pendingRequests(),
+                    friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                    friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
+            );
+        }
         FriendFilterState filterState = FriendFilterGUI.getFilterState(player);
         List<FriendshipData> friends = applyFilters(
                 currentViewData.friends(),

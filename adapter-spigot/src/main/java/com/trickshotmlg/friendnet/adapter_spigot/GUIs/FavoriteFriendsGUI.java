@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.GUIs.Items.ActionItemStack;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.GUIUtils;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
+import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
@@ -49,14 +50,19 @@ public class FavoriteFriendsGUI extends AbstractGUI {
         inventory.clear();
 
         FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
-        currentViewData = friendNetPlugin.isProxyBackendMode() && viewData != null
-                ? viewData
-                : FriendGuiViewData.local(
-                friendNetPlugin.getFriendService().getFriendships(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getPendingRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
-                friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
-        );
+        if (friendNetPlugin.isProxyBackendMode() && viewData != null) {
+            currentViewData = viewData;
+        } else {
+            FriendListViewData localViewData = friendNetPlugin.getApplicationServices()
+                    .friendCommandUseCases()
+                    .listViewData(player.getUniqueId());
+            currentViewData = FriendGuiViewData.local(
+                    localViewData.friends(),
+                    localViewData.pendingRequests(),
+                    friendNetPlugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
+                    friendNetPlugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
+            );
+        }
 
         List<FriendshipData> favoriteFriends = currentViewData.friends().stream()
                 .filter(FriendshipData::isFavourite)

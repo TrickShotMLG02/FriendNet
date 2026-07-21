@@ -57,6 +57,7 @@ public class VelocityPlayerStatusListener {
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, velocityPlayer));
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
+        initializedPlayerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
 
         plugin.getPlatform().runAsync(() -> {
             Optional<PlayerData> storedPlayerData = databaseService.find(playerId, PlayerData.class);
@@ -64,6 +65,7 @@ public class VelocityPlayerStatusListener {
             if (storedPlayerData.isPresent()) {
                 playerData = storedPlayerData.get();
                 playerData.setLastDisplayName(lastDisplayName);
+                playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
             } else {
                 playerData = initializedPlayerData;
             }
@@ -77,6 +79,7 @@ public class VelocityPlayerStatusListener {
             Optional<Set<FriendshipData>> friendships = databaseService.findAll(playerId, FriendshipData.class);
             friendships.ifPresent(friendshipDataSet -> {
                 for (FriendshipData friendshipData : friendshipDataSet) {
+                    friendshipData.setFavourite(false);
                     friendService.putFriendshipData(friendshipData);
                     UUID otherPlayerId = friendshipData.getOtherPlayerId(playerId);
                     databaseService.find(otherPlayerId, PlayerData.class).ifPresent(playerService::putPlayerData);
@@ -101,6 +104,8 @@ public class VelocityPlayerStatusListener {
             return;
         }
 
+        playerData.setLastServerName(event.getServer().getServerInfo().getName());
+        playerDataSaveQueue.markDirty(playerData);
         networkAuthorityService.setPresence(new NetworkPlayerPresence(
                 playerId,
                 velocityPlayer.getName(),
@@ -127,6 +132,7 @@ public class VelocityPlayerStatusListener {
             playerData.setLastSeen();
         }
         playerData.setLastDisplayName(velocityPlayer.getDisplayName());
+        playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(playerData.getLastServerName()));
         networkAuthorityService.setPresence(toPresence(velocityPlayer, playerData, false));
         playerService.setOnline(playerId, false);
 
