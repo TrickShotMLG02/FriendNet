@@ -7,6 +7,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -145,6 +146,7 @@ public final class SpigotUtils {
 
         if (meta != null) {
             applyPlayerHeadProfile(meta, playerId, displayName);
+            meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             applyItemMeta(meta, displayName, lore);
 
             head.setItemMeta(meta);
@@ -176,6 +178,7 @@ public final class SpigotUtils {
                 applyCustomHeadTexture(meta, base64Texture);
             }
 
+            meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             applyItemMeta(meta, displayName, lore);
             head.setItemMeta(meta);
         }
