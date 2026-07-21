@@ -142,7 +142,9 @@ public final class FriendNetPlugin extends JavaPlugin {
         String dbName = config.getString("MySQL.dbName", "friendnet");
         String username = config.getString("MySQL.username", "friendnet");
         String password = config.getString("MySQL.password", "friendnet");
-        return new MySQLDatabase(host, dbName, username, password, databaseType);
+        boolean useSsl = config.getBoolean("MySQL.useSSL", false);
+        boolean allowPublicKeyRetrieval = config.getBoolean("MySQL.allowPublicKeyRetrieval", false);
+        return new MySQLDatabase(host, dbName, username, password, databaseType, useSsl, allowPublicKeyRetrieval);
     }
 
     private DatabaseType parseDatabaseType(String value) {

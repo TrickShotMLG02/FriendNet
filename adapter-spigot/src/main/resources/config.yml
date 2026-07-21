@@ -27,6 +27,8 @@ MySQL:
   dbName: friendnet
   username: friendnet
   password: friendnet
+  useSSL: false
+  allowPublicKeyRetrieval: false
 
 # The settings for SQLite Connection
 SQLite:
