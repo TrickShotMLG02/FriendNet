@@ -62,6 +62,10 @@ public final class FriendNetVelocityPlugin {
     private Platform platform;
     private VelocityApplicationServices applicationServices;
     private VelocityProxyMessagingService proxyMessagingService;
+    private CommandMeta friendNetCommandMeta;
+    private CommandMeta friendCommandMeta;
+    private boolean enabled;
+    private boolean disabledDueToStartupFailure;
 
     @Inject
     public FriendNetVelocityPlugin(ProxyServer server, org.slf4j.Logger logger, @DataDirectory Path dataDirectory) {
@@ -79,28 +83,35 @@ public final class FriendNetVelocityPlugin {
             initializeServices();
             registerListeners();
             registerCommands();
+            enabled = true;
             Logger.info("FriendNet Velocity adapter enabled!");
         } catch (PluginStartupException e) {
-            Logger.error("FriendNet Velocity startup failed: " + e.getMessage(), e);
+            disableAfterStartupFailure(e.getMessage(), e);
         } catch (RuntimeException e) {
-            Logger.error("Unexpected FriendNet Velocity startup error: " + e.getMessage(), e);
+            disableAfterStartupFailure("Unexpected startup error: " + e.getMessage(), e);
         }
     }
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
+        shutdownServices();
+        Logger.info("FriendNet Velocity adapter disabled!");
+    }
+
+    private void shutdownServices() {
         EventBus.clear();
         if (playerDataSaveQueue != null) {
             playerDataSaveQueue.stopAndFlush();
+            playerDataSaveQueue = null;
         }
         if (databaseService != null) {
             databaseService.stop();
+            databaseService = null;
         }
         if (proxyMessagingService != null) {
             proxyMessagingService.unregister();
+            proxyMessagingService = null;
         }
-
-        Logger.info("FriendNet Velocity adapter disabled!");
     }
 
     private void initializePlatform() {
@@ -134,17 +145,46 @@ public final class FriendNetVelocityPlugin {
 
     private void registerCommands() {
         CommandManager commandManager = server.getCommandManager();
-        CommandMeta commandMeta = commandManager.metaBuilder("friendnet")
+        friendNetCommandMeta = commandManager.metaBuilder("friendnet")
                 .aliases("fn")
                 .plugin(this)
                 .build();
-        commandManager.register(commandMeta, new FriendNetVelocityCommand(this));
+        commandManager.register(friendNetCommandMeta, new FriendNetVelocityCommand(this));
 
-        CommandMeta friendCommandMeta = commandManager.metaBuilder("friend")
+        friendCommandMeta = commandManager.metaBuilder("friend")
                 .aliases("friends")
                 .plugin(this)
                 .build();
         commandManager.register(friendCommandMeta, new VelocityFriendCommand(this));
+    }
+
+    private void disableAfterStartupFailure(String message, Throwable throwable) {
+        disabledDueToStartupFailure = true;
+        enabled = false;
+
+        Logger.error("FriendNet Velocity startup failed: " + message, throwable);
+        velocityLogger.error("FriendNet Velocity startup failed. FriendNet will be disabled.");
+        velocityLogger.error(message);
+        velocityLogger.error("Check config.yml, especially DatabaseType and the matching database connection settings.");
+
+        unregisterVelocityEntrypoints();
+        shutdownServices();
+
+        Logger.info("FriendNet Velocity adapter disabled due to startup failure.");
+    }
+
+    private void unregisterVelocityEntrypoints() {
+        CommandManager commandManager = server.getCommandManager();
+        if (friendNetCommandMeta != null) {
+            commandManager.unregister(friendNetCommandMeta);
+            friendNetCommandMeta = null;
+        }
+        if (friendCommandMeta != null) {
+            commandManager.unregister(friendCommandMeta);
+            friendCommandMeta = null;
+        }
+
+        server.getEventManager().unregisterListeners(this);
     }
 
     private Database createDatabaseFromConfig() {
@@ -244,6 +284,14 @@ public final class FriendNetVelocityPlugin {
 
     public Path getDataDirectory() {
         return dataDirectory;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public boolean isDisabledDueToStartupFailure() {
+        return disabledDueToStartupFailure;
     }
 
     private void warnIfConnectionTokenUnsafe() {
