@@ -119,14 +119,16 @@ public class FavoriteFriendsGUI extends AbstractGUI {
             ));
         }
 
+        ItemStack filterItem = SpigotUtils.createItem(
+                Material.HOPPER,
+                player,
+                "gui",
+                "friendsGUI.buttons.filter.displayName",
+                "friendsGUI.buttons.filter.lore"
+        );
+        SpigotUtils.setGlint(filterItem, FriendFilterGUI.getFilterState(player).isActive(false));
         setInteractableItem(bottomRowStart + 3, new ActionItemStack(
-                SpigotUtils.createItem(
-                        Material.HOPPER,
-                        player,
-                        "gui",
-                        "friendsGUI.buttons.filter.displayName",
-                        "friendsGUI.buttons.filter.lore"
-                ),
+                filterItem,
                 player,
                 () -> openChild(new FriendFilterGUI(plugin, player, false)),
                 ActionItemStack.SoundProfile.NAVIGATION

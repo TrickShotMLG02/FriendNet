@@ -196,6 +196,20 @@ public final class SpigotUtils {
         return item;
     }
 
+    public static ItemStack setGlint(ItemStack item, boolean glint) {
+        if (item == null) {
+            return null;
+        }
+
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setEnchantmentGlintOverride(glint);
+            item.setItemMeta(meta);
+        }
+
+        return item;
+    }
+
     public static ItemStack createFillerGlass() {
         ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE, 1);
         ItemMeta meta = glass.getItemMeta();

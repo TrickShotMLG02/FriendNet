@@ -241,14 +241,17 @@ public class FriendsGUI extends AbstractGUI {
 
         // Filter Item
         {
+            ItemStack filterItem = SpigotUtils.createItem(
+                    Material.HOPPER,
+                    player,
+                    "gui",
+                    "friendsGUI.buttons.filter.displayName",
+                    "friendsGUI.buttons.filter.lore"
+            );
+            SpigotUtils.setGlint(filterItem, filterState.isActive());
+
             ActionItemStack actionItemStack = new ActionItemStack(
-                    SpigotUtils.createItem(
-                            Material.HOPPER,
-                            player,
-                            "gui",
-                            "friendsGUI.buttons.filter.displayName",
-                            "friendsGUI.buttons.filter.lore"
-                    ),
+                    filterItem,
                     player,
                     () -> this.openChild(new FriendFilterGUI(plugin, player)),
                     ActionItemStack.SoundProfile.NAVIGATION
