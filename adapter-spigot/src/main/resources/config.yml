@@ -14,13 +14,16 @@ DatabaseType: SQLite
 # In Proxy mode, the proxy should be the authoritative writer instead.
 PlayerDataFlushIntervalSeconds: 30
 
+# Enables verbose FriendNet debug logging.
 Debug: false
 
+# Locale files that FriendNet should load from the Locales directory.
 SupportedLocales:
   - en_US
   - de
   - gsw_CH
 
+# Locale used for console messages and players without a stored locale.
 DefaultLocale: "en_US"
 
 # The settings for MySQL/MariaDB Connection

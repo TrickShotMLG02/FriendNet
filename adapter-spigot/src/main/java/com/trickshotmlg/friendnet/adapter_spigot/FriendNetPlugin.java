@@ -16,6 +16,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.Listeners.PlayerStatusListener;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.NetworkAuthorityServiceImpl;
 import com.trickshotmlg.friendnet.core.PlayerServiceImpl;
+import com.trickshotmlg.friendnet.core.config.CommentedYamlConfigUpdater;
 import com.trickshotmlg.friendnet.core.database.DatabaseServiceImpl;
 import com.trickshotmlg.friendnet.core.database.MySQLDatabase;
 import com.trickshotmlg.friendnet.core.database.SQLiteDatabase;
@@ -38,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 public final class FriendNetPlugin extends JavaPlugin {
@@ -252,32 +254,57 @@ public final class FriendNetPlugin extends JavaPlugin {
     }
 
     public void createConfigWithDefaults() {
-        config.options().copyDefaults(true);
         defaultConfigFile = new File(getDataFolder(), "config.yml");
+
+        updateConfigFileFromTemplate();
+
+        reloadConfig();
+        config = this.getConfig();
+        applyDefaultConfigValues();
+        applyDebugConfig();
+    }
+
+    private void updateConfigFileFromTemplate() {
+        if (defaultConfigFile == null) {
+            defaultConfigFile = new File(getDataFolder(), "config.yml");
+        }
 
         try (InputStream configResource = this.getResource("config.yml")) {
             if (configResource == null) {
                 throw new PluginStartupException("Default config.yml resource is missing.");
             }
 
-            InputStreamReader defConfigStream = new InputStreamReader(configResource, "UTF8");
+            String template = new String(configResource.readAllBytes(), StandardCharsets.UTF_8);
+            CommentedYamlConfigUpdater.UpdateResult result = CommentedYamlConfigUpdater.update(defaultConfigFile.toPath(), template);
+            if (result == CommentedYamlConfigUpdater.UpdateResult.UPDATED) {
+                Logger.info("Updated Spigot config.yml from bundled template and preserved existing values.");
+            }
+        } catch (IOException e) {
+            throw new PluginStartupException("Could not update config.yml from bundled template", e);
+        }
+    }
+
+    private void applyDefaultConfigValues() {
+        try (InputStream configResource = this.getResource("config.yml")) {
+            if (configResource == null) {
+                throw new PluginStartupException("Default config.yml resource is missing.");
+            }
+
+            InputStreamReader defConfigStream = new InputStreamReader(configResource, StandardCharsets.UTF_8);
             YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
             config.setDefaults(defConfig);
-            saveConfig();
-
-            reloadConfig();
-            config = this.getConfig();
-            applyDebugConfig();
-
+            config.options().copyDefaults(false);
         } catch (IOException e) {
-            throw new PluginStartupException("Could not load default config.yml", e);
+            throw new PluginStartupException("Could not load default config.yml defaults", e);
         }
     }
 
     public boolean reloadPluginConfigs() {
         try {
+            updateConfigFileFromTemplate();
             super.reloadConfig();
             config = getConfig();
+            applyDefaultConfigValues();
             applyDebugConfig();
 
             if (config.getStringList("SupportedLocales").isEmpty()) {

@@ -8,7 +8,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class SpigotConfig implements AbstractConfig {
@@ -99,12 +101,17 @@ public class SpigotConfig implements AbstractConfig {
             return false;
         }
 
-        // Apply defaults from JAR
-        try (InputStreamReader reader = new InputStreamReader(plugin.getResource(fileName), "UTF-8")) {
+        // Apply defaults from JAR in memory only. Saving here rewrites YAML and strips comments.
+        try (InputStream resource = plugin.getResource(fileName)) {
+            if (resource == null) {
+                Logger.error("Default resource not found: " + fileName, null);
+                return false;
+            }
+
+            InputStreamReader reader = new InputStreamReader(resource, StandardCharsets.UTF_8);
             YamlConfiguration defaults = YamlConfiguration.loadConfiguration(reader);
             config.setDefaults(defaults);
-            config.options().copyDefaults(true);
-            config.save(file);
+            config.options().copyDefaults(false);
             return true;
         } catch (IOException e) {
             Logger.error("Failed to apply defaults to messages file.", e);

@@ -1,19 +1,24 @@
 # The proxy adapter is the authoritative FriendNet data owner for a network.
+# The backend to use: SQLite, MySQL, MariaDB (case-insensitive)
 DatabaseType: SQLite
 
+# Interval for coalesced proxy player-data writes.
 PlayerDataFlushIntervalSeconds: 30
 
+# Enables verbose FriendNet debug logging.
 Debug: false
 
 # Shared secret for Spigot <-> proxy plugin messaging.
 # Set the same value on every Spigot backend adapter. Change this before production use.
 ConnectionToken: change-me
 
+# Locale files that FriendNet should load from the Locales directory.
 SupportedLocales:
   - en_US
   - de
   - gsw_CH
 
+# Locale used for console messages and players without a stored locale.
 DefaultLocale: "en_US"
 
 # The settings for MySQL/MariaDB Connection

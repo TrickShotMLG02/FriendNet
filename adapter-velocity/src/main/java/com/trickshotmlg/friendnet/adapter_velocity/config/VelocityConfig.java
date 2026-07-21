@@ -1,12 +1,14 @@
 package com.trickshotmlg.friendnet.adapter_velocity.config;
 
+import com.trickshotmlg.friendnet.core.Logger;
+import com.trickshotmlg.friendnet.core.config.CommentedYamlConfigUpdater;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -23,12 +25,15 @@ public class VelocityConfig {
         try {
             Files.createDirectories(dataDirectory);
             Path configPath = dataDirectory.resolve("config.yml");
-            if (Files.notExists(configPath)) {
-                try (InputStream resource = VelocityConfig.class.getClassLoader().getResourceAsStream("config.yml")) {
-                    if (resource == null) {
-                        throw new IllegalStateException("Default config.yml resource is missing.");
-                    }
-                    Files.copy(resource, configPath, StandardCopyOption.REPLACE_EXISTING);
+            try (InputStream resource = VelocityConfig.class.getClassLoader().getResourceAsStream("config.yml")) {
+                if (resource == null) {
+                    throw new IllegalStateException("Default config.yml resource is missing.");
+                }
+
+                String template = new String(resource.readAllBytes(), StandardCharsets.UTF_8);
+                CommentedYamlConfigUpdater.UpdateResult result = CommentedYamlConfigUpdater.update(configPath, template);
+                if (result == CommentedYamlConfigUpdater.UpdateResult.UPDATED) {
+                    Logger.info("Updated Velocity config.yml from bundled template and preserved existing values.");
                 }
             }
 
