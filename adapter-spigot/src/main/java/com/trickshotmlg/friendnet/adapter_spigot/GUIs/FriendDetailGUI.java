@@ -80,7 +80,7 @@ public class FriendDetailGUI extends AbstractGUI {
                 ? null
                 : SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
 
-        inventory.setItem(13, SpigotUtils.createPlayerHead(friendId, getFriendDisplayName(), createFriendLore(friendEntry, playerData)));
+        inventory.setItem(13, SpigotUtils.createPlayerHead((FriendNetPlugin) plugin, viewData, friendId, getFriendDisplayName(), createFriendLore(friendEntry, playerData)));
 
         setInteractableItem(28, new ActionItemStack(
                 createFavouriteItem(friendEntry.favourite()),

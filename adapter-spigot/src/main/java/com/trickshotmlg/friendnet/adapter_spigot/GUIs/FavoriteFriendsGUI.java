@@ -154,7 +154,7 @@ public class FavoriteFriendsGUI extends AbstractGUI {
                 ? null
                 : SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendId);
 
-        return SpigotUtils.createPlayerHead(friendId, friendName, createFriendLore(friend, friendId, playerData));
+        return SpigotUtils.createPlayerHead((FriendNetPlugin) plugin, currentViewData, friendId, friendName, createFriendLore(friend, friendId, playerData));
     }
 
     @Override

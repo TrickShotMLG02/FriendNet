@@ -240,7 +240,7 @@ public class RequestsGUI extends AbstractGUI {
             friendName = friendID.toString();
         }
 
-        return SpigotUtils.createPlayerHead(friendID, friendName, createRequestLore(friend));
+        return SpigotUtils.createPlayerHead((FriendNetPlugin) plugin, currentViewData, friendID, friendName, createRequestLore(friend));
     }
 
     private List<String> createRequestLore(FriendshipData request) {

@@ -127,7 +127,7 @@ public class SentRequestDetailGUI extends AbstractGUI {
     }
 
     private ItemStack createTargetItem(FriendshipData request) {
-        return SpigotUtils.createPlayerHead(targetId, getTargetDisplayName(), createTargetLore(request));
+        return SpigotUtils.createPlayerHead((FriendNetPlugin) plugin, viewData, targetId, getTargetDisplayName(), createTargetLore(request));
     }
 
     private List<String> createTargetLore(FriendshipData request) {

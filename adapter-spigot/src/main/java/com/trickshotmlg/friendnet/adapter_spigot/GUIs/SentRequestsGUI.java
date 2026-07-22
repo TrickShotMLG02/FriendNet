@@ -149,7 +149,7 @@ public class SentRequestsGUI extends AbstractGUI {
             displayName = targetId.toString();
         }
 
-        return SpigotUtils.createPlayerHead(targetId, displayName, createRequestLore(request));
+        return SpigotUtils.createPlayerHead((FriendNetPlugin) plugin, currentViewData, targetId, displayName, createRequestLore(request));
     }
 
     private List<String> createRequestLore(FriendshipData request) {

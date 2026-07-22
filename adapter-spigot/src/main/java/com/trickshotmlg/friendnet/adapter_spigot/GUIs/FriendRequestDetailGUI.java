@@ -139,7 +139,7 @@ public class FriendRequestDetailGUI extends AbstractGUI {
     }
 
     private ItemStack createRequesterItem(FriendshipData request) {
-        return SpigotUtils.createPlayerHead(requesterId, getRequesterDisplayName(), createRequesterLore(request));
+        return SpigotUtils.createPlayerHead((FriendNetPlugin) plugin, viewData, requesterId, getRequesterDisplayName(), createRequesterLore(request));
     }
 
     private List<String> createRequesterLore(FriendshipData request) {

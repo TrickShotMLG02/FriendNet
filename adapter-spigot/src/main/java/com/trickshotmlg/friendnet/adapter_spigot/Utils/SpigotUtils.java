@@ -1,8 +1,10 @@
 package com.trickshotmlg.friendnet.adapter_spigot.Utils;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
+import com.trickshotmlg.friendnet.adapter_spigot.Services.FriendGuiViewData;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -173,6 +175,35 @@ public final class SpigotUtils {
 
     public static ItemStack createPlayerHead(UUID playerId, String displayName, List<String> lore, String skinTexture, String skinSignature) {
         return createPlayerHead(playerId, displayName, lore, 1, skinTexture, skinSignature);
+    }
+
+    public static ItemStack createPlayerHead(
+            FriendNetPlugin plugin,
+            FriendGuiViewData viewData,
+            UUID playerId,
+            String displayName,
+            List<String> lore
+    ) {
+        PlayerSkin playerSkin = getCachedPlayerSkin(plugin, viewData, playerId);
+        return createPlayerHead(playerId, displayName, lore, playerSkin.texture(), playerSkin.signature());
+    }
+
+    private static PlayerSkin getCachedPlayerSkin(FriendNetPlugin plugin, FriendGuiViewData viewData, UUID playerId) {
+        ProxyFriendEntry proxyEntry = viewData != null ? viewData.proxyEntry(playerId) : null;
+        if (proxyEntry != null && proxyEntry.skinTexture() != null && !proxyEntry.skinTexture().isBlank()) {
+            return new PlayerSkin(proxyEntry.skinTexture(), proxyEntry.skinSignature());
+        }
+
+        if (plugin == null || plugin.isProxyBackendMode()) {
+            return PlayerSkin.EMPTY;
+        }
+
+        PlayerData playerData = getPlayerData(plugin, playerId);
+        if (playerData == null || playerData.getSkinTexture() == null || playerData.getSkinTexture().isBlank()) {
+            return PlayerSkin.EMPTY;
+        }
+
+        return new PlayerSkin(playerData.getSkinTexture(), playerData.getSkinSignature());
     }
 
     public static SkinData extractSkin(UUID playerId) {
@@ -469,5 +500,9 @@ public final class SpigotUtils {
     }
 
     public record SkinData(String texture, String signature) {
+    }
+
+    private record PlayerSkin(String texture, String signature) {
+        private static final PlayerSkin EMPTY = new PlayerSkin("", "");
     }
 }

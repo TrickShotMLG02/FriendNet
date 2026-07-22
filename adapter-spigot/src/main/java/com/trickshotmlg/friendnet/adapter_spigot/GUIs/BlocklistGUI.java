@@ -177,7 +177,7 @@ public class BlocklistGUI extends AbstractGUI {
 
     private ItemStack createBlockedPlayerItem(BlocklistData blockedPlayer) {
         UUID blockedId = blockedPlayer.getBlockedId();
-        return SpigotUtils.createPlayerHead(blockedId, getDisplayName(blockedId), createBlockedPlayerLore(blockedPlayer));
+        return SpigotUtils.createPlayerHead((FriendNetPlugin) plugin, currentViewData, blockedId, getDisplayName(blockedId), createBlockedPlayerLore(blockedPlayer));
     }
 
     private String getDisplayName(UUID playerId) {

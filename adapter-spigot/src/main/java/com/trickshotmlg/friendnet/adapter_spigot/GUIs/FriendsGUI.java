@@ -291,15 +291,7 @@ public class FriendsGUI extends AbstractGUI {
         PlayerData playerData = ((FriendNetPlugin) plugin).isProxyBackendMode()
                 ? null
                 : SpigotUtils.getPlayerData((FriendNetPlugin) plugin, friendID);
-        ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendID);
-        String skinTexture = proxyEntry != null
-                ? proxyEntry.skinTexture()
-                : playerData != null ? playerData.getSkinTexture() : "";
-        String skinSignature = proxyEntry != null
-                ? proxyEntry.skinSignature()
-                : playerData != null ? playerData.getSkinSignature() : "";
-
-        return SpigotUtils.createPlayerHead(friendID, friendName, createFriendLore(friend, friendID, playerData), skinTexture, skinSignature);
+        return SpigotUtils.createPlayerHead((FriendNetPlugin) plugin, currentViewData, friendID, friendName, createFriendLore(friend, friendID, playerData));
     }
 
     @Override
