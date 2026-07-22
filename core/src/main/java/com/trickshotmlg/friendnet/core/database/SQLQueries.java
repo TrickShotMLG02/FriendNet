@@ -72,6 +72,16 @@ public class SQLQueries {
                     "FROM players p LEFT JOIN player_settings s ON s.player_id = p.player_id " +
                     "WHERE p.player_id = ?";
 
+    public static final String TABLE_PLAYERS_SELECT_ALL =
+            "SELECT p.*, " +
+                    "COALESCE(s.allow_friend_requests, TRUE) AS allow_friend_requests, " +
+                    "COALESCE(s.show_online_status, TRUE) AS show_online_status, " +
+                    "COALESCE(s.auto_accept_friends, FALSE) AS auto_accept_friends, " +
+                    "COALESCE(s.friend_request_notifications, TRUE) AS friend_request_notifications, " +
+                    "COALESCE(s.friend_list_public, FALSE) AS friend_list_public, " +
+                    "COALESCE(s.locale, 'EN') AS locale " +
+                    "FROM players p LEFT JOIN player_settings s ON s.player_id = p.player_id";
+
     public static final String TABLE_PLAYERS_SELECT_BY_LAST_DISPLAY_NAME =
             "SELECT p.*, " +
                     "COALESCE(s.allow_friend_requests, TRUE) AS allow_friend_requests, " +

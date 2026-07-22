@@ -354,6 +354,7 @@ public class VelocityProxyMessagingService {
 
         playerData.setLastPlayerName(playerName);
         playerData.setLastDisplayName(displayName);
+        plugin.getApplicationServices().knownPlayerLookup().remember(playerData);
         plugin.getPlayerDataSaveQueue().markDirty(playerData);
 
         if (serverName.isBlank()) {

@@ -75,6 +75,7 @@ public class VelocityPlayerStatusListener {
             Logger.debug("Loaded player data on proxy join: " + playerData);
 
             playerService.putPlayerData(playerData);
+            plugin.getApplicationServices().knownPlayerLookup().remember(playerData);
             playerService.setOnline(playerId, playerData.isShowOnlineStatus());
             networkAuthorityService.setPresence(toPresence(velocityPlayer, playerData, true));
             playerDataSaveQueue.saveNow(playerData);

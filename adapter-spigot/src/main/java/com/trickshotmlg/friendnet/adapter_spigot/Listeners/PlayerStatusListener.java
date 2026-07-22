@@ -86,6 +86,7 @@ public class PlayerStatusListener extends AbstractListener {
                 playerData = initializedPlayerData;
             }
             playerService.putPlayerData(playerData);
+            plugin.getApplicationServices().knownPlayerLookup().remember(playerData);
             playerService.setOnline(playerId, playerData.isShowOnlineStatus());
             playerDataSaveQueue.saveNow(playerData);
 

@@ -88,6 +88,16 @@ public class VelocityFriendCommand implements SimpleCommand {
         }
 
         String[] arguments = invocation.arguments();
+        if (arguments.length == 1 && arguments[0] != null && !arguments[0].isBlank()) {
+            CommandPath candidatePath = FriendCommandDefinitions.FRIEND.append(arguments[0]);
+            if (registry.definition(candidatePath).isPresent()) {
+                List<String> completions = completeArgument(invocation.source(), candidatePath, List.of(""));
+                if (!completions.isEmpty()) {
+                    return completions;
+                }
+            }
+        }
+
         if (arguments.length <= 1) {
             String prefix = arguments.length == 0 ? "" : arguments[0].toLowerCase(Locale.ROOT);
             return completeSubcommands(invocation.source(), FriendCommandDefinitions.FRIEND, prefix);
@@ -119,6 +129,28 @@ public class VelocityFriendCommand implements SimpleCommand {
         }
         if (path.equals(FriendCommandDefinitions.CANCEL.path())) {
             return completeSentRequests(invocation.source(), resolvedCommand.args());
+        }
+        return List.of();
+    }
+
+    private List<String> completeArgument(CommandSource source, CommandPath path, List<String> args) {
+        if (path.equals(FriendCommandDefinitions.ADD.path())) {
+            return completeAdd(source, args);
+        }
+        if (path.equals(FriendCommandDefinitions.REMOVE.path())) {
+            return completeFriends(source, args);
+        }
+        if (path.equals(FriendCommandDefinitions.BLOCK.path())) {
+            return completeBlock(source, args);
+        }
+        if (path.equals(FriendCommandDefinitions.UNBLOCK.path())) {
+            return completeBlocked(source, args);
+        }
+        if (path.equals(FriendCommandDefinitions.ACCEPT.path()) || path.equals(FriendCommandDefinitions.DENY.path())) {
+            return completePendingRequests(source, args);
+        }
+        if (path.equals(FriendCommandDefinitions.CANCEL.path())) {
+            return completeSentRequests(source, args);
         }
         return List.of();
     }
@@ -482,20 +514,19 @@ public class VelocityFriendCommand implements SimpleCommand {
             return List.of();
         }
 
-        String prefix = args.get(0).toLowerCase();
-        return plugin.getServer().getAllPlayers().stream()
-                .filter(candidate -> !candidate.getUniqueId().equals(player.getUniqueId()))
-                .filter(candidate -> !plugin.getFriendService().areFriends(player.getUniqueId(), candidate.getUniqueId()))
-                .filter(candidate -> !plugin.getFriendService().requestPending(candidate.getUniqueId(), player.getUniqueId()))
-                .filter(candidate -> !plugin.getFriendService().requestPending(player.getUniqueId(), candidate.getUniqueId()))
+        return plugin.getApplicationServices().knownPlayerLookup()
+                .suggestOnlinePlayers(player.getUniqueId(), args.get(0))
+                .stream()
+                .map(name -> resolveTarget(plugin, name))
+                .flatMap(Optional::stream)
+                .filter(candidate -> !plugin.getFriendService().areFriends(player.getUniqueId(), candidate.playerId()))
+                .filter(candidate -> !plugin.getFriendService().requestPending(candidate.playerId(), player.getUniqueId()))
+                .filter(candidate -> !plugin.getFriendService().requestPending(player.getUniqueId(), candidate.playerId()))
                 .filter(candidate -> !plugin.getApplicationServices().blocklistService()
-                        .hasEitherBlocked(player.getUniqueId(), candidate.getUniqueId()))
-                .filter(candidate -> {
-                    PlayerData playerData = plugin.getPlayerService().getPlayerData(candidate.getUniqueId());
-                    return playerData == null || playerData.isAllowFriendRequests();
-                })
-                .map(Player::getUsername)
-                .filter(name -> name.toLowerCase().startsWith(prefix))
+                        .hasEitherBlocked(player.getUniqueId(), candidate.playerId()))
+                .filter(candidate -> candidate.playerData() == null || candidate.playerData().isAllowFriendRequests())
+                .map(candidate -> plugin.getApplicationServices().knownPlayerLookup().playerName(candidate.playerId()))
+                .distinct()
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }
@@ -507,7 +538,7 @@ public class VelocityFriendCommand implements SimpleCommand {
 
         Set<FriendshipData> friends = plugin.getFriendService().getFriendships(player.getUniqueId());
         return plugin.getApplicationServices().knownPlayerLookup()
-                .suggestFriendshipPlayers(friends, player.getUniqueId(), args.get(0));
+                .suggestFriendshipPlayerNames(friends, player.getUniqueId(), args.get(0));
     }
 
     private List<String> completeBlock(CommandSource source, List<String> args) {
@@ -533,8 +564,8 @@ public class VelocityFriendCommand implements SimpleCommand {
 
         return plugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId()).stream()
                 .map(BlocklistData::getBlockedId)
-                .map(playerId -> plugin.getApplicationServices().knownPlayerLookup().displayName(playerId))
-                .filter(name -> name.toLowerCase().startsWith(args.get(0).toLowerCase()))
+                .map(playerId -> plugin.getApplicationServices().knownPlayerLookup().playerName(playerId))
+                .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(args.get(0).toLowerCase(Locale.ROOT)))
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }
@@ -546,8 +577,8 @@ public class VelocityFriendCommand implements SimpleCommand {
 
         return plugin.getFriendService().getPendingRequests(player.getUniqueId()).stream()
                 .map(FriendshipData::getRequesterId)
-                .map(playerId -> plugin.getApplicationServices().knownPlayerLookup().displayName(playerId))
-                .filter(name -> name.toLowerCase().startsWith(args.get(0).toLowerCase()))
+                .map(playerId -> plugin.getApplicationServices().knownPlayerLookup().playerName(playerId))
+                .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(args.get(0).toLowerCase(Locale.ROOT)))
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }
@@ -559,7 +590,7 @@ public class VelocityFriendCommand implements SimpleCommand {
 
         List<String> targets = plugin.getFriendService().getSentRequests(player.getUniqueId()).stream()
                 .map(friendship -> friendship.getOtherPlayerId(player.getUniqueId()))
-                .map(playerId -> plugin.getApplicationServices().knownPlayerLookup().displayName(playerId))
+                .map(playerId -> plugin.getApplicationServices().knownPlayerLookup().playerName(playerId))
                 .toList();
         return completeKnownNames(
                 "all".startsWith(args.get(0).toLowerCase()) ? concat(targets, "all") : targets,

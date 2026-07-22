@@ -122,6 +122,7 @@ public final class FriendNetPlugin extends JavaPlugin {
             this.databaseService.init();
             this.databaseService.postInit();
             this.databaseService.start();
+            this.applicationServices.knownPlayerLookup().loadKnownPlayers();
             this.friendGuiService = new StandaloneFriendGuiService(this);
         } else {
             this.proxyMessagingClient = new SpigotProxyMessagingClient(this);

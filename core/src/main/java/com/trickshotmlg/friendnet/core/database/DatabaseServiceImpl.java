@@ -154,6 +154,27 @@ public class DatabaseServiceImpl implements DatabaseService {
     }
 
     @Override
+    public Set<PlayerData> findAllPlayerData() {
+        Set<PlayerData> players = new HashSet<>();
+
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_SELECT_ALL);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    players.add(mapPlayerData(rs));
+                }
+            } catch (SQLException e) {
+                Logger.error("Failed to fetch known player data", e);
+            }
+        } catch (SQLException e) {
+            Logger.error("Could not establish database connection", e);
+        }
+
+        return players;
+    }
+
+    @Override
     public Optional<PlayerData> findPlayerByLastPlayerName(String lastPlayerName) {
         if (lastPlayerName == null || lastPlayerName.isBlank()) {
             return Optional.empty();

@@ -182,6 +182,11 @@ public class ApplicationServiceTest extends TestCase {
         }
 
         @Override
+        public Set<PlayerData> findAllPlayerData() {
+            return Set.of();
+        }
+
+        @Override
         public Optional<PlayerData> findPlayerByLastDisplayName(String lastDisplayName) {
             return Optional.empty();
         }

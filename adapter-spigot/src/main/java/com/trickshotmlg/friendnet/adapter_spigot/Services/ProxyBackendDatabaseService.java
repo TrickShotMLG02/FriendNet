@@ -43,6 +43,12 @@ public class ProxyBackendDatabaseService implements DatabaseService {
     }
 
     @Override
+    public Set<PlayerData> findAllPlayerData() {
+        reportUnexpectedUse("findAllPlayerData");
+        return Set.of();
+    }
+
+    @Override
     public Optional<PlayerData> findPlayerByLastDisplayName(String lastDisplayName) {
         reportUnexpectedUse("findPlayerByLastDisplayName");
         return Optional.empty();

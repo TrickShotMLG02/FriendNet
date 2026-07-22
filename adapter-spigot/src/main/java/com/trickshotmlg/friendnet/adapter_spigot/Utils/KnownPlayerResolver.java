@@ -44,7 +44,7 @@ public final class KnownPlayerResolver {
             UUID viewerId,
             String prefix
     ) {
-        return createLookup(plugin).suggestFriendshipPlayers(friendships, viewerId, prefix);
+        return createLookup(plugin).suggestFriendshipPlayerNames(friendships, viewerId, prefix);
     }
 
     public static List<String> suggestOnlinePlayers(Player sender, String prefix) {

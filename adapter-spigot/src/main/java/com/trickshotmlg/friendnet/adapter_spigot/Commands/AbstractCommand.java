@@ -87,6 +87,14 @@ public abstract class AbstractCommand implements CommandExecutor, TabCompleter {
             return List.of();
         }
 
+        if (args.length == 1 && args[0] != null && !args[0].isBlank()) {
+            CommandPath candidatePath = primaryPath.append(args[0]);
+            TabCompletionHandler handler = tabCompletionHandlers.get(candidatePath);
+            if (handler != null && registry.definition(candidatePath).isPresent()) {
+                return handler.complete(sender, List.of(""));
+            }
+        }
+
         if (args.length <= 1) {
             String prefix = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
             return completeSubcommands(sender, primaryPath, prefix);

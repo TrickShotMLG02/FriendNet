@@ -135,6 +135,7 @@ public final class FriendNetVelocityPlugin {
         this.databaseService.init();
         this.databaseService.postInit();
         this.databaseService.start();
+        this.applicationServices.knownPlayerLookup().loadKnownPlayers();
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalSeconds());
         this.proxyMessagingService.register();
     }

@@ -317,20 +317,19 @@ public class FriendCommand extends AbstractCommand {
         }
 
         FriendNetPlugin plugin = getPlugin();
-        String prefix = args.get(0).toLowerCase();
-        return Bukkit.getOnlinePlayers().stream()
-                .filter(candidate -> !candidate.getUniqueId().equals(player.getUniqueId()))
-                .filter(candidate -> !plugin.getFriendService().areFriends(player.getUniqueId(), candidate.getUniqueId()))
-                .filter(candidate -> !plugin.getFriendService().requestPending(candidate.getUniqueId(), player.getUniqueId()))
-                .filter(candidate -> !plugin.getFriendService().requestPending(player.getUniqueId(), candidate.getUniqueId()))
+        return plugin.getApplicationServices().knownPlayerLookup()
+                .suggestOnlinePlayers(player.getUniqueId(), args.get(0))
+                .stream()
+                .map(name -> resolveTarget(plugin, name))
+                .flatMap(Optional::stream)
+                .filter(candidate -> !plugin.getFriendService().areFriends(player.getUniqueId(), candidate.playerId()))
+                .filter(candidate -> !plugin.getFriendService().requestPending(candidate.playerId(), player.getUniqueId()))
+                .filter(candidate -> !plugin.getFriendService().requestPending(player.getUniqueId(), candidate.playerId()))
                 .filter(candidate -> !plugin.getApplicationServices().blocklistService()
-                        .hasEitherBlocked(player.getUniqueId(), candidate.getUniqueId()))
-                .filter(candidate -> {
-                    PlayerData playerData = plugin.getPlayerService().getPlayerData(candidate.getUniqueId());
-                    return playerData == null || playerData.isAllowFriendRequests();
-                })
-                .map(Player::getName)
-                .filter(name -> name.toLowerCase().startsWith(prefix))
+                        .hasEitherBlocked(player.getUniqueId(), candidate.playerId()))
+                .filter(candidate -> candidate.playerData() == null || candidate.playerData().isAllowFriendRequests())
+                .map(candidate -> plugin.getApplicationServices().knownPlayerLookup().playerName(candidate.playerId()))
+                .distinct()
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }
@@ -342,7 +341,7 @@ public class FriendCommand extends AbstractCommand {
 
         Set<FriendshipData> friends = getPlugin().getFriendService().getFriendships(player.getUniqueId());
         return getPlugin().getApplicationServices().knownPlayerLookup()
-                .suggestFriendshipPlayers(friends, player.getUniqueId(), args.get(0));
+                .suggestFriendshipPlayerNames(friends, player.getUniqueId(), args.get(0));
     }
 
     private List<String> completeBlock(org.bukkit.command.CommandSender sender, List<String> args) {
@@ -369,8 +368,8 @@ public class FriendCommand extends AbstractCommand {
 
         return getPlugin().getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId()).stream()
                 .map(BlocklistData::getBlockedId)
-                .map(playerId -> getPlugin().getApplicationServices().knownPlayerLookup().displayName(playerId))
-                .filter(name -> name.toLowerCase().startsWith(args.get(0).toLowerCase()))
+                .map(playerId -> getPlugin().getApplicationServices().knownPlayerLookup().playerName(playerId))
+                .filter(name -> name.toLowerCase(java.util.Locale.ROOT).startsWith(args.get(0).toLowerCase(java.util.Locale.ROOT)))
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }
@@ -382,8 +381,8 @@ public class FriendCommand extends AbstractCommand {
 
         return getPlugin().getFriendService().getPendingRequests(player.getUniqueId()).stream()
                 .map(FriendshipData::getRequesterId)
-                .map(playerId -> getPlugin().getApplicationServices().knownPlayerLookup().displayName(playerId))
-                .filter(name -> name.toLowerCase().startsWith(args.get(0).toLowerCase()))
+                .map(playerId -> getPlugin().getApplicationServices().knownPlayerLookup().playerName(playerId))
+                .filter(name -> name.toLowerCase(java.util.Locale.ROOT).startsWith(args.get(0).toLowerCase(java.util.Locale.ROOT)))
                 .sorted(String.CASE_INSENSITIVE_ORDER)
                 .toList();
     }
@@ -395,7 +394,7 @@ public class FriendCommand extends AbstractCommand {
 
         List<String> targets = getPlugin().getFriendService().getSentRequests(player.getUniqueId()).stream()
                 .map(friendship -> friendship.getOtherPlayerId(player.getUniqueId()))
-                .map(playerId -> getPlugin().getApplicationServices().knownPlayerLookup().displayName(playerId))
+                .map(playerId -> getPlugin().getApplicationServices().knownPlayerLookup().playerName(playerId))
                 .toList();
         return completeKnownNames(
                 "all".startsWith(args.get(0).toLowerCase()) ? concat(targets, "all") : targets,
