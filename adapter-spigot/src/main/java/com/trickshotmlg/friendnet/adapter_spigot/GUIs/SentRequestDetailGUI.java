@@ -212,8 +212,14 @@ public class SentRequestDetailGUI extends AbstractGUI {
                         updateViewDataChain(viewData);
                     }
                     if (response.success()) {
-                        new SentRequestsGUI(plugin, player, viewData)
-                                .openWithParent(new RequestsGUI(plugin, player, viewData));
+                        SentRequestsGUI sentRequestsGUI = new SentRequestsGUI(plugin, player, viewData);
+                        if (parentGUI != null && parentGUI.parentGUI != null) {
+                            sentRequestsGUI.openWithParent(parentGUI.parentGUI);
+                        } else {
+                            RequestsGUI requestsGUI = new RequestsGUI(plugin, player, viewData);
+                            requestsGUI.parentGUI = new FriendsGUI(plugin, player, viewData);
+                            sentRequestsGUI.openWithParent(requestsGUI);
+                        }
                     } else {
                         buildInventory();
                     }
