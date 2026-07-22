@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityFriendStatusNot
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
+import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.models.NetworkPlayerPresence;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
@@ -26,6 +27,7 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyBackendGuiType;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewRequestPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessagePayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyMessageRecipient;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyOpenBackendGuiPayloadCodec;
@@ -100,6 +102,10 @@ public class VelocityProxyMessagingService {
     }
 
     public boolean openBackendGui(Player player, ProxyBackendGuiType guiType, Runnable fallback) {
+        return openBackendGui(player, guiType, null, fallback);
+    }
+
+    public boolean openBackendGui(Player player, ProxyBackendGuiType guiType, UUID viewedPlayerId, Runnable fallback) {
         ServerConnection connection = player.getCurrentServer().orElse(null);
         if (connection == null) {
             return false;
@@ -113,7 +119,7 @@ public class VelocityProxyMessagingService {
                 ProxyRequestType.OPEN_BACKEND_GUI,
                 player.getUniqueId(),
                 "velocity",
-                ProxyOpenBackendGuiPayloadCodec.encode(guiType)
+                ProxyOpenBackendGuiPayloadCodec.encode(guiType, viewedPlayerId)
         );
         ScheduledTask timeoutTask = plugin.getServer().getScheduler().buildTask(plugin, () -> {
             PendingBackendGuiRequest removed = pendingBackendGuiRequests.remove(request.correlationId());
@@ -302,13 +308,33 @@ public class VelocityProxyMessagingService {
     }
 
     private ProxyProtocolMessage handleFriendListView(ProxyProtocolMessage request, Player player) {
+        UUID viewedPlayerId = ProxyFriendListViewRequestPayloadCodec.decode(request.payload())
+                .orElse(request.playerId());
+        boolean ownList = viewedPlayerId.equals(request.playerId());
         ensurePermission(player, FriendCommandDefinitions.LIST);
+        if (!ownList && !PermissionHolder.FRIEND_LIST_OTHERS.anyParentGranted(player::hasPermission)) {
+            throw new ProxyProtocolException(ProxyErrorCode.PERMISSION_DENIED, "Player lacks permission: " + PermissionHolder.FRIEND_LIST_OTHERS.getPermissionPrefixed());
+        }
+        if (!ownList && !canViewFriendList(player, viewedPlayerId)) {
+            throw new ProxyProtocolException(ProxyErrorCode.PERMISSION_DENIED, "Player cannot view private friend list.");
+        }
         return ProxyProtocolCodec.response(
                 request,
                 ProxyResponseStatus.SUCCESS,
                 ProxyErrorCode.NONE,
-                ProxyFriendListViewPayloadCodec.encode(plugin.getApplicationServices().friendListViewPayload(request.playerId()))
+                ProxyFriendListViewPayloadCodec.encode(plugin.getApplicationServices().friendListViewPayload(request.playerId(), viewedPlayerId))
         );
+    }
+
+    private boolean canViewFriendList(Player viewer, UUID viewedPlayerId) {
+        if (PermissionHolder.FRIENDS_ADMIN.anyParentGranted(viewer::hasPermission)) {
+            return true;
+        }
+
+        return plugin.getDatabaseService()
+                .find(viewedPlayerId, PlayerData.class)
+                .map(PlayerData::isFriendListPublic)
+                .orElse(false);
     }
 
     private ProxyProtocolMessage handleDisplayNameUpdate(ProxyProtocolMessage request, Player player) {

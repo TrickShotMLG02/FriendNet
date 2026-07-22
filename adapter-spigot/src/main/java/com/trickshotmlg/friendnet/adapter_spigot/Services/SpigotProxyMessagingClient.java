@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Services;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.PublicFriendsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
@@ -27,6 +28,7 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdateP
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyDisplayNameUpdatePayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayloadCodec;
+import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewRequestPayloadCodec;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyOpenBackendGuiPayloadCodec;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.PluginMessageListener;
@@ -81,11 +83,17 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
     }
 
     public CompletableFuture<ProxyFriendListViewPayload> requestFriendListView(Player player) {
+        return requestFriendListView(player, player.getUniqueId());
+    }
+
+    public CompletableFuture<ProxyFriendListViewPayload> requestFriendListView(Player player, UUID viewedPlayerId) {
         ProxyProtocolMessage request = ProxyProtocolCodec.request(
                 ProxyRequestType.FRIEND_LIST_VIEW,
                 player.getUniqueId(),
                 "",
-                new byte[0]
+                viewedPlayerId == null || viewedPlayerId.equals(player.getUniqueId())
+                        ? new byte[0]
+                        : ProxyFriendListViewRequestPayloadCodec.encode(viewedPlayerId)
         );
 
         CompletableFuture<ProxyProtocolMessage> responseFuture = send(player, request);
@@ -257,8 +265,10 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
     }
 
     private void handleOpenBackendGui(Player player, ProxyProtocolMessage request) {
-        ProxyBackendGuiType guiType = ProxyOpenBackendGuiPayloadCodec.decode(request.payload());
-        plugin.getFriendGuiService().friendListView(player).whenComplete((viewData, throwable) ->
+        ProxyOpenBackendGuiPayloadCodec.ProxyOpenBackendGuiPayload guiRequest = ProxyOpenBackendGuiPayloadCodec.decodeRequest(request.payload());
+        ProxyBackendGuiType guiType = guiRequest.guiType();
+        UUID viewedPlayerId = guiRequest.viewedPlayerId().orElse(player.getUniqueId());
+        plugin.getFriendGuiService().friendListView(player, viewedPlayerId).whenComplete((viewData, throwable) ->
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                     if (throwable != null) {
                         Logger.warn("Could not open backend GUI from proxy request: " + throwable.getMessage());
@@ -269,6 +279,7 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
                     switch (guiType) {
                         case FRIENDS -> new FriendsGUI(plugin, player, viewData).open();
                         case REQUESTS -> new RequestsGUI(plugin, player, viewData).openWithParent(new FriendsGUI(plugin, player, viewData));
+                        case PUBLIC_FRIENDS -> new PublicFriendsGUI(plugin, player, viewedPlayerId, viewData).open();
                     }
                     sendProxyResponse(player, request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE);
                 })

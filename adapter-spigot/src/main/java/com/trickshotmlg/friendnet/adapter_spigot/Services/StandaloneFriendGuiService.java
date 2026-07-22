@@ -36,14 +36,24 @@ public class StandaloneFriendGuiService implements FriendGuiService {
 
     @Override
     public CompletableFuture<FriendGuiViewData> friendListView(Player player) {
+        return friendListView(player, player.getUniqueId());
+    }
+
+    @Override
+    public CompletableFuture<FriendGuiViewData> friendListView(Player player, UUID viewedPlayerId) {
         FriendListViewData viewData = plugin.getApplicationServices()
                 .friendCommandUseCases()
-                .listViewData(player.getUniqueId());
+                .listViewData(viewedPlayerId);
+        PlayerData viewedData = playerData(viewedPlayerId);
         return CompletableFuture.completedFuture(FriendGuiViewData.local(
                 viewData.friends(),
                 viewData.pendingRequests(),
                 plugin.getFriendService().getSentRequests(player.getUniqueId()).stream().toList(),
-                plugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId())
+                plugin.getApplicationServices().blocklistService().getBlockedPlayers(player.getUniqueId()),
+                viewedPlayerId,
+                plugin.getApplicationServices().knownPlayerLookup().displayName(viewedPlayerId),
+                viewedData != null ? viewedData.getFirstSeen() : null,
+                viewedData == null || viewedData.isFriendListPublic()
         ));
     }
 
@@ -56,7 +66,7 @@ public class StandaloneFriendGuiService implements FriendGuiService {
         FriendListViewData viewData = plugin.getApplicationServices()
                 .friendCommandUseCases()
                 .listViewData(playerId);
-        PlayerData viewerData = plugin.getPlayerService().getPlayerData(playerId);
+        PlayerData viewerData = playerData(playerId);
         return new ProxyFriendListViewPayload(
                 toFriendEntries(playerId, viewData.friends()),
                 toRequestEntries(playerId, viewData.pendingRequests()),
@@ -71,7 +81,12 @@ public class StandaloneFriendGuiService implements FriendGuiService {
                 viewerData != null && viewerData.isFriendListPublic(),
                 viewerData != null && viewerData.getLocale() != null
                         ? viewerData.getLocale().getCode()
-                        : defaultLocaleCode()
+                        : defaultLocaleCode(),
+                viewerData != null ? toMillis(viewerData.getFirstSeen()) : -1L,
+                playerId,
+                plugin.getApplicationServices().knownPlayerLookup().displayName(playerId),
+                viewerData != null ? toMillis(viewerData.getFirstSeen()) : -1L,
+                viewerData == null || viewerData.isFriendListPublic()
         );
     }
 
@@ -115,15 +130,7 @@ public class StandaloneFriendGuiService implements FriendGuiService {
             long friendSinceMillis,
             long blockedAtMillis
     ) {
-        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
-        if (playerData == null) {
-            playerData = plugin.getDatabaseService()
-                    .find(playerId, PlayerData.class)
-                    .orElse(null);
-            if (playerData != null) {
-                plugin.getPlayerService().putPlayerData(playerData);
-            }
-        }
+        PlayerData playerData = playerData(playerId);
         return new ProxyFriendEntry(
                 playerId,
                 plugin.getApplicationServices().knownPlayerLookup().displayName(playerId),
@@ -137,6 +144,19 @@ public class StandaloneFriendGuiService implements FriendGuiService {
                 blockedAtMillis,
                 playerData != null ? toMillis(playerData.getLastSeen()) : -1L
         );
+    }
+
+    private PlayerData playerData(UUID playerId) {
+        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+        if (playerData == null) {
+            playerData = plugin.getDatabaseService()
+                    .find(playerId, PlayerData.class)
+                    .orElse(null);
+            if (playerData != null) {
+                plugin.getPlayerService().putPlayerData(playerData);
+            }
+        }
+        return playerData;
     }
 
     private long toMillis(Timestamp timestamp) {

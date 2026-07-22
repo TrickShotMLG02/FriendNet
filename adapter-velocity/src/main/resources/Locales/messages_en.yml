@@ -99,8 +99,10 @@ blocklist:
 
 friendList:
   header: "&aYour friends:"
+  publicHeader: "&a%target%'s friends:"
   entry: "&e%target%"
   empty: "&cYour friend list is empty"
+  private: "&cThis player's friend list is private."
 
 requestList:
   pendingSummary: "&aYou have &e%count% &apending friend requests"

@@ -14,6 +14,7 @@ import com.trickshotmlg.friendnet.core.application.command.CommandUseCaseResult;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
 import com.trickshotmlg.friendnet.core.application.command.FriendListViewData;
+import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.interfaces.PermissionNode;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
@@ -130,6 +131,9 @@ public class VelocityFriendCommand implements SimpleCommand {
         if (path.equals(FriendCommandDefinitions.CANCEL.path())) {
             return completeSentRequests(invocation.source(), resolvedCommand.args());
         }
+        if (path.equals(FriendCommandDefinitions.SHOW.path())) {
+            return completeShow(invocation.source(), resolvedCommand.args());
+        }
         return List.of();
     }
 
@@ -151,6 +155,9 @@ public class VelocityFriendCommand implements SimpleCommand {
         }
         if (path.equals(FriendCommandDefinitions.CANCEL.path())) {
             return completeSentRequests(source, args);
+        }
+        if (path.equals(FriendCommandDefinitions.SHOW.path())) {
+            return completeShow(source, args);
         }
         return List.of();
     }
@@ -259,6 +266,7 @@ public class VelocityFriendCommand implements SimpleCommand {
         });
 
         registry.override(FriendCommandDefinitions.LIST.path(), (context, next) -> showFriends(plugin, context.senderId(), context.args()));
+        registry.override(FriendCommandDefinitions.SHOW.path(), (context, next) -> showPublicFriends(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.FRIENDS_ALIAS.path(), (context, next) -> showFriends(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.REQUESTS.path(), (context, next) -> showRequests(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) -> CommandFeedbackUseCases.proxyReloadUnavailable());
@@ -301,6 +309,65 @@ public class VelocityFriendCommand implements SimpleCommand {
             result.message(com.trickshotmlg.friendnet.core.application.command.CommandMessage.sender(
                     "friendList.entry",
                     java.util.Map.of("target", plugin.getApplicationServices().knownPlayerLookup().displayName(friendId))
+            ));
+        }
+        return result.build();
+    }
+
+    private static CommandUseCaseResult showPublicFriends(FriendNetVelocityPlugin plugin, UUID senderId, List<String> args) {
+        if (args.size() != 1) {
+            return CommandFeedbackUseCases.usage(FriendCommandDefinitions.SHOW.usage());
+        }
+
+        Optional<KnownPlayerLookup.KnownPlayer> target = resolveTarget(plugin, args.get(0));
+        if (target.isEmpty()) {
+            return CommandFeedbackUseCases.playerNotFound();
+        }
+
+        Player viewer = plugin.getServer().getPlayer(senderId).orElse(null);
+        if (viewer == null) {
+            return CommandFeedbackUseCases.playersOnly();
+        }
+
+        UUID viewedPlayerId = target.get().playerId();
+        if (viewedPlayerId.equals(senderId)) {
+            return showFriends(plugin, senderId, List.of());
+        }
+
+        if (!PermissionHolder.FRIEND_LIST_OTHERS.anyParentGranted(viewer::hasPermission)) {
+            return CommandFeedbackUseCases.noPermission();
+        }
+
+        boolean admin = PermissionHolder.FRIENDS_ADMIN.anyParentGranted(viewer::hasPermission);
+        PlayerData viewedData = target.get().playerData();
+        if (!admin && (viewedData == null || !viewedData.isFriendListPublic())) {
+            return CommandFeedbackUseCases.friendListPrivate();
+        }
+
+        if (requestBackendGui(plugin, senderId, ProxyBackendGuiType.PUBLIC_FRIENDS, viewedPlayerId, () -> renderPublicFriendsText(plugin, senderId, viewedPlayerId))) {
+            return CommandUseCaseResult.builder(true).build();
+        }
+
+        return publicFriendsText(plugin, viewedPlayerId);
+    }
+
+    private static CommandUseCaseResult publicFriendsText(FriendNetVelocityPlugin plugin, UUID viewedPlayerId) {
+        FriendListViewData viewData = plugin.getApplicationServices().friendCommandUseCases().listViewData(viewedPlayerId);
+        if (viewData.friends().isEmpty()) {
+            return CommandUseCaseResult.builder(false)
+                    .message(com.trickshotmlg.friendnet.core.application.command.CommandMessage.sender("friendList.empty"))
+                    .build();
+        }
+
+        CommandUseCaseResult.Builder result = CommandUseCaseResult.builder(true)
+                .message(com.trickshotmlg.friendnet.core.application.command.CommandMessage.sender(
+                        "friendList.publicHeader",
+                        java.util.Map.of("target", plugin.getApplicationServices().knownPlayerLookup().displayName(viewedPlayerId))
+                ));
+        for (FriendEntry friend : viewData.friends()) {
+            result.message(com.trickshotmlg.friendnet.core.application.command.CommandMessage.sender(
+                    "friendList.entry",
+                    java.util.Map.of("target", plugin.getApplicationServices().knownPlayerLookup().displayName(friend.friendId()))
             ));
         }
         return result.build();
@@ -350,7 +417,17 @@ public class VelocityFriendCommand implements SimpleCommand {
         );
     }
 
+    private static void renderPublicFriendsText(FriendNetVelocityPlugin plugin, UUID senderId, UUID viewedPlayerId) {
+        plugin.getServer().getPlayer(senderId).ifPresent(player ->
+                VelocityCommandResultRenderer.render(plugin, player, publicFriendsText(plugin, viewedPlayerId))
+        );
+    }
+
     private static boolean requestBackendGui(FriendNetVelocityPlugin plugin, UUID senderId, ProxyBackendGuiType guiType, Runnable fallback) {
+        return requestBackendGui(plugin, senderId, guiType, null, fallback);
+    }
+
+    private static boolean requestBackendGui(FriendNetVelocityPlugin plugin, UUID senderId, ProxyBackendGuiType guiType, UUID viewedPlayerId, Runnable fallback) {
         if (senderId == null) {
             return false;
         }
@@ -360,7 +437,7 @@ public class VelocityFriendCommand implements SimpleCommand {
             return false;
         }
 
-        return plugin.getProxyMessagingService().openBackendGui(player, guiType, fallback);
+        return plugin.getProxyMessagingService().openBackendGui(player, guiType, viewedPlayerId, fallback);
     }
 
     private ResolvedCommand resolve(String label, String[] args) {
@@ -596,6 +673,15 @@ public class VelocityFriendCommand implements SimpleCommand {
                 "all".startsWith(args.get(0).toLowerCase()) ? concat(targets, "all") : targets,
                 args.get(0)
         );
+    }
+
+    private List<String> completeShow(CommandSource source, List<String> args) {
+        if (args.size() != 1 || !(source instanceof Player player)) {
+            return List.of();
+        }
+
+        return plugin.getApplicationServices().knownPlayerLookup()
+                .suggestOnlinePlayers(player.getUniqueId(), args.get(0));
     }
 
     private List<String> completeKnownNames(Collection<String> names, String prefix) {

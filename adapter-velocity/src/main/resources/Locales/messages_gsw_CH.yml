@@ -99,8 +99,10 @@ blocklist:
 
 friendList:
   header: "&aDini Fründe:"
+  publicHeader: "&a%target%s Fruende:"
   entry: "&e%target%"
   empty: "&cDini Fründesliste isch leer"
+  private: "&cD Fruendesliste vo dem Spieler isch privat."
 
 requestList:
   pendingSummary: "&aDu hesch &e%count% &aoffeni Fründschaftsafrage"

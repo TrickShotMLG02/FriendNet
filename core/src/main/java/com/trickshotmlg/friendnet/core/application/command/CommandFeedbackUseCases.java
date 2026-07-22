@@ -31,6 +31,12 @@ public final class CommandFeedbackUseCases {
                 .build();
     }
 
+    public static CommandUseCaseResult friendListPrivate() {
+        return CommandUseCaseResult.builder(false)
+                .message(CommandMessage.sender("friendList.private"))
+                .build();
+    }
+
     public static CommandUseCaseResult reload(boolean success) {
         return CommandUseCaseResult.builder(success)
                 .message(CommandMessage.sender(success ? "configReloadSuccess" : "configReloadError"))

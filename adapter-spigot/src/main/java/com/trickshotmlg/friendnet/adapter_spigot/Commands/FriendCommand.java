@@ -2,6 +2,7 @@ package com.trickshotmlg.friendnet.adapter_spigot.Commands;
 
 import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
+import com.trickshotmlg.friendnet.adapter_spigot.GUIs.PublicFriendsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotCommandResultRenderer;
@@ -14,6 +15,7 @@ import com.trickshotmlg.friendnet.core.application.command.CommandUsageFormatter
 import com.trickshotmlg.friendnet.core.application.command.CommandUseCaseResult;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandUseCases;
+import com.trickshotmlg.friendnet.core.permissions.PermissionHolder;
 import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
@@ -38,6 +40,7 @@ public class FriendCommand extends AbstractCommand {
         registerTabCompletion(FriendCommandDefinitions.ACCEPT.path(), this::completePendingRequests);
         registerTabCompletion(FriendCommandDefinitions.DENY.path(), this::completePendingRequests);
         registerTabCompletion(FriendCommandDefinitions.CANCEL.path(), this::completeSentRequests);
+        registerTabCompletion(FriendCommandDefinitions.SHOW.path(), this::completeShow);
 
         register(plugin, "friend");
         register(plugin, "friends");
@@ -152,6 +155,7 @@ public class FriendCommand extends AbstractCommand {
         });
 
         registry.override(FriendCommandDefinitions.LIST.path(), (context, next) -> openFriendsGui(plugin, context.senderId(), context.args()));
+        registry.override(FriendCommandDefinitions.SHOW.path(), (context, next) -> openPublicFriendsGui(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.FRIENDS_ALIAS.path(), (context, next) -> openFriendsGui(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.REQUESTS.path(), (context, next) -> openRequestsGui(plugin, context.senderId(), context.args()));
         registry.override(FriendCommandDefinitions.RELOAD.path(), (context, next) ->
@@ -334,6 +338,51 @@ public class FriendCommand extends AbstractCommand {
                 .toList();
     }
 
+    private static CommandUseCaseResult openPublicFriendsGui(FriendNetPlugin plugin, UUID senderId, List<String> args) {
+        if (args.size() != 1) {
+            return CommandFeedbackUseCases.usage(FriendCommandDefinitions.SHOW.usage());
+        }
+
+        Player player = Bukkit.getPlayer(senderId);
+        if (player == null) {
+            return CommandFeedbackUseCases.playersOnly();
+        }
+
+        Optional<KnownPlayerLookup.KnownPlayer> target = resolveTarget(plugin, args.get(0));
+        if (target.isEmpty()) {
+            return CommandFeedbackUseCases.playerNotFound();
+        }
+
+        UUID viewedPlayerId = target.get().playerId();
+        if (viewedPlayerId.equals(player.getUniqueId())) {
+            return openFriendsGui(plugin, senderId, List.of());
+        }
+
+        if (!PermissionHolder.FRIEND_LIST_OTHERS.has(new SpigotPlayer(player))) {
+            return CommandFeedbackUseCases.noPermission();
+        }
+
+        if (!plugin.isProxyBackendMode()) {
+            PlayerData viewedData = target.get().playerData();
+            boolean admin = PermissionHolder.FRIENDS_ADMIN.has(new SpigotPlayer(player));
+            if (!admin && (viewedData == null || !viewedData.isFriendListPublic())) {
+                return CommandFeedbackUseCases.friendListPrivate();
+            }
+        }
+
+        plugin.getFriendGuiService().friendListView(player, viewedPlayerId).whenComplete((viewData, throwable) ->
+                Bukkit.getScheduler().runTask(plugin, () -> {
+                    if (throwable != null) {
+                        SpigotCommandResultRenderer.render(player, CommandFeedbackUseCases.proxyBackendGuiUnavailable());
+                        return;
+                    }
+
+                    new PublicFriendsGUI(plugin, player, viewedPlayerId, viewData).open();
+                })
+        );
+        return CommandUseCaseResult.builder(true).build();
+    }
+
     private List<String> completeFriends(org.bukkit.command.CommandSender sender, List<String> args) {
         if (args.size() != 1 || !(sender instanceof Player player)) {
             return List.of();
@@ -400,6 +449,15 @@ public class FriendCommand extends AbstractCommand {
                 "all".startsWith(args.get(0).toLowerCase()) ? concat(targets, "all") : targets,
                 args.get(0)
         );
+    }
+
+    private List<String> completeShow(org.bukkit.command.CommandSender sender, List<String> args) {
+        if (args.size() != 1 || !(sender instanceof Player player)) {
+            return List.of();
+        }
+
+        return getPlugin().getApplicationServices().knownPlayerLookup()
+                .suggestOnlinePlayers(player.getUniqueId(), args.get(0));
     }
 
     private List<String> concat(List<String> values, String value) {

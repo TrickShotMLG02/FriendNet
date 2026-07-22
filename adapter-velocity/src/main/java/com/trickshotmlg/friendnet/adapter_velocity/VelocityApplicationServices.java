@@ -14,6 +14,7 @@ import com.trickshotmlg.friendnet.core_api.models.FriendEntry;
 import com.trickshotmlg.friendnet.core_api.models.FriendshipData;
 import com.trickshotmlg.friendnet.core_api.models.LocaleKey;
 import com.trickshotmlg.friendnet.core_api.models.NetworkPlayerPresence;
+import com.trickshotmlg.friendnet.core_api.models.BlocklistData;
 import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendEntry;
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyFriendListViewPayload;
@@ -152,14 +153,23 @@ public class VelocityApplicationServices {
     }
 
     public ProxyFriendListViewPayload friendListViewPayload(UUID viewerId) {
-        FriendListViewData viewData = friendCommandUseCases.listViewData(viewerId);
+        return friendListViewPayload(viewerId, viewerId);
+    }
+
+    public ProxyFriendListViewPayload friendListViewPayload(UUID viewerId, UUID viewedPlayerId) {
+        boolean ownList = viewerId.equals(viewedPlayerId);
+        FriendListViewData viewData = friendCommandUseCases.listViewData(viewedPlayerId);
         PlayerData viewerData = plugin.getPlayerService().getPlayerData(viewerId);
+        PlayerData viewedData = playerData(viewedPlayerId);
         return new ProxyFriendListViewPayload(
                 toFriendEntries(viewerId, viewData.friends()),
-                toRequestEntries(viewerId, viewData.pendingRequests()),
+                ownList
+                        ? toRequestEntries(viewerId, viewData.pendingRequests())
+                        : toRequestEntries(viewerId, plugin.getFriendService().getPendingRequests(viewerId).stream().toList()),
                 toRequestEntries(viewerId, plugin.getFriendService().getSentRequests(viewerId).stream().toList()),
-                blocklistService.getBlockedPlayers(viewerId).stream()
+                (ownList ? blocklistService.getBlockedPlayers(viewerId).stream() : java.util.stream.Stream.<BlocklistData>empty())
                         .map(blockedPlayer -> toEntry(
+                                viewerId,
                                 blockedPlayer.getBlockedId(),
                                 false,
                                 -1L,
@@ -175,7 +185,11 @@ public class VelocityApplicationServices {
                 viewerData != null && viewerData.getLocale() != null
                         ? viewerData.getLocale().getCode()
                         : defaultLocaleCode(),
-                viewerData != null ? toMillis(viewerData.getFirstSeen()) : -1L
+                viewerData != null ? toMillis(viewerData.getFirstSeen()) : -1L,
+                viewedPlayerId,
+                knownPlayerLookup.displayName(viewedPlayerId),
+                viewedData != null ? toMillis(viewedData.getFirstSeen()) : -1L,
+                viewedData == null || viewedData.isFriendListPublic()
         );
     }
 
@@ -187,6 +201,7 @@ public class VelocityApplicationServices {
     private List<ProxyFriendEntry> toFriendEntries(UUID viewerId, List<FriendEntry> friends) {
         return friends.stream()
                 .map(friend -> toEntry(
+                        viewerId,
                         friend.friendId(),
                         friend.favourite(),
                         toMillis(friend.getRequestSentTime()),
@@ -199,6 +214,7 @@ public class VelocityApplicationServices {
     private List<ProxyFriendEntry> toRequestEntries(UUID viewerId, List<FriendshipData> friendships) {
         return friendships.stream()
                 .map(friendship -> toEntry(
+                        viewerId,
                         friendship.getOtherPlayerId(viewerId),
                         false,
                         toMillis(friendship.getRequestSentTime()),
@@ -209,21 +225,14 @@ public class VelocityApplicationServices {
     }
 
     private ProxyFriendEntry toEntry(
+            UUID viewerId,
             UUID playerId,
             boolean favourite,
             long requestSentTimeMillis,
             long friendSinceMillis,
             long blockedAtMillis
     ) {
-        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
-        if (playerData == null) {
-            playerData = plugin.getDatabaseService()
-                    .find(playerId, PlayerData.class)
-                    .orElse(null);
-            if (playerData != null) {
-                plugin.getPlayerService().putPlayerData(playerData);
-            }
-        }
+        PlayerData playerData = playerData(playerId);
         Optional<NetworkPlayerPresence> presence = plugin.getNetworkAuthorityService().getPresence(playerId);
         String displayName = presence
                 .map(NetworkPlayerPresence::displayName)
@@ -248,8 +257,24 @@ public class VelocityApplicationServices {
                 requestSentTimeMillis,
                 friendSinceMillis,
                 blockedAtMillis,
-                lastSeenMillis
+                lastSeenMillis,
+                plugin.getFriendService().areFriends(viewerId, playerId),
+                plugin.getFriendService().requestPending(viewerId, playerId),
+                plugin.getFriendService().requestPending(playerId, viewerId)
         );
+    }
+
+    private PlayerData playerData(UUID playerId) {
+        PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+        if (playerData == null) {
+            playerData = plugin.getDatabaseService()
+                    .find(playerId, PlayerData.class)
+                    .orElse(null);
+            if (playerData != null) {
+                plugin.getPlayerService().putPlayerData(playerData);
+            }
+        }
+        return playerData;
     }
 
     private String serverNameForEntry(Optional<NetworkPlayerPresence> presence, PlayerData playerData, boolean online) {

@@ -28,7 +28,11 @@ public record FriendGuiViewData(
         boolean friendRequestNotifications,
         boolean friendListPublic,
         String localeCode,
-        Timestamp viewerFirstSeen
+        Timestamp viewerFirstSeen,
+        UUID viewedPlayerId,
+        String viewedDisplayName,
+        Timestamp viewedFirstSeen,
+        boolean viewedFriendListPublic
 ) {
     public FriendGuiViewData {
         friends = friends == null ? List.of() : List.copyOf(friends);
@@ -37,6 +41,7 @@ public record FriendGuiViewData(
         blockedPlayers = blockedPlayers == null ? List.of() : List.copyOf(blockedPlayers);
         proxyEntries = proxyEntries == null ? Map.of() : Map.copyOf(proxyEntries);
         localeCode = localeCode == null || localeCode.isBlank() ? defaultLocaleCode() : localeCode;
+        viewedDisplayName = viewedDisplayName == null ? "" : viewedDisplayName;
     }
 
     public static FriendGuiViewData local(List<FriendEntry> friends, List<FriendshipData> pendingRequests) {
@@ -49,7 +54,37 @@ public record FriendGuiViewData(
             List<FriendshipData> sentRequests,
             List<BlocklistData> blockedPlayers
     ) {
-        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, Map.of(), true, true, false, true, false, defaultLocaleCode(), null);
+        return local(friends, pendingRequests, sentRequests, blockedPlayers, null, "", null, true);
+    }
+
+    public static FriendGuiViewData local(
+            List<FriendEntry> friends,
+            List<FriendshipData> pendingRequests,
+            List<FriendshipData> sentRequests,
+            List<BlocklistData> blockedPlayers,
+            UUID viewedPlayerId,
+            String viewedDisplayName,
+            Timestamp viewedFirstSeen,
+            boolean viewedFriendListPublic
+    ) {
+        return new FriendGuiViewData(
+                friends,
+                pendingRequests,
+                sentRequests,
+                blockedPlayers,
+                Map.of(),
+                true,
+                true,
+                false,
+                true,
+                false,
+                defaultLocaleCode(),
+                viewedFirstSeen,
+                viewedPlayerId,
+                viewedDisplayName,
+                viewedFirstSeen,
+                viewedFriendListPublic
+        );
     }
 
     public static FriendGuiViewData fromProxyPayload(UUID viewerId, ProxyFriendListViewPayload payload) {
@@ -106,7 +141,11 @@ public record FriendGuiViewData(
                 payload.friendRequestNotifications(),
                 payload.friendListPublic(),
                 payload.localeCode(),
-                timestamp(payload.viewerFirstSeenMillis())
+                timestamp(payload.viewerFirstSeenMillis()),
+                payload.viewedPlayerId(),
+                payload.viewedDisplayName(),
+                timestamp(payload.viewedFirstSeenMillis()),
+                payload.viewedFriendListPublic()
         );
     }
 

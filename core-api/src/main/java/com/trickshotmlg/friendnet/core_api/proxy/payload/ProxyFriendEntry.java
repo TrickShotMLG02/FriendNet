@@ -13,7 +13,10 @@ public record ProxyFriendEntry(
         long requestSentTimeMillis,
         long friendSinceMillis,
         long blockedAtMillis,
-        long lastSeenMillis
+        long lastSeenMillis,
+        boolean friendOfViewer,
+        boolean requestSentByViewer,
+        boolean requestReceivedByViewer
 ) {
     public ProxyFriendEntry {
         if (playerId == null) {
@@ -23,6 +26,37 @@ public record ProxyFriendEntry(
         skinTexture = skinTexture == null ? "" : skinTexture;
         skinSignature = skinSignature == null ? "" : skinSignature;
         currentServerName = currentServerName == null ? "" : currentServerName;
+    }
+
+    public ProxyFriendEntry(
+            UUID playerId,
+            String displayName,
+            String skinTexture,
+            String skinSignature,
+            boolean online,
+            String currentServerName,
+            boolean favourite,
+            long requestSentTimeMillis,
+            long friendSinceMillis,
+            long blockedAtMillis,
+            long lastSeenMillis
+    ) {
+        this(
+                playerId,
+                displayName,
+                skinTexture,
+                skinSignature,
+                online,
+                currentServerName,
+                favourite,
+                requestSentTimeMillis,
+                friendSinceMillis,
+                blockedAtMillis,
+                lastSeenMillis,
+                false,
+                false,
+                false
+        );
     }
 
     public ProxyFriendEntry(
@@ -47,7 +81,10 @@ public record ProxyFriendEntry(
                 requestSentTimeMillis,
                 friendSinceMillis,
                 blockedAtMillis,
-                lastSeenMillis
+                lastSeenMillis,
+                false,
+                false,
+                false
         );
     }
 }

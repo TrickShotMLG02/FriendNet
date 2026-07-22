@@ -4,11 +4,16 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPaylo
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import org.bukkit.entity.Player;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public interface FriendGuiService {
 
     CompletableFuture<FriendGuiViewData> friendListView(Player player);
+
+    default CompletableFuture<FriendGuiViewData> friendListView(Player player, UUID viewedPlayerId) {
+        return friendListView(player);
+    }
 
     CompletableFuture<ProxyActionResponsePayload> executeAction(Player player, ProxyActionRequestPayload actionRequest);
 }

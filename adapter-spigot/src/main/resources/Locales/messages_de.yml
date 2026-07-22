@@ -130,6 +130,9 @@ playerSettings:
 
 # Friend request list display
 
+friendList:
+  private: '&cDie Freundesliste dieses Spielers ist privat.'
+
 requestList:
   pendingSummary: '&aDu hast &e%count% &aausstehende Freundschaftsanfragen'
   header: '&aDu hast ausstehende Freundschaftsanfragen von folgenden Spielern:'

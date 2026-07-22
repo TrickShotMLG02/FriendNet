@@ -32,6 +32,14 @@ public final class ProxyFriendListViewPayloadCodec {
                 output.writeBoolean(payload.friendListPublic());
                 output.writeUTF(payload.localeCode());
                 output.writeLong(payload.viewerFirstSeenMillis());
+                output.writeBoolean(payload.viewedPlayerId() != null);
+                if (payload.viewedPlayerId() != null) {
+                    output.writeLong(payload.viewedPlayerId().getMostSignificantBits());
+                    output.writeLong(payload.viewedPlayerId().getLeastSignificantBits());
+                }
+                output.writeUTF(payload.viewedDisplayName());
+                output.writeLong(payload.viewedFirstSeenMillis());
+                output.writeBoolean(payload.viewedFriendListPublic());
             }
             return bytes.toByteArray();
         } catch (IOException e) {
@@ -41,18 +49,49 @@ public final class ProxyFriendListViewPayloadCodec {
 
     public static ProxyFriendListViewPayload decode(byte[] data) {
         try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(data))) {
+            List<ProxyFriendEntry> friends = readEntries(input);
+            List<ProxyFriendEntry> pendingRequests = readEntries(input);
+            List<ProxyFriendEntry> sentRequests = readEntries(input);
+            List<ProxyFriendEntry> blockedPlayers = readEntries(input);
+            boolean allowFriendRequests = input.readBoolean();
+            boolean showOnlineStatus = input.readBoolean();
+            boolean autoAcceptFriends = input.readBoolean();
+            boolean friendRequestNotifications = input.readBoolean();
+            boolean friendListPublic = input.readBoolean();
+            String localeCode = input.readUTF();
+            long viewerFirstSeenMillis = input.readLong();
+            UUID viewedPlayerId = null;
+            String viewedDisplayName = "";
+            long viewedFirstSeenMillis = -1L;
+            boolean viewedFriendListPublic = true;
+            if (input.available() > 0 && input.readBoolean()) {
+                viewedPlayerId = new UUID(input.readLong(), input.readLong());
+            }
+            if (input.available() > 0) {
+                viewedDisplayName = input.readUTF();
+            }
+            if (input.available() > 0) {
+                viewedFirstSeenMillis = input.readLong();
+            }
+            if (input.available() > 0) {
+                viewedFriendListPublic = input.readBoolean();
+            }
             return new ProxyFriendListViewPayload(
-                    readEntries(input),
-                    readEntries(input),
-                    readEntries(input),
-                    readEntries(input),
-                    input.readBoolean(),
-                    input.readBoolean(),
-                    input.readBoolean(),
-                    input.readBoolean(),
-                    input.readBoolean(),
-                    input.readUTF(),
-                    input.readLong()
+                    friends,
+                    pendingRequests,
+                    sentRequests,
+                    blockedPlayers,
+                    allowFriendRequests,
+                    showOnlineStatus,
+                    autoAcceptFriends,
+                    friendRequestNotifications,
+                    friendListPublic,
+                    localeCode,
+                    viewerFirstSeenMillis,
+                    viewedPlayerId,
+                    viewedDisplayName,
+                    viewedFirstSeenMillis,
+                    viewedFriendListPublic
             );
         } catch (IOException | RuntimeException e) {
             throw new ProxyProtocolException(ProxyErrorCode.BAD_REQUEST, "Could not decode friend list payload.", e);
@@ -74,6 +113,9 @@ public final class ProxyFriendListViewPayloadCodec {
             output.writeLong(entry.friendSinceMillis());
             output.writeLong(entry.blockedAtMillis());
             output.writeLong(entry.lastSeenMillis());
+            output.writeBoolean(entry.friendOfViewer());
+            output.writeBoolean(entry.requestSentByViewer());
+            output.writeBoolean(entry.requestReceivedByViewer());
         }
     }
 
@@ -96,6 +138,14 @@ public final class ProxyFriendListViewPayloadCodec {
             long friendSinceMillis = input.readLong();
             long blockedAtMillis = input.readLong();
             long lastSeenMillis = input.readLong();
+            boolean friendOfViewer = false;
+            boolean requestSentByViewer = false;
+            boolean requestReceivedByViewer = false;
+            if (input.available() > 0) {
+                friendOfViewer = input.readBoolean();
+                requestSentByViewer = input.readBoolean();
+                requestReceivedByViewer = input.readBoolean();
+            }
             entries.add(new ProxyFriendEntry(
                     playerId,
                     displayName,
@@ -107,7 +157,10 @@ public final class ProxyFriendListViewPayloadCodec {
                     requestSentTimeMillis,
                     friendSinceMillis,
                     blockedAtMillis,
-                    lastSeenMillis
+                    lastSeenMillis,
+                    friendOfViewer,
+                    requestSentByViewer,
+                    requestReceivedByViewer
             ));
         }
         return entries;

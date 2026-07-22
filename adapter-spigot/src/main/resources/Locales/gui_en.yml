@@ -19,6 +19,8 @@ titles:
   friendRequestDetailGUI: "%target%'s Request"
   sentRequestsGUI: "Sent Requests"
   sentRequestDetailGUI: "Request to %target%"
+  publicFriendsGUI: "%target%'s Friends"
+  publicFriendActionGUI: "%target%"
   confirmationGUI: "Confirm Action"
 
 # Buttons / Items
@@ -149,6 +151,17 @@ friendsGUI:
     totalFriends: "&7Total Friends: &e%count%"
     totalRequests: "&7Total Requests: &e%count%"
     firstSeen: "&7First seen: %date%"
+
+publicFriendsGUI:
+  emptyListMessage: "&cThis player has no public friends."
+  emptyPrivateListMessage: "&cThis player has no friends."
+
+publicFriendActionGUI:
+  buttons:
+    add:
+      displayName: "&aSend Friend Request"
+      lore:
+        - "&7Send this player a friend request."
 
 # Friend Entry Lore
 friendEntries:

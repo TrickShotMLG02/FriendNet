@@ -95,6 +95,14 @@ public final class FriendCommandDefinitions {
             .platformSpecific(true)
             .build();
 
+    public static final CommandDefinition SHOW = CommandDefinition.builder(FRIEND.append("show"))
+            .description("Shows another player's public friend list")
+            .usage("/friend show <player>")
+            .permission(PermissionHolder.FRIEND_LIST)
+            .playerOnly(true)
+            .platformSpecific(true)
+            .build();
+
     public static final CommandDefinition FRIENDS_ALIAS = CommandDefinition.builder(FRIENDS)
             .description("Shows all your friends")
             .usage("/friends")
@@ -156,6 +164,7 @@ public final class FriendCommandDefinitions {
                 CANCEL,
                 REQUESTS,
                 LIST,
+                SHOW,
                 FRIENDS_ALIAS,
                 RELOAD,
                 PROXY,

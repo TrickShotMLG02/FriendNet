@@ -2,5 +2,6 @@ package com.trickshotmlg.friendnet.core_api.proxy.payload;
 
 public enum ProxyBackendGuiType {
     FRIENDS,
-    REQUESTS
+    REQUESTS,
+    PUBLIC_FRIENDS
 }

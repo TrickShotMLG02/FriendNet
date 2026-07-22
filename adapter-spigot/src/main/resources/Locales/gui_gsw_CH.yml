@@ -19,6 +19,8 @@ titles:
   friendRequestDetailGUI: "Afraag vo %target%"
   sentRequestsGUI: "Gschickti Afrage"
   sentRequestDetailGUI: "Afraag a %target%"
+  publicFriendsGUI: "%target%'s Fruende"
+  publicFriendActionGUI: "%target%"
   confirmationGUI: "Aktion bestätige"
 
 # Buttons / Items
@@ -149,6 +151,17 @@ friendsGUI:
     totalFriends: "&7Fründe total: &e%count%"
     totalRequests: "&7Afrage total: &e%count%"
     firstSeen: "&7S erscht Mol gseh: %date%"
+
+publicFriendsGUI:
+  emptyListMessage: "&cDe Spieler het kei oeffentligi Fruende."
+  emptyPrivateListMessage: "&cDe Spieler het kei Fruende."
+
+publicFriendActionGUI:
+  buttons:
+    add:
+      displayName: "&aFruendschaftsafraag schicke"
+      lore:
+        - "&7Schick dem Spieler e Fruendschaftsafraag."
 
 # Friend Entry Lore
 friendEntries:

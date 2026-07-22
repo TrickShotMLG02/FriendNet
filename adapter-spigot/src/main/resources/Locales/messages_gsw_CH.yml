@@ -130,6 +130,9 @@ playerSettings:
 
 # Friend request list display
 
+friendList:
+  private: '&cD Fruendesliste vo dem Spieler isch privat.'
+
 requestList:
   pendingSummary: '&aDu hesch &e%count% &aoffeni Fründschaftsafrage'
   header: '&aDu hesch offeni Fründschaftsafrage vo dene Spieler:'

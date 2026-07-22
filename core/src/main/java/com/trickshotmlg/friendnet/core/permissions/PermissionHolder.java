@@ -23,6 +23,7 @@ public class PermissionHolder {
     public static final Permission FRIENDS = new Permission("friends", FRIENDS_BASIC, false);
 
     public static final Permission FRIEND_LIST = new Permission("list", FRIENDS);
+    public static final Permission FRIEND_LIST_OTHERS = new Permission("others", FRIEND_LIST);
     public static final Permission FRIEND_ADD = new Permission("add", FRIENDS);
     public static final Permission FRIEND_REMOVE = new Permission("remove", FRIENDS);
     public static final Permission FRIEND_BLOCK = new Permission("block", FRIENDS);

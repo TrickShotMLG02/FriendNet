@@ -6,6 +6,7 @@ import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionRequestPaylo
 import com.trickshotmlg.friendnet.core_api.proxy.payload.ProxyActionResponsePayload;
 import org.bukkit.entity.Player;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class ProxyBackendFriendGuiService implements FriendGuiService {
@@ -18,8 +19,13 @@ public class ProxyBackendFriendGuiService implements FriendGuiService {
 
     @Override
     public CompletableFuture<FriendGuiViewData> friendListView(Player player) {
+        return friendListView(player, player.getUniqueId());
+    }
+
+    @Override
+    public CompletableFuture<FriendGuiViewData> friendListView(Player player, UUID viewedPlayerId) {
         return plugin.getProxyMessagingClient()
-                .requestFriendListView(player)
+                .requestFriendListView(player, viewedPlayerId)
                 .thenApply(payload -> {
                     FriendGuiViewData viewData = FriendGuiViewData.fromProxyPayload(player.getUniqueId(), payload);
                     applyViewDataToLocalPlayer(player, viewData);
