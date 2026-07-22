@@ -30,9 +30,12 @@ import com.trickshotmlg.friendnet.core_api.interfaces.database.Database;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.PlayerService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.DatabaseService;
 import com.trickshotmlg.friendnet.core_api.interfaces.services.NetworkAuthorityService;
+import com.trickshotmlg.friendnet.core_api.models.PlayerData;
 import com.trickshotmlg.friendnet.core_api.proxy.FriendNetProxyProtocol;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -122,6 +125,7 @@ public final class FriendNetPlugin extends JavaPlugin {
             this.databaseService.init();
             this.databaseService.postInit();
             this.databaseService.start();
+            backfillMissingPlayerNamesFromOfflineProfiles();
             this.applicationServices.knownPlayerLookup().loadKnownPlayers();
             this.friendGuiService = new StandaloneFriendGuiService(this);
         } else {
@@ -131,6 +135,37 @@ public final class FriendNetPlugin extends JavaPlugin {
         }
         this.playerDataSaveQueue.start(getPlayerDataFlushIntervalTicks());
         Logger.info("FriendNet Spigot running as " + networkAuthorityService.getNetworkRole());
+    }
+
+    private void backfillMissingPlayerNamesFromOfflineProfiles() {
+        int updated = 0;
+        int unresolved = 0;
+
+        for (PlayerData playerData : databaseService.findAllPlayerData()) {
+            if (playerData.getLastPlayerName() != null && !playerData.getLastPlayerName().isBlank()) {
+                continue;
+            }
+
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerData.getPlayerId());
+            String playerName = offlinePlayer.getName();
+            if (playerName == null || playerName.isBlank()) {
+                unresolved++;
+                continue;
+            }
+
+            playerData.setLastPlayerName(playerName);
+            databaseService.save(playerData);
+            updated++;
+            Logger.debug("Backfilled last_player_name from Spigot offline profile: playerId="
+                    + playerData.getPlayerId() + ", playerName=" + playerName);
+        }
+
+        if (updated > 0) {
+            Logger.info("Backfilled last_player_name for " + updated + " known players from Spigot offline profiles.");
+        }
+        if (unresolved > 0) {
+            Logger.debug("Could not backfill last_player_name for " + unresolved + " known players from Spigot offline profiles.");
+        }
     }
 
     private Database createDatabaseFromConfig() {
