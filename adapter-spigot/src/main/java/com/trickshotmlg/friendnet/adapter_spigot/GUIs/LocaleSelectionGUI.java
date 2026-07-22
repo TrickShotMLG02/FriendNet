@@ -32,7 +32,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
 
     private int currentPage = 0;
     private final int localesPerPage = 5;
-    private final int localesStartIndexOffset = 1 * 9 + 2;
+    private final int localesRow = 1;
 
     private final PlayerService playerService;
     private FriendGuiViewData viewData;
@@ -115,6 +115,7 @@ public class LocaleSelectionGUI extends AbstractGUI{
         }
 
         // Populate locales for this page
+        int localesStartIndexOffset = localesStartIndexOffset(visibleLocales.size());
         for (int i = 0; i < visibleLocales.size(); i++) {
             LocaleKey locale = visibleLocales.get(i);
 
@@ -201,9 +202,15 @@ public class LocaleSelectionGUI extends AbstractGUI{
      * @param localeToggles The list containing all InteractableItemStacks that can be redrawn
      */
     private void updateRadioSelection(int count, List<InteractableItemStack> localeToggles) {
+        int localesStartIndexOffset = localesStartIndexOffset(count);
         for (int i = 0; i < count; i++) {
             setInteractableItem(i + localesStartIndexOffset + 9, localeToggles.get(i + localesPerPage * currentPage));
         }
+    }
+
+    private int localesStartIndexOffset(int visibleLocaleCount) {
+        int startColumn = Math.max(0, (9 - visibleLocaleCount) / 2);
+        return localesRow * 9 + startColumn;
     }
 
     private LocaleKey getSelectedLocale() {
