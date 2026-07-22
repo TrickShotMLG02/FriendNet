@@ -326,10 +326,20 @@ public class VelocityProxyMessagingService {
 
     private void updateDisplayName(Player player, String displayName) {
         if (displayName == null || displayName.isBlank()) {
+            Logger.debug("Ignored blank display name update from backend: playerId=" + player.getUniqueId()
+                    + ", playerName=" + player.getUsername());
             return;
         }
 
         UUID playerId = player.getUniqueId();
+        String serverName = player.getCurrentServer()
+                .map(connection -> connection.getServerInfo().getName())
+                .orElse("");
+        Logger.debug("Received display name update from backend: playerId=" + playerId
+                + ", playerName=" + player.getUsername()
+                + ", server=" + serverName
+                + ", displayName=" + displayName);
+
         PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
         if (playerData == null) {
             playerData = plugin.getDatabaseService()
@@ -341,9 +351,9 @@ public class VelocityProxyMessagingService {
         playerData.setLastDisplayName(displayName);
         plugin.getPlayerDataSaveQueue().markDirty(playerData);
 
-        String serverName = player.getCurrentServer()
-                .map(connection -> connection.getServerInfo().getName())
-                .orElse(playerData.getLastServerName());
+        if (serverName.isBlank()) {
+            serverName = playerData.getLastServerName();
+        }
         plugin.getNetworkAuthorityService().setPresence(new NetworkPlayerPresence(
                 playerId,
                 player.getUsername(),
