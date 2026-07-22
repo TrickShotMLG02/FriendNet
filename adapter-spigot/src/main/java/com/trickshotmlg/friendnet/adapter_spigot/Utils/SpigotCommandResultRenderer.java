@@ -8,6 +8,7 @@ import com.trickshotmlg.friendnet.core.application.command.CommandUseCaseResult;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -48,7 +49,12 @@ public final class SpigotCommandResultRenderer {
     private static void renderMessage(CommandSender sender, CommandMessage message) {
         switch (message.recipient()) {
             case SENDER -> MessageManager.send(sender, message.key(), message.placeholders());
-            case PLAYER -> MessageManager.send(message.recipientId(), message.key(), message.placeholders());
+            case PLAYER -> {
+                MessageManager.send(message.recipientId(), message.key(), message.placeholders());
+                if ("friendRequest.accept.target.success".equals(message.key())) {
+                    playFriendNotificationSound(Bukkit.getPlayer(message.recipientId()));
+                }
+            }
         }
     }
 
@@ -88,5 +94,12 @@ public final class SpigotCommandResultRenderer {
         placeholders.put("acceptRequest", accept);
         placeholders.put("denyRequest", deny);
         MessageManager.send(target, "friendRequest.send.target.success", placeholders);
+        playFriendNotificationSound(target);
+    }
+
+    private static void playFriendNotificationSound(Player player) {
+        if (player != null && player.isOnline()) {
+            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.7f, 1.2f);
+        }
     }
 }

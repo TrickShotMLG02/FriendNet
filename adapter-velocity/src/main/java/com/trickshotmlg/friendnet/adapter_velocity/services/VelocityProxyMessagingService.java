@@ -1,6 +1,7 @@
 package com.trickshotmlg.friendnet.adapter_velocity.services;
 
 import com.trickshotmlg.friendnet.adapter_velocity.FriendNetVelocityPlugin;
+import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityCommandResultRenderer;
 import com.trickshotmlg.friendnet.adapter_velocity.utils.VelocityFriendStatusNotifier;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
@@ -466,6 +467,9 @@ public class VelocityProxyMessagingService {
                         Map<String, Object> placeholders = message.placeholders().entrySet().stream()
                                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                         plugin.getMessageManager().send(target, message.key(), placeholders);
+                        if ("friendRequest.accept.target.success".equals(message.key())) {
+                            VelocityCommandResultRenderer.playFriendNotificationSound(target);
+                        }
                     });
                     return false;
                 })

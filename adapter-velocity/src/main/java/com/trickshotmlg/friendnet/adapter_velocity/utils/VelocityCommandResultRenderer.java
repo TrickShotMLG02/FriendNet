@@ -8,6 +8,8 @@ import com.trickshotmlg.friendnet.core.application.command.CommandMessage;
 import com.trickshotmlg.friendnet.core.application.command.CommandUseCaseResult;
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.proxy.Player;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -42,7 +44,12 @@ public final class VelocityCommandResultRenderer {
         switch (message.recipient()) {
             case SENDER -> plugin.getMessageManager().send(source, message.key(), message.placeholders());
             case PLAYER -> plugin.getServer().getPlayer(message.recipientId())
-                    .ifPresent(player -> plugin.getMessageManager().send(player, message.key(), message.placeholders()));
+                    .ifPresent(player -> {
+                        plugin.getMessageManager().send(player, message.key(), message.placeholders());
+                        if ("friendRequest.accept.target.success".equals(message.key())) {
+                            playFriendNotificationSound(player);
+                        }
+                    });
         }
     }
 
@@ -75,6 +82,16 @@ public final class VelocityCommandResultRenderer {
                 "/friend deny " + senderName
         ));
         plugin.getMessageManager().send(target, "friendRequest.send.target.success", placeholders);
+        playFriendNotificationSound(target);
+    }
+
+    public static void playFriendNotificationSound(Player player) {
+        player.playSound(Sound.sound(
+                Key.key("entity.experience_orb.pickup"),
+                Sound.Source.PLAYER,
+                0.7f,
+                1.2f
+        ));
     }
 
     private static Component actionButton(
