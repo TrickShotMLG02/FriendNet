@@ -65,9 +65,9 @@ public class PersonalSettingsGUI extends AbstractGUI {
             int row = 1;
             int col = 2;
             int slot = 9 * row + col;
-            ItemStack allowRequestsItem = SpigotUtils.createItem(
-                    Material.BARRIER,
+            ItemStack allowRequestsItem = GUIUtils.CreateLocalizedHead(
                     player,
+                    GUIUtils.MAILBOX_TEXTURE,
                     "gui",
                     "personalSettingsGUI.buttons.toggleAllowRequests.displayName",
                     "personalSettingsGUI.buttons.toggleAllowRequests.lore"
@@ -88,9 +88,9 @@ public class PersonalSettingsGUI extends AbstractGUI {
             int row = 1;
             int col = 3;
             int slot = 9 * row + col;
-            ItemStack showOnlineStatusItem = SpigotUtils.createItem(
-                    Material.BARRIER,
+            ItemStack showOnlineStatusItem = GUIUtils.CreateLocalizedHead(
                     player,
+                    GUIUtils.ONLINE_STATUS_TEXTURE,
                     "gui",
                     "personalSettingsGUI.buttons.toggleShowOnlineStatus.displayName",
                     "personalSettingsGUI.buttons.toggleShowOnlineStatus.lore"
@@ -111,9 +111,9 @@ public class PersonalSettingsGUI extends AbstractGUI {
             int row = 1;
             int col = 4;
             int slot = 9 * row + col;
-            ItemStack autoAcceptFriendsItem = SpigotUtils.createItem(
-                    Material.BARRIER,
+            ItemStack autoAcceptFriendsItem = GUIUtils.CreateLocalizedHead(
                     player,
+                    GUIUtils.AUTO_ACCEPT_TEXTURE,
                     "gui",
                     "personalSettingsGUI.buttons.toggleAutoAcceptRequests.displayName",
                     "personalSettingsGUI.buttons.toggleAutoAcceptRequests.lore"
@@ -134,9 +134,9 @@ public class PersonalSettingsGUI extends AbstractGUI {
             int row = 1;
             int col = 5;
             int slot = 9 * row + col;
-            ItemStack friendRequestNotificationsItem = SpigotUtils.createItem(
-                    Material.BARRIER,
+            ItemStack friendRequestNotificationsItem = GUIUtils.CreateLocalizedHead(
                     player,
+                    GUIUtils.BELL_TEXTURE,
                     "gui",
                     "personalSettingsGUI.buttons.toggleRequestNotifications.displayName",
                     "personalSettingsGUI.buttons.toggleRequestNotifications.lore"
@@ -157,9 +157,9 @@ public class PersonalSettingsGUI extends AbstractGUI {
             int row = 1;
             int col = 6;
             int slot = 9 * row + col;
-            ItemStack publicFriendListItem = SpigotUtils.createItem(
-                    Material.BARRIER,
+            ItemStack publicFriendListItem = GUIUtils.CreateLocalizedHead(
                     player,
+                    GUIUtils.GLOBE_TEXTURE,
                     "gui",
                     "personalSettingsGUI.buttons.togglePublicFriendList.displayName",
                     "personalSettingsGUI.buttons.togglePublicFriendList.lore"
@@ -182,7 +182,7 @@ public class PersonalSettingsGUI extends AbstractGUI {
             int slot = 9 * row + col;
             ItemStack localeItem = GUIUtils.CreateLocalizedHead(
                     player,
-                    GUIUtils.GLOBE_TEXTURE,
+                    GUIUtils.GetLocaleFlagTexture(playerData().getLocale()),
                     "gui",
                     "personalSettingsGUI.buttons.setLanguage.displayName",
                     "personalSettingsGUI.buttons.setLanguage.lore"
