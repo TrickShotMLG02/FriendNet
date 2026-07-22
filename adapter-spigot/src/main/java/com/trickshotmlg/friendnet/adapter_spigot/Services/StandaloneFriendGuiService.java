@@ -116,9 +116,19 @@ public class StandaloneFriendGuiService implements FriendGuiService {
             long blockedAtMillis
     ) {
         PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+        if (playerData == null) {
+            playerData = plugin.getDatabaseService()
+                    .find(playerId, PlayerData.class)
+                    .orElse(null);
+            if (playerData != null) {
+                plugin.getPlayerService().putPlayerData(playerData);
+            }
+        }
         return new ProxyFriendEntry(
                 playerId,
                 plugin.getApplicationServices().knownPlayerLookup().displayName(playerId),
+                playerData != null && playerData.getSkinTexture() != null ? playerData.getSkinTexture() : "",
+                playerData != null && playerData.getSkinSignature() != null ? playerData.getSkinSignature() : "",
                 plugin.getPlayerService().isOnline(playerId),
                 "",
                 favourite,

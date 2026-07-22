@@ -211,11 +211,23 @@ public class VelocityApplicationServices {
                 .map(NetworkPlayerPresence::serverName)
                 .orElse("");
         PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+        if (playerData == null) {
+            playerData = plugin.getDatabaseService()
+                    .find(playerId, PlayerData.class)
+                    .orElse(null);
+            if (playerData != null) {
+                plugin.getPlayerService().putPlayerData(playerData);
+            }
+        }
         long lastSeenMillis = playerData != null ? toMillis(playerData.getLastSeen()) : -1L;
+        String skinTexture = playerData != null && playerData.getSkinTexture() != null ? playerData.getSkinTexture() : "";
+        String skinSignature = playerData != null && playerData.getSkinSignature() != null ? playerData.getSkinSignature() : "";
 
         return new ProxyFriendEntry(
                 playerId,
                 displayName,
+                skinTexture,
+                skinSignature,
                 online,
                 serverName,
                 favourite,

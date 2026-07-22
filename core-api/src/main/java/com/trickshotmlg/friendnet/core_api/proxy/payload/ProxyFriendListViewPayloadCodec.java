@@ -63,6 +63,8 @@ public final class ProxyFriendListViewPayloadCodec {
             output.writeLong(entry.playerId().getMostSignificantBits());
             output.writeLong(entry.playerId().getLeastSignificantBits());
             output.writeUTF(entry.displayName());
+            output.writeUTF(entry.skinTexture());
+            output.writeUTF(entry.skinSignature());
             output.writeBoolean(entry.online());
             output.writeUTF(entry.currentServerName());
             output.writeBoolean(entry.favourite());
@@ -83,6 +85,8 @@ public final class ProxyFriendListViewPayloadCodec {
         for (int i = 0; i < size; i++) {
             UUID playerId = new UUID(input.readLong(), input.readLong());
             String displayName = input.readUTF();
+            String skinTexture = input.readUTF();
+            String skinSignature = input.readUTF();
             boolean online = input.readBoolean();
             String currentServerName = input.readUTF();
             boolean favourite = input.readBoolean();
@@ -93,6 +97,8 @@ public final class ProxyFriendListViewPayloadCodec {
             entries.add(new ProxyFriendEntry(
                     playerId,
                     displayName,
+                    skinTexture,
+                    skinSignature,
                     online,
                     currentServerName,
                     favourite,

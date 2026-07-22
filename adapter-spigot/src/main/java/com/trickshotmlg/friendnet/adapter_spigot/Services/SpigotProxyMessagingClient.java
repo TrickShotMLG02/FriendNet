@@ -4,6 +4,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.FriendsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.GUIs.RequestsGUI;
 import com.trickshotmlg.friendnet.adapter_spigot.SpigotPlayer;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core.application.command.CommandDefinition;
 import com.trickshotmlg.friendnet.core.application.command.FriendCommandDefinitions;
@@ -126,15 +127,19 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
     public void sendDisplayNameUpdate(Player player) {
         String playerName = player.getName();
         String displayName = player.getDisplayName();
+        SpigotUtils.SkinData skinData = SpigotUtils.extractSkin(player.getUniqueId());
+        String skinTexture = skinData == null ? "" : skinData.texture();
+        String skinSignature = skinData == null ? "" : skinData.signature();
         Logger.debug("Sending display name update to proxy: playerId=" + player.getUniqueId()
                 + ", lastPlayerName=" + playerName
-                + ", displayName=" + displayName);
+                + ", displayName=" + displayName
+                + ", hasSkinTexture=" + (skinTexture != null && !skinTexture.isBlank()));
 
         ProxyProtocolMessage request = ProxyProtocolCodec.request(
                 ProxyRequestType.DISPLAY_NAME_UPDATE,
                 player.getUniqueId(),
                 "",
-                ProxyDisplayNameUpdatePayloadCodec.encode(new ProxyDisplayNameUpdatePayload(displayName, playerName))
+                ProxyDisplayNameUpdatePayloadCodec.encode(new ProxyDisplayNameUpdatePayload(displayName, playerName, skinTexture, skinSignature))
         );
 
         send(player, request).exceptionally(throwable -> {

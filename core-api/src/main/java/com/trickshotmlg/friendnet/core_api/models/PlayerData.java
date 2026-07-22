@@ -12,6 +12,8 @@ public class PlayerData {
     private final UUID playerId;
     private String lastPlayerName = null;
     private String lastDisplayName = null;
+    private String skinTexture = null;
+    private String skinSignature = null;
     private String lastServerName = null;
 
 
@@ -37,6 +39,22 @@ public class PlayerData {
 
     public void setLastDisplayName(String lastDisplayName) {
         this.lastDisplayName = lastDisplayName;
+    }
+
+    public String getSkinTexture() {
+        return skinTexture;
+    }
+
+    public void setSkinTexture(String skinTexture) {
+        this.skinTexture = skinTexture;
+    }
+
+    public String getSkinSignature() {
+        return skinSignature;
+    }
+
+    public void setSkinSignature(String skinSignature) {
+        this.skinSignature = skinSignature;
     }
 
     public String getLastServerName() {
@@ -149,6 +167,7 @@ public class PlayerData {
                 "playerId=" + playerId +
                 ", lastPlayerName='" + lastPlayerName + '\'' +
                 ", lastDisplayName='" + lastDisplayName + '\'' +
+                ", hasSkinTexture=" + (skinTexture != null && !skinTexture.isBlank()) +
                 ", lastServerName='" + lastServerName + '\'' +
                 ", allow_friend_requests=" + allowFriendRequests +
                 ", show_online_status=" + showOnlineStatus +

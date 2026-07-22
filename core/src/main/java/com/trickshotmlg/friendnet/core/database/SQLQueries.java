@@ -15,22 +15,26 @@ public class SQLQueries {
 
     public static final String TABLE_PLAYERS_UPSERT =
             "INSERT INTO players (" +
-                    "player_id, last_player_name, last_display_name, first_seen, last_seen, last_server_name) " +
-                    "VALUES (?, ?, ?, ?, ?, ?) " +
+                    "player_id, last_player_name, last_display_name, skin_texture, skin_signature, first_seen, last_seen, last_server_name) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                     "ON CONFLICT(player_id) DO UPDATE SET " +
                     "last_player_name = excluded.last_player_name, " +
                     "last_display_name = excluded.last_display_name, " +
+                    "skin_texture = excluded.skin_texture, " +
+                    "skin_signature = excluded.skin_signature, " +
                     "first_seen = excluded.first_seen, " +
                     "last_seen = excluded.last_seen, " +
                     "last_server_name = excluded.last_server_name;";
 
     public static final String TABLE_PLAYERS_UPSERT_MYSQL =
             "INSERT INTO players (" +
-                    "player_id, last_player_name, last_display_name, first_seen, last_seen, last_server_name) " +
-                    "VALUES (?, ?, ?, ?, ?, ?) " +
+                    "player_id, last_player_name, last_display_name, skin_texture, skin_signature, first_seen, last_seen, last_server_name) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
                     "ON DUPLICATE KEY UPDATE " +
                     "last_player_name = VALUES(last_player_name), " +
                     "last_display_name = VALUES(last_display_name), " +
+                    "skin_texture = VALUES(skin_texture), " +
+                    "skin_signature = VALUES(skin_signature), " +
                     "first_seen = VALUES(first_seen), " +
                     "last_seen = VALUES(last_seen), " +
                     "last_server_name = VALUES(last_server_name);";

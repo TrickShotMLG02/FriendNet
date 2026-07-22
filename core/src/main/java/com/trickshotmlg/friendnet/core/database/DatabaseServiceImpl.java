@@ -206,6 +206,8 @@ public class DatabaseServiceImpl implements DatabaseService {
         PlayerData playerData = new PlayerData(playerId, firstSeen, lastSeen);
         playerData.setLastPlayerName(rs.getString("last_player_name"));
         playerData.setLastDisplayName(rs.getString("last_display_name"));
+        playerData.setSkinTexture(rs.getString("skin_texture"));
+        playerData.setSkinSignature(rs.getString("skin_signature"));
         playerData.setLastServerName(rs.getString("last_server_name"));
         playerData.setAllowFriendRequests(rs.getBoolean("allow_friend_requests"));
         playerData.setShowOnlineStatus(rs.getBoolean("show_online_status"));
@@ -364,9 +366,11 @@ public class DatabaseServiceImpl implements DatabaseService {
                 ps.setString(1, entity.getPlayerId().toString());
                 ps.setString(2, entity.getLastPlayerName());
                 ps.setString(3, entity.getLastDisplayName());
-                ps.setTimestamp(4, entity.getFirstSeen());
-                ps.setTimestamp(5, entity.getLastSeen());
-                ps.setString(6, entity.getLastServerName());
+                ps.setString(4, entity.getSkinTexture());
+                ps.setString(5, entity.getSkinSignature());
+                ps.setTimestamp(6, entity.getFirstSeen());
+                ps.setTimestamp(7, entity.getLastSeen());
+                ps.setString(8, entity.getLastServerName());
 
                 ps.executeUpdate();
             }

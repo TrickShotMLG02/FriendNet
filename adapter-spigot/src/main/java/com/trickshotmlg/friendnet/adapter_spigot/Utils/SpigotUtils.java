@@ -141,11 +141,22 @@ public final class SpigotUtils {
      * @return ItemStack of a player head
      */
     public static ItemStack createPlayerHead(UUID playerId, String displayName, List<String> lore, int amount) {
+        return createPlayerHead(playerId, displayName, lore, amount, null, null);
+    }
+
+    public static ItemStack createPlayerHead(
+            UUID playerId,
+            String displayName,
+            List<String> lore,
+            int amount,
+            String skinTexture,
+            String skinSignature
+    ) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD, amount);
         SkullMeta meta = (SkullMeta) head.getItemMeta();
 
         if (meta != null) {
-            applyPlayerHeadProfile(meta, playerId, displayName);
+            applyPlayerHeadProfile(meta, playerId, skinTexture, skinSignature);
             meta.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             applyItemMeta(meta, displayName, lore);
 
@@ -158,6 +169,31 @@ public final class SpigotUtils {
     // Optional overload for single amount (default to 1)
     public static ItemStack createPlayerHead(UUID playerId, String displayName, List<String> lore) {
         return createPlayerHead(playerId, displayName, lore, 1);
+    }
+
+    public static ItemStack createPlayerHead(UUID playerId, String displayName, List<String> lore, String skinTexture, String skinSignature) {
+        return createPlayerHead(playerId, displayName, lore, 1, skinTexture, skinSignature);
+    }
+
+    public static SkinData extractSkin(UUID playerId) {
+        if (playerId == null) {
+            return null;
+        }
+
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
+        PlayerProfile profile = offlinePlayer.getPlayerProfile();
+        SkinData signedSkinData = extractSignedSkin(profile);
+        if (signedSkinData != null) {
+            return signedSkinData;
+        }
+
+        PlayerTextures textures = profile.getTextures();
+        URL skin = textures.getSkin();
+        if (skin != null) {
+            return new SkinData(skin.toString(), "");
+        }
+
+        return null;
     }
 
     /**
@@ -265,21 +301,69 @@ public final class SpigotUtils {
         }
     }
 
-    private static void applyPlayerHeadProfile(SkullMeta meta, UUID playerId, String displayName) {
+    private static void applyPlayerHeadProfile(SkullMeta meta, UUID playerId, String skinTexture, String skinSignature) {
+        if (skinTexture != null && !skinTexture.isBlank()) {
+            if (skinSignature != null && !skinSignature.isBlank() && applySignedHeadTexture(meta, playerId, skinTexture, skinSignature)) {
+                return;
+            }
+
+            applyCustomHeadTexture(meta, skinTexture);
+            return;
+        }
+
         Player onlinePlayer = Bukkit.getPlayer(playerId);
         if (onlinePlayer != null) {
             meta.setOwningPlayer(onlinePlayer);
             return;
         }
 
-        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerId);
-        String profileName = offlinePlayer.getName();
-        if (profileName != null && !profileName.isBlank()) {
-            meta.setOwningPlayer(offlinePlayer);
-            return;
+        // Offline heads without cached textures intentionally stay as the default skull.
+    }
+
+    private static SkinData extractSignedSkin(PlayerProfile profile) {
+        try {
+            Object properties = profile.getClass().getMethod("getProperties").invoke(profile);
+            if (!(properties instanceof Iterable<?> iterable)) {
+                return null;
+            }
+
+            for (Object property : iterable) {
+                String name = String.valueOf(property.getClass().getMethod("getName").invoke(property));
+                if (!"textures".equals(name)) {
+                    continue;
+                }
+
+                String texture = String.valueOf(property.getClass().getMethod("getValue").invoke(property));
+                Object signatureValue = property.getClass().getMethod("getSignature").invoke(property);
+                String signature = signatureValue == null ? "" : String.valueOf(signatureValue);
+                return new SkinData(texture, signature);
+            }
+        } catch (ReflectiveOperationException ignored) {
+            return null;
         }
 
-        // Unknown synthetic/dev UUIDs should remain unresolved so Paper does not query Mojang for them.
+        return null;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static boolean applySignedHeadTexture(SkullMeta meta, UUID playerId, String skinTexture, String skinSignature) {
+        try {
+            PlayerProfile profile = Bukkit.createPlayerProfile(playerId);
+            Object properties = profile.getClass().getMethod("getProperties").invoke(profile);
+            if (!(properties instanceof Collection collection)) {
+                return false;
+            }
+
+            Class<?> propertyClass = Class.forName("org.bukkit.profile.ProfileProperty");
+            Object property = propertyClass
+                    .getConstructor(String.class, String.class, String.class)
+                    .newInstance("textures", skinTexture, skinSignature);
+            collection.add(property);
+            meta.setOwnerProfile(profile);
+            return true;
+        } catch (ReflectiveOperationException | RuntimeException ignored) {
+            return false;
+        }
     }
 
     private static String normalizeBase64Texture(String texture) {
@@ -382,5 +466,8 @@ public final class SpigotUtils {
         }
 
         return result;
+    }
+
+    public record SkinData(String texture, String signature) {
     }
 }

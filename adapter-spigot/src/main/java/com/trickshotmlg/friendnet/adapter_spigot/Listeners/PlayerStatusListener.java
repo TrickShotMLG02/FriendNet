@@ -5,6 +5,7 @@ import com.trickshotmlg.friendnet.adapter_spigot.FriendNetPlugin;
 import com.trickshotmlg.friendnet.adapter_spigot.Services.PlayerDataSaveQueue;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.FriendStatusNotifier;
 import com.trickshotmlg.friendnet.adapter_spigot.Utils.MessageManager;
+import com.trickshotmlg.friendnet.adapter_spigot.Utils.SpigotUtils;
 import com.trickshotmlg.friendnet.core.Logger;
 import com.trickshotmlg.friendnet.core_api.enums.EventSource;
 import com.trickshotmlg.friendnet.core.events.EventBus;
@@ -55,11 +56,13 @@ public class PlayerStatusListener extends AbstractListener {
         UUID playerId = spigotPlayer.getUniqueId();
         String lastPlayerName = event.getPlayer().getName();
         String lastDisplayName = event.getPlayer().getDisplayName();
+        SpigotUtils.SkinData skinData = SpigotUtils.extractSkin(playerId);
 
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, spigotPlayer));
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
         initializedPlayerData.setLastPlayerName(lastPlayerName);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
+        applySkinData(initializedPlayerData, skinData);
         initializedPlayerData.setLastServerName(null);
 
         if (plugin.isProxyBackendMode()) {
@@ -80,6 +83,7 @@ public class PlayerStatusListener extends AbstractListener {
                 playerData = pld.get();
                 playerData.setLastPlayerName(lastPlayerName);
                 playerData.setLastDisplayName(lastDisplayName);
+                applySkinData(playerData, skinData);
                 playerData.setLastServerName(null);
                 Logger.debug("playerData: " + playerData);
             } else {
@@ -124,6 +128,7 @@ public class PlayerStatusListener extends AbstractListener {
             playerData.setLastSeen();
         }
         playerData.setLastDisplayName(event.getPlayer().getDisplayName());
+        applySkinData(playerData, SpigotUtils.extractSkin(playerId));
         playerData.setLastServerName(null);
         playerService.setOnline(playerId, false);
 
@@ -141,6 +146,15 @@ public class PlayerStatusListener extends AbstractListener {
 
 
         Logger.debug(spigotPlayer.getName() + " quit!");
+    }
+
+    private void applySkinData(PlayerData playerData, SpigotUtils.SkinData skinData) {
+        if (skinData == null || skinData.texture() == null || skinData.texture().isBlank()) {
+            return;
+        }
+
+        playerData.setSkinTexture(skinData.texture());
+        playerData.setSkinSignature(skinData.signature());
     }
 
     private void scheduleProxyDisplayNameUpdate(UUID playerId) {

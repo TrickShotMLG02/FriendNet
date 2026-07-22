@@ -68,7 +68,7 @@ public class ProxyProtocolCodecTest extends TestCase {
         long friendSinceMillis = 1784580100000L;
         long lastSeenMillis = 1784580200000L;
         ProxyFriendListViewPayload payload = new ProxyFriendListViewPayload(
-                List.of(new ProxyFriendEntry(friendId, "Alex", true, "survival", true, requestSentTimeMillis, friendSinceMillis, -1L, lastSeenMillis)),
+                List.of(new ProxyFriendEntry(friendId, "Alex", "texture", "signature", true, "survival", true, requestSentTimeMillis, friendSinceMillis, -1L, lastSeenMillis)),
                 List.of(new ProxyFriendEntry(requesterId, "Steve", false, "", false, requestSentTimeMillis, -1L, -1L, -1L)),
                 List.of(),
                 List.of(),
@@ -86,6 +86,8 @@ public class ProxyProtocolCodecTest extends TestCase {
 
         assertEquals(friendId, decoded.friends().get(0).playerId());
         assertEquals("survival", decoded.friends().get(0).currentServerName());
+        assertEquals("texture", decoded.friends().get(0).skinTexture());
+        assertEquals("signature", decoded.friends().get(0).skinSignature());
         assertEquals(friendSinceMillis, decoded.friends().get(0).friendSinceMillis());
         assertEquals(lastSeenMillis, decoded.friends().get(0).lastSeenMillis());
         assertEquals(requesterId, decoded.pendingRequests().get(0).playerId());

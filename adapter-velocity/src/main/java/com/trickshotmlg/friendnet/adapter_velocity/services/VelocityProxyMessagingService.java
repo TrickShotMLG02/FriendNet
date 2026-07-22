@@ -313,7 +313,7 @@ public class VelocityProxyMessagingService {
 
     private ProxyProtocolMessage handleDisplayNameUpdate(ProxyProtocolMessage request, Player player) {
         ProxyDisplayNameUpdatePayload payload = ProxyDisplayNameUpdatePayloadCodec.decode(request.payload());
-        updateDisplayName(player, payload.playerName(), payload.displayName());
+        updateDisplayName(player, payload.playerName(), payload.displayName(), payload.skinTexture(), payload.skinSignature());
         flushPendingOnlineNotification(player.getUniqueId());
         return ProxyProtocolCodec.response(request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE, new byte[0]);
     }
@@ -324,7 +324,7 @@ public class VelocityProxyMessagingService {
         return ProxyProtocolCodec.response(request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE, new byte[0]);
     }
 
-    private void updateDisplayName(Player player, String playerName, String displayName) {
+    private void updateDisplayName(Player player, String playerName, String displayName, String skinTexture, String skinSignature) {
         if (displayName == null || displayName.isBlank()) {
             Logger.debug("Ignored blank display name update from backend: playerId=" + player.getUniqueId()
                     + ", playerName=" + player.getUsername());
@@ -342,7 +342,8 @@ public class VelocityProxyMessagingService {
                 + ", playerName=" + player.getUsername()
                 + ", lastPlayerName=" + playerName
                 + ", server=" + serverName
-                + ", displayName=" + displayName);
+                + ", displayName=" + displayName
+                + ", hasSkinTexture=" + (skinTexture != null && !skinTexture.isBlank()));
 
         PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
         if (playerData == null) {
@@ -354,6 +355,10 @@ public class VelocityProxyMessagingService {
 
         playerData.setLastPlayerName(playerName);
         playerData.setLastDisplayName(displayName);
+        if (skinTexture != null && !skinTexture.isBlank()) {
+            playerData.setSkinTexture(skinTexture);
+            playerData.setSkinSignature(skinSignature);
+        }
         plugin.getApplicationServices().knownPlayerLookup().remember(playerData);
         plugin.getPlayerDataSaveQueue().markDirty(playerData);
 

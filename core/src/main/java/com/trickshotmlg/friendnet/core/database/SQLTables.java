@@ -13,6 +13,8 @@ public class SQLTables {
             "player_id VARCHAR(36) PRIMARY KEY, " +
             "last_player_name VARCHAR(64), " +
             "last_display_name VARCHAR(64), " +
+            "skin_texture TEXT, " +
+            "skin_signature TEXT, " +
             "first_seen TIMESTAMP NOT NULL, " +
             "last_seen TIMESTAMP, " +
             "last_server_name VARCHAR(64) DEFAULT NULL" +

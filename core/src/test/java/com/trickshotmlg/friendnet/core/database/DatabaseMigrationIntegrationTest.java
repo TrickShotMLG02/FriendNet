@@ -60,6 +60,8 @@ public class DatabaseMigrationIntegrationTest extends TestCase {
         UUID playerId = UUID.randomUUID();
         PlayerData playerData = new PlayerData(playerId);
         playerData.setLastDisplayName("MigrationTestPlayer");
+        playerData.setSkinTexture("http://textures.minecraft.net/texture/test");
+        playerData.setSkinSignature("signature");
         playerData.setLocale(LocaleKey.of("en"));
 
         databaseService.save(playerData);
@@ -68,6 +70,8 @@ public class DatabaseMigrationIntegrationTest extends TestCase {
         assertTrue(loaded.isPresent());
         assertEquals(playerId, loaded.get().getPlayerId());
         assertEquals("MigrationTestPlayer", loaded.get().getLastDisplayName());
+        assertEquals("http://textures.minecraft.net/texture/test", loaded.get().getSkinTexture());
+        assertEquals("signature", loaded.get().getSkinSignature());
     }
 
     public void testMySqlJdbcUrlsUseStableConnectionOptions() throws Exception {

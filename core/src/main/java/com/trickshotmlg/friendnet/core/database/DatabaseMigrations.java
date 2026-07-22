@@ -63,6 +63,14 @@ public final class DatabaseMigrations {
                         List.of(
                                 "ALTER TABLE players ADD COLUMN last_player_name VARCHAR(64) DEFAULT NULL"
                         )
+                ),
+                new DatabaseMigration(
+                        4,
+                        "Store cached player skin textures",
+                        List.of(
+                                "ALTER TABLE players ADD COLUMN skin_texture TEXT DEFAULT NULL",
+                                "ALTER TABLE players ADD COLUMN skin_signature TEXT DEFAULT NULL"
+                        )
                 )
         );
     }

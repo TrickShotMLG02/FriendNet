@@ -20,6 +20,8 @@ public final class ProxyDisplayNameUpdatePayloadCodec {
             try (DataOutputStream output = new DataOutputStream(bytes)) {
                 output.writeUTF(payload.displayName());
                 output.writeUTF(payload.playerName());
+                output.writeUTF(payload.skinTexture());
+                output.writeUTF(payload.skinSignature());
             }
             return bytes.toByteArray();
         } catch (IOException e) {
@@ -31,7 +33,9 @@ public final class ProxyDisplayNameUpdatePayloadCodec {
         try (DataInputStream input = new DataInputStream(new ByteArrayInputStream(data))) {
             String displayName = input.readUTF();
             String playerName = input.available() > 0 ? input.readUTF() : "";
-            return new ProxyDisplayNameUpdatePayload(displayName, playerName);
+            String skinTexture = input.available() > 0 ? input.readUTF() : "";
+            String skinSignature = input.available() > 0 ? input.readUTF() : "";
+            return new ProxyDisplayNameUpdatePayload(displayName, playerName, skinTexture, skinSignature);
         } catch (IOException e) {
             throw new ProxyProtocolException(ProxyErrorCode.BAD_REQUEST, "Could not decode display name update.", e);
         }
