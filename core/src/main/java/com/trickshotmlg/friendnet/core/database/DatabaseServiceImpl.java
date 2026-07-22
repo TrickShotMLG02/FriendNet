@@ -153,12 +153,37 @@ public class DatabaseServiceImpl implements DatabaseService {
         return Optional.empty();
     }
 
+    @Override
+    public Optional<PlayerData> findPlayerByLastPlayerName(String lastPlayerName) {
+        if (lastPlayerName == null || lastPlayerName.isBlank()) {
+            return Optional.empty();
+        }
+
+        try {
+            DatabaseConnection conn = getDatabase().getConnection();
+            try (PreparedStatement ps = conn.prepareStatement(SQLQueries.TABLE_PLAYERS_SELECT_BY_LAST_PLAYER_NAME)) {
+                ps.setString(1, lastPlayerName);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return Optional.of(mapPlayerData(rs));
+                    }
+                }
+            } catch (SQLException e) {
+                Logger.error("Failed to fetch player by last player name: " + lastPlayerName, e);
+            }
+        } catch (SQLException e) {
+            Logger.error("Could not establish database connection", e);
+        }
+        return Optional.empty();
+    }
+
     private PlayerData mapPlayerData(ResultSet rs) throws SQLException {
         UUID playerId = UUID.fromString(rs.getString("player_id"));
         Timestamp firstSeen = rs.getTimestamp("first_seen");
         Timestamp lastSeen = rs.getTimestamp("last_seen");
 
         PlayerData playerData = new PlayerData(playerId, firstSeen, lastSeen);
+        playerData.setLastPlayerName(rs.getString("last_player_name"));
         playerData.setLastDisplayName(rs.getString("last_display_name"));
         playerData.setLastServerName(rs.getString("last_server_name"));
         playerData.setAllowFriendRequests(rs.getBoolean("allow_friend_requests"));
@@ -316,10 +341,11 @@ public class DatabaseServiceImpl implements DatabaseService {
 
             try (PreparedStatement ps = conn.prepareStatement(SQLQueries.playersUpsert(getDatabase().getDatabaseType()))){
                 ps.setString(1, entity.getPlayerId().toString());
-                ps.setString(2, entity.getLastDisplayName());
-                ps.setTimestamp(3, entity.getFirstSeen());
-                ps.setTimestamp(4, entity.getLastSeen());
-                ps.setString(5, entity.getLastServerName());
+                ps.setString(2, entity.getLastPlayerName());
+                ps.setString(3, entity.getLastDisplayName());
+                ps.setTimestamp(4, entity.getFirstSeen());
+                ps.setTimestamp(5, entity.getLastSeen());
+                ps.setString(6, entity.getLastServerName());
 
                 ps.executeUpdate();
             }

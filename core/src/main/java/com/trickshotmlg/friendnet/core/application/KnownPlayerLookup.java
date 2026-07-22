@@ -39,7 +39,7 @@ public class KnownPlayerLookup {
             return Optional.of(new KnownPlayer(player.getUniqueId(), displayName(player), playerData, true));
         }
 
-        return databaseService.findPlayerByLastDisplayName(name)
+        return databaseService.findPlayerByLastPlayerName(name)
                 .map(playerData -> {
                     playerService.putPlayerData(playerData);
                     return new KnownPlayer(playerData.getPlayerId(), displayNameOrFallback(playerData), playerData, false);
@@ -96,6 +96,7 @@ public class KnownPlayerLookup {
         }
 
         playerData.setLastDisplayName(displayName(player));
+        playerData.setLastPlayerName(player.getName());
         playerService.putPlayerData(playerData);
         return playerData;
     }

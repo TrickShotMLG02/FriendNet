@@ -11,6 +11,7 @@ public class SQLTables {
     public static final String TABLE_CREATE_PLAYERDATA =
             "CREATE TABLE IF NOT EXISTS players (" +
             "player_id VARCHAR(36) PRIMARY KEY, " +
+            "last_player_name VARCHAR(64), " +
             "last_display_name VARCHAR(64), " +
             "first_seen TIMESTAMP NOT NULL, " +
             "last_seen TIMESTAMP, " +

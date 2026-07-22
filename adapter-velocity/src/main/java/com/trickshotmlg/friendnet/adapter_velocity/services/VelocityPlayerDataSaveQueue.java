@@ -70,6 +70,7 @@ public class VelocityPlayerDataSaveQueue {
         dirtySnapshots.put(playerData.getPlayerId(), playerData);
         dirtyPlayers.add(playerData.getPlayerId());
         Logger.debug("Marked Velocity player data dirty snapshot: playerId=" + playerData.getPlayerId()
+                + ", lastPlayerName=" + playerData.getLastPlayerName()
                 + ", lastDisplayName=" + playerData.getLastDisplayName());
     }
 
@@ -88,6 +89,7 @@ public class VelocityPlayerDataSaveQueue {
         databaseService.save(playerData);
         clearDirty(playerData.getPlayerId());
         Logger.debug("Saved Velocity player data immediately: playerId=" + playerData.getPlayerId()
+                + ", lastPlayerName=" + playerData.getLastPlayerName()
                 + ", lastDisplayName=" + playerData.getLastDisplayName());
     }
 
@@ -108,6 +110,7 @@ public class VelocityPlayerDataSaveQueue {
             databaseService.save(playerData);
             clearDirty(playerId);
             Logger.debug("Flushed Velocity player data: playerId=" + playerId
+                    + ", lastPlayerName=" + playerData.getLastPlayerName()
                     + ", lastDisplayName=" + playerData.getLastDisplayName());
             saved++;
         }

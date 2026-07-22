@@ -56,6 +56,13 @@ public final class DatabaseMigrations {
                                 "ALTER TABLE players DROP COLUMN locale",
                                 "ALTER TABLE friendships DROP COLUMN is_favourite"
                         )
+                ),
+                new DatabaseMigration(
+                        3,
+                        "Store last plain player name",
+                        List.of(
+                                "ALTER TABLE players ADD COLUMN last_player_name VARCHAR(64) DEFAULT NULL"
+                        )
                 )
         );
     }

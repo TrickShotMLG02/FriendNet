@@ -52,10 +52,12 @@ public class VelocityPlayerStatusListener {
     public void onPostLogin(PostLoginEvent event) {
         VelocityPlayer velocityPlayer = new VelocityPlayer(event.getPlayer());
         UUID playerId = velocityPlayer.getUniqueId();
+        String lastPlayerName = velocityPlayer.getName();
         String lastDisplayName = velocityPlayer.getDisplayName();
 
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, velocityPlayer));
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
+        initializedPlayerData.setLastPlayerName(lastPlayerName);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
         initializedPlayerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
 
@@ -64,6 +66,7 @@ public class VelocityPlayerStatusListener {
             PlayerData playerData;
             if (storedPlayerData.isPresent()) {
                 playerData = storedPlayerData.get();
+                playerData.setLastPlayerName(lastPlayerName);
                 ensureDisplayName(playerData, lastDisplayName);
                 playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
             } else {
@@ -131,6 +134,7 @@ public class VelocityPlayerStatusListener {
             playerData.setLastSeen();
         }
         ensureDisplayName(playerData, velocityPlayer.getDisplayName());
+        playerData.setLastPlayerName(velocityPlayer.getName());
         playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(playerData.getLastServerName()));
         networkAuthorityService.setPresence(toPresence(velocityPlayer, playerData, false));
         playerService.setOnline(playerId, false);

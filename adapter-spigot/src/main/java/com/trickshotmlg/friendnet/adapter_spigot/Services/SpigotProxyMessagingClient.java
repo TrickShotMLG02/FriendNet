@@ -124,16 +124,17 @@ public class SpigotProxyMessagingClient implements PluginMessageListener {
     }
 
     public void sendDisplayNameUpdate(Player player) {
+        String playerName = player.getName();
         String displayName = player.getDisplayName();
         Logger.debug("Sending display name update to proxy: playerId=" + player.getUniqueId()
-                + ", playerName=" + player.getName()
+                + ", lastPlayerName=" + playerName
                 + ", displayName=" + displayName);
 
         ProxyProtocolMessage request = ProxyProtocolCodec.request(
                 ProxyRequestType.DISPLAY_NAME_UPDATE,
                 player.getUniqueId(),
                 "",
-                ProxyDisplayNameUpdatePayloadCodec.encode(new ProxyDisplayNameUpdatePayload(displayName))
+                ProxyDisplayNameUpdatePayloadCodec.encode(new ProxyDisplayNameUpdatePayload(displayName, playerName))
         );
 
         send(player, request).exceptionally(throwable -> {

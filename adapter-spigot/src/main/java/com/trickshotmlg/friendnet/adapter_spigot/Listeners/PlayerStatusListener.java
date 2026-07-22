@@ -53,10 +53,12 @@ public class PlayerStatusListener extends AbstractListener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         SpigotPlayer spigotPlayer = new SpigotPlayer(event.getPlayer());
         UUID playerId = spigotPlayer.getUniqueId();
+        String lastPlayerName = event.getPlayer().getName();
         String lastDisplayName = event.getPlayer().getDisplayName();
 
         EventBus.publish(new com.trickshotmlg.friendnet.core.events.PlayerJoinEvent(EventSource.LOCAL, spigotPlayer));
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
+        initializedPlayerData.setLastPlayerName(lastPlayerName);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
         initializedPlayerData.setLastServerName(null);
 
@@ -76,6 +78,7 @@ public class PlayerStatusListener extends AbstractListener {
             PlayerData playerData;
             if (pld.isPresent()) {
                 playerData = pld.get();
+                playerData.setLastPlayerName(lastPlayerName);
                 playerData.setLastDisplayName(lastDisplayName);
                 playerData.setLastServerName(null);
                 Logger.debug("playerData: " + playerData);

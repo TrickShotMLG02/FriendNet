@@ -10,6 +10,7 @@ public class PlayerData {
 
     /// The UUID of the player this data belongs to.
     private final UUID playerId;
+    private String lastPlayerName = null;
     private String lastDisplayName = null;
     private String lastServerName = null;
 
@@ -24,6 +25,14 @@ public class PlayerData {
 
     public String getLastDisplayName() {
         return lastDisplayName;
+    }
+
+    public String getLastPlayerName() {
+        return lastPlayerName;
+    }
+
+    public void setLastPlayerName(String lastPlayerName) {
+        this.lastPlayerName = lastPlayerName;
     }
 
     public void setLastDisplayName(String lastDisplayName) {
@@ -138,6 +147,7 @@ public class PlayerData {
     public String toString() {
         return "PlayerData{" +
                 "playerId=" + playerId +
+                ", lastPlayerName='" + lastPlayerName + '\'' +
                 ", lastDisplayName='" + lastDisplayName + '\'' +
                 ", lastServerName='" + lastServerName + '\'' +
                 ", allow_friend_requests=" + allowFriendRequests +

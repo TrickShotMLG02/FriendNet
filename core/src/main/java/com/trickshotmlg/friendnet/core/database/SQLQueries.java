@@ -15,9 +15,10 @@ public class SQLQueries {
 
     public static final String TABLE_PLAYERS_UPSERT =
             "INSERT INTO players (" +
-                    "player_id, last_display_name, first_seen, last_seen, last_server_name) " +
-                    "VALUES (?, ?, ?, ?, ?) " +
+                    "player_id, last_player_name, last_display_name, first_seen, last_seen, last_server_name) " +
+                    "VALUES (?, ?, ?, ?, ?, ?) " +
                     "ON CONFLICT(player_id) DO UPDATE SET " +
+                    "last_player_name = excluded.last_player_name, " +
                     "last_display_name = excluded.last_display_name, " +
                     "first_seen = excluded.first_seen, " +
                     "last_seen = excluded.last_seen, " +
@@ -25,9 +26,10 @@ public class SQLQueries {
 
     public static final String TABLE_PLAYERS_UPSERT_MYSQL =
             "INSERT INTO players (" +
-                    "player_id, last_display_name, first_seen, last_seen, last_server_name) " +
-                    "VALUES (?, ?, ?, ?, ?) " +
+                    "player_id, last_player_name, last_display_name, first_seen, last_seen, last_server_name) " +
+                    "VALUES (?, ?, ?, ?, ?, ?) " +
                     "ON DUPLICATE KEY UPDATE " +
+                    "last_player_name = VALUES(last_player_name), " +
                     "last_display_name = VALUES(last_display_name), " +
                     "first_seen = VALUES(first_seen), " +
                     "last_seen = VALUES(last_seen), " +
@@ -80,6 +82,17 @@ public class SQLQueries {
                     "COALESCE(s.locale, 'EN') AS locale " +
                     "FROM players p LEFT JOIN player_settings s ON s.player_id = p.player_id " +
                     "WHERE LOWER(p.last_display_name) = LOWER(?)";
+
+    public static final String TABLE_PLAYERS_SELECT_BY_LAST_PLAYER_NAME =
+            "SELECT p.*, " +
+                    "COALESCE(s.allow_friend_requests, TRUE) AS allow_friend_requests, " +
+                    "COALESCE(s.show_online_status, TRUE) AS show_online_status, " +
+                    "COALESCE(s.auto_accept_friends, FALSE) AS auto_accept_friends, " +
+                    "COALESCE(s.friend_request_notifications, TRUE) AS friend_request_notifications, " +
+                    "COALESCE(s.friend_list_public, FALSE) AS friend_list_public, " +
+                    "COALESCE(s.locale, 'EN') AS locale " +
+                    "FROM players p LEFT JOIN player_settings s ON s.player_id = p.player_id " +
+                    "WHERE LOWER(p.last_player_name) = LOWER(?)";
 
     public static final String TABLE_PLAYERS_DELETE =
             "DELETE FROM players WHERE player_id = ?";

@@ -49,6 +49,12 @@ public class ProxyBackendDatabaseService implements DatabaseService {
     }
 
     @Override
+    public Optional<PlayerData> findPlayerByLastPlayerName(String lastPlayerName) {
+        reportUnexpectedUse("findPlayerByLastPlayerName");
+        return Optional.empty();
+    }
+
+    @Override
     public void save(FriendshipData entity) {
         reportUnexpectedUse("save(FriendshipData)");
     }

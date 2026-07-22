@@ -313,7 +313,7 @@ public class VelocityProxyMessagingService {
 
     private ProxyProtocolMessage handleDisplayNameUpdate(ProxyProtocolMessage request, Player player) {
         ProxyDisplayNameUpdatePayload payload = ProxyDisplayNameUpdatePayloadCodec.decode(request.payload());
-        updateDisplayName(player, payload.displayName());
+        updateDisplayName(player, payload.playerName(), payload.displayName());
         flushPendingOnlineNotification(player.getUniqueId());
         return ProxyProtocolCodec.response(request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE, new byte[0]);
     }
@@ -324,7 +324,7 @@ public class VelocityProxyMessagingService {
         return ProxyProtocolCodec.response(request, ProxyResponseStatus.SUCCESS, ProxyErrorCode.NONE, new byte[0]);
     }
 
-    private void updateDisplayName(Player player, String displayName) {
+    private void updateDisplayName(Player player, String playerName, String displayName) {
         if (displayName == null || displayName.isBlank()) {
             Logger.debug("Ignored blank display name update from backend: playerId=" + player.getUniqueId()
                     + ", playerName=" + player.getUsername());
@@ -332,11 +332,15 @@ public class VelocityProxyMessagingService {
         }
 
         UUID playerId = player.getUniqueId();
+        if (playerName == null || playerName.isBlank()) {
+            playerName = player.getUsername();
+        }
         String serverName = player.getCurrentServer()
                 .map(connection -> connection.getServerInfo().getName())
                 .orElse("");
         Logger.debug("Received display name update from backend: playerId=" + playerId
                 + ", playerName=" + player.getUsername()
+                + ", lastPlayerName=" + playerName
                 + ", server=" + serverName
                 + ", displayName=" + displayName);
 
@@ -348,6 +352,7 @@ public class VelocityProxyMessagingService {
             plugin.getPlayerService().putPlayerData(playerData);
         }
 
+        playerData.setLastPlayerName(playerName);
         playerData.setLastDisplayName(displayName);
         plugin.getPlayerDataSaveQueue().markDirty(playerData);
 
@@ -356,7 +361,7 @@ public class VelocityProxyMessagingService {
         }
         plugin.getNetworkAuthorityService().setPresence(new NetworkPlayerPresence(
                 playerId,
-                player.getUsername(),
+                playerName,
                 displayName,
                 serverName,
                 true,

@@ -95,6 +95,11 @@ public class FriendServiceImplTest extends TestCase {
         }
 
         @Override
+        public Optional<PlayerData> findPlayerByLastPlayerName(String lastPlayerName) {
+            return Optional.empty();
+        }
+
+        @Override
         public void save(FriendshipData entity) {
             savedFriendships.remove(entity);
             savedFriendships.add(entity);

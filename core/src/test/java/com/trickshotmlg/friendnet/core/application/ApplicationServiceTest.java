@@ -187,6 +187,11 @@ public class ApplicationServiceTest extends TestCase {
         }
 
         @Override
+        public Optional<PlayerData> findPlayerByLastPlayerName(String lastPlayerName) {
+            return Optional.empty();
+        }
+
+        @Override
         public void save(FriendshipData entity) {
         }
 
