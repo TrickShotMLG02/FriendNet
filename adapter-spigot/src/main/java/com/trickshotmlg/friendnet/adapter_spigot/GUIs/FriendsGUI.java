@@ -169,11 +169,7 @@ public class FriendsGUI extends AbstractGUI {
                     SpigotUtils.createPlayerHead(
                             player.getUniqueId(),
                             player.getDisplayName(),
-                            List.of(
-                                    locale("friendsGUI.playerSummary.statistics"),
-                                    locale("friendsGUI.playerSummary.totalFriends", Map.of("count", friends.size())),
-                                    locale("friendsGUI.playerSummary.totalRequests", Map.of("count", requests.size()))
-                            )
+                            createPlayerSummaryLore(friends.size(), requests.size())
                     )
             );
         }
@@ -315,6 +311,25 @@ public class FriendsGUI extends AbstractGUI {
         return lore;
     }
 
+    private List<String> createPlayerSummaryLore(int friendCount, int requestCount) {
+        List<String> lore = new ArrayList<>();
+        lore.add(locale("friendsGUI.playerSummary.statistics"));
+        lore.add(locale("friendsGUI.playerSummary.totalFriends", Map.of("count", friendCount)));
+        lore.add(locale("friendsGUI.playerSummary.totalRequests", Map.of("count", requestCount)));
+        lore.add(locale("friendsGUI.playerSummary.firstSeen", Map.of("date", ChatColor.YELLOW + formatTimestamp(getViewerFirstSeen()))));
+        return lore;
+    }
+
+    private Timestamp getViewerFirstSeen() {
+        FriendNetPlugin friendNetPlugin = (FriendNetPlugin) plugin;
+        if (friendNetPlugin.isProxyBackendMode()) {
+            return currentViewData != null ? currentViewData.viewerFirstSeen() : null;
+        }
+
+        PlayerData playerData = SpigotUtils.getPlayerData(friendNetPlugin, player.getUniqueId());
+        return playerData != null ? playerData.getFirstSeen() : null;
+    }
+
     private String formatOnlineStatus(FriendEntry friend, UUID friendId) {
         if (isFriendOnline(friend)) {
             return locale("friendEntries.status.online");
@@ -418,7 +433,7 @@ public class FriendsGUI extends AbstractGUI {
         }
 
         ProxyFriendEntry proxyEntry = currentViewData.proxyEntry(friendId);
-        if (proxyEntry == null || !proxyEntry.online() || proxyEntry.currentServerName().isBlank()) {
+        if (proxyEntry == null || proxyEntry.currentServerName().isBlank()) {
             return null;
         }
 

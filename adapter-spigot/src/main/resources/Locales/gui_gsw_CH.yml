@@ -148,6 +148,7 @@ friendsGUI:
     statistics: "&7Statistike:"
     totalFriends: "&7Fründe total: &e%count%"
     totalRequests: "&7Afrage total: &e%count%"
+    firstSeen: "&7S erscht Mol gseh: %date%"
 
 # Friend Entry Lore
 friendEntries:

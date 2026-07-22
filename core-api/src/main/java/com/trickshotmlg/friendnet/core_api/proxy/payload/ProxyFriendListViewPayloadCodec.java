@@ -31,6 +31,7 @@ public final class ProxyFriendListViewPayloadCodec {
                 output.writeBoolean(payload.friendRequestNotifications());
                 output.writeBoolean(payload.friendListPublic());
                 output.writeUTF(payload.localeCode());
+                output.writeLong(payload.viewerFirstSeenMillis());
             }
             return bytes.toByteArray();
         } catch (IOException e) {
@@ -50,7 +51,8 @@ public final class ProxyFriendListViewPayloadCodec {
                     input.readBoolean(),
                     input.readBoolean(),
                     input.readBoolean(),
-                    input.readUTF()
+                    input.readUTF(),
+                    input.readLong()
             );
         } catch (IOException | RuntimeException e) {
             throw new ProxyProtocolException(ProxyErrorCode.BAD_REQUEST, "Could not decode friend list payload.", e);

@@ -27,7 +27,8 @@ public record FriendGuiViewData(
         boolean autoAcceptFriends,
         boolean friendRequestNotifications,
         boolean friendListPublic,
-        String localeCode
+        String localeCode,
+        Timestamp viewerFirstSeen
 ) {
     public FriendGuiViewData {
         friends = friends == null ? List.of() : List.copyOf(friends);
@@ -48,7 +49,7 @@ public record FriendGuiViewData(
             List<FriendshipData> sentRequests,
             List<BlocklistData> blockedPlayers
     ) {
-        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, Map.of(), true, true, false, true, false, defaultLocaleCode());
+        return new FriendGuiViewData(friends, pendingRequests, sentRequests, blockedPlayers, Map.of(), true, true, false, true, false, defaultLocaleCode(), null);
     }
 
     public static FriendGuiViewData fromProxyPayload(UUID viewerId, ProxyFriendListViewPayload payload) {
@@ -104,7 +105,8 @@ public record FriendGuiViewData(
                 payload.autoAcceptFriends(),
                 payload.friendRequestNotifications(),
                 payload.friendListPublic(),
-                payload.localeCode()
+                payload.localeCode(),
+                timestamp(payload.viewerFirstSeenMillis())
         );
     }
 

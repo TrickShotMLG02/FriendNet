@@ -59,7 +59,7 @@ public class VelocityPlayerStatusListener {
         PlayerData initializedPlayerData = playerService.initPlayer(playerId);
         initializedPlayerData.setLastPlayerName(lastPlayerName);
         initializedPlayerData.setLastDisplayName(lastDisplayName);
-        initializedPlayerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
+        updateLastServerNameIfVisible(initializedPlayerData, velocityPlayer.getCurrentServerName().orElse(null));
 
         plugin.getPlatform().runAsync(() -> {
             Optional<PlayerData> storedPlayerData = databaseService.find(playerId, PlayerData.class);
@@ -68,7 +68,7 @@ public class VelocityPlayerStatusListener {
                 playerData = storedPlayerData.get();
                 playerData.setLastPlayerName(lastPlayerName);
                 ensureDisplayName(playerData, lastDisplayName);
-                playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(null));
+                updateLastServerNameIfVisible(playerData, velocityPlayer.getCurrentServerName().orElse(null));
             } else {
                 playerData = initializedPlayerData;
             }
@@ -107,13 +107,14 @@ public class VelocityPlayerStatusListener {
             return;
         }
 
-        playerData.setLastServerName(event.getServer().getServerInfo().getName());
-        playerDataSaveQueue.markDirty(playerData);
+        if (updateLastServerNameIfVisible(playerData, event.getServer().getServerInfo().getName())) {
+            playerDataSaveQueue.markDirty(playerData);
+        }
         networkAuthorityService.setPresence(new NetworkPlayerPresence(
                 playerId,
                 velocityPlayer.getName(),
                 displayNameOrFallback(playerData, velocityPlayer.getDisplayName()),
-                event.getServer().getServerInfo().getName(),
+                presenceServerName(playerData, event.getServer().getServerInfo().getName()),
                 true,
                 playerData.isShowOnlineStatus(),
                 playerData.getLastSeen()
@@ -133,10 +134,10 @@ public class VelocityPlayerStatusListener {
 
         if (wasVisibleOnline) {
             playerData.setLastSeen();
+            updateLastServerNameIfVisible(playerData, velocityPlayer.getCurrentServerName().orElse(null));
         }
         ensureDisplayName(playerData, velocityPlayer.getDisplayName());
         playerData.setLastPlayerName(velocityPlayer.getName());
-        playerData.setLastServerName(velocityPlayer.getCurrentServerName().orElse(playerData.getLastServerName()));
         networkAuthorityService.setPresence(toPresence(velocityPlayer, playerData, false));
         playerService.setOnline(playerId, false);
 
@@ -156,11 +157,32 @@ public class VelocityPlayerStatusListener {
                 player.getUniqueId(),
                 player.getName(),
                 displayNameOrFallback(playerData, player.getDisplayName()),
-                player.getCurrentServerName().orElse(null),
+                presenceServerName(playerData, player.getCurrentServerName().orElse(null)),
                 online,
                 playerData.isShowOnlineStatus(),
                 playerData.getLastSeen()
         );
+    }
+
+    private boolean updateLastServerNameIfVisible(PlayerData playerData, String serverName) {
+        if (playerData == null || !playerData.isShowOnlineStatus() || serverName == null || serverName.isBlank()) {
+            return false;
+        }
+
+        if (serverName.equals(playerData.getLastServerName())) {
+            return false;
+        }
+
+        playerData.setLastServerName(serverName);
+        return true;
+    }
+
+    private String presenceServerName(PlayerData playerData, String currentServerName) {
+        if (playerData != null && playerData.isShowOnlineStatus() && currentServerName != null && !currentServerName.isBlank()) {
+            return currentServerName;
+        }
+
+        return playerData != null ? playerData.getLastServerName() : null;
     }
 
     private void ensureDisplayName(PlayerData playerData, String fallbackName) {

@@ -95,10 +95,25 @@ public class VelocityApplicationServices {
 
     private void updatePresenceVisibility(FriendNetVelocityPlugin plugin, UUID playerId, boolean visibleOnline) {
         PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
+        String currentServerName = plugin.getServer()
+                .getPlayer(playerId)
+                .flatMap(player -> player.getCurrentServer().map(server -> server.getServerInfo().getName()))
+                .orElse(null);
+        if (visibleOnline && playerData != null && currentServerName != null && !currentServerName.isBlank()) {
+            playerData.setLastServerName(currentServerName);
+            VelocityPlayerDataSaveQueue playerDataSaveQueue = plugin.getPlayerDataSaveQueue();
+            if (playerDataSaveQueue != null) {
+                playerDataSaveQueue.markDirty(playerData);
+            }
+        }
+        String visibleServerName = visibleOnline && currentServerName != null && !currentServerName.isBlank()
+                ? currentServerName
+                : playerData != null ? playerData.getLastServerName() : null;
         plugin.getNetworkAuthorityService().getPresence(playerId)
                 .ifPresentOrElse(
                         presence -> plugin.getNetworkAuthorityService().setPresence(
                                 presence.withVisibleOnline(visibleOnline)
+                                        .withServerName(visibleServerName)
                                         .withLastSeen(playerData != null ? playerData.getLastSeen() : presence.lastSeen())
                         ),
                         () -> plugin.getServer().getPlayer(playerId).ifPresent(player -> plugin.getNetworkAuthorityService().setPresence(
@@ -108,7 +123,7 @@ public class VelocityApplicationServices {
                                         playerData != null && playerData.getLastDisplayName() != null && !playerData.getLastDisplayName().isBlank()
                                                 ? playerData.getLastDisplayName()
                                                 : player.getUsername(),
-                                        player.getCurrentServer().map(server -> server.getServerInfo().getName()).orElse(null),
+                                        visibleServerName,
                                         true,
                                         visibleOnline,
                                         playerData != null ? playerData.getLastSeen() : null
@@ -159,7 +174,8 @@ public class VelocityApplicationServices {
                 viewerData != null && viewerData.isFriendListPublic(),
                 viewerData != null && viewerData.getLocale() != null
                         ? viewerData.getLocale().getCode()
-                        : defaultLocaleCode()
+                        : defaultLocaleCode(),
+                viewerData != null ? toMillis(viewerData.getFirstSeen()) : -1L
         );
     }
 
@@ -199,17 +215,6 @@ public class VelocityApplicationServices {
             long friendSinceMillis,
             long blockedAtMillis
     ) {
-        Optional<NetworkPlayerPresence> presence = plugin.getNetworkAuthorityService().getPresence(playerId);
-        String displayName = presence
-                .map(NetworkPlayerPresence::displayName)
-                .filter(name -> !name.isBlank())
-                .orElseGet(() -> knownPlayerLookup.displayName(playerId));
-        boolean online = presence
-                .map(status -> status.online() && status.visibleOnline())
-                .orElse(false);
-        String serverName = presence
-                .map(NetworkPlayerPresence::serverName)
-                .orElse("");
         PlayerData playerData = plugin.getPlayerService().getPlayerData(playerId);
         if (playerData == null) {
             playerData = plugin.getDatabaseService()
@@ -219,6 +224,15 @@ public class VelocityApplicationServices {
                 plugin.getPlayerService().putPlayerData(playerData);
             }
         }
+        Optional<NetworkPlayerPresence> presence = plugin.getNetworkAuthorityService().getPresence(playerId);
+        String displayName = presence
+                .map(NetworkPlayerPresence::displayName)
+                .filter(name -> !name.isBlank())
+                .orElseGet(() -> knownPlayerLookup.displayName(playerId));
+        boolean online = presence
+                .map(status -> status.online() && status.visibleOnline())
+                .orElse(false);
+        String serverName = serverNameForEntry(presence, playerData, online);
         long lastSeenMillis = playerData != null ? toMillis(playerData.getLastSeen()) : -1L;
         String skinTexture = playerData != null && playerData.getSkinTexture() != null ? playerData.getSkinTexture() : "";
         String skinSignature = playerData != null && playerData.getSkinSignature() != null ? playerData.getSkinSignature() : "";
@@ -236,6 +250,22 @@ public class VelocityApplicationServices {
                 blockedAtMillis,
                 lastSeenMillis
         );
+    }
+
+    private String serverNameForEntry(Optional<NetworkPlayerPresence> presence, PlayerData playerData, boolean online) {
+        if (online) {
+            String currentServerName = presence
+                    .map(NetworkPlayerPresence::serverName)
+                    .filter(name -> !name.isBlank())
+                    .orElse("");
+            if (!currentServerName.isBlank()) {
+                return currentServerName;
+            }
+        }
+
+        return playerData != null && playerData.getLastServerName() != null
+                ? playerData.getLastServerName()
+                : "";
     }
 
     private long toMillis(Timestamp timestamp) {
